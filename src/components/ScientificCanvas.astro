@@ -1,0 +1,411 @@
+---
+/**
+ * Scientific Canvas — the large-scale research field behind a section (v1.5).
+ *
+ * This is the layer that carries mathematics, biology and AI so that no
+ * project drawing has to. It is *wall scale*: a trajectory sweeps a thousand
+ * units, a formula is set at 50px, a matrix fragment is 20 columns wide. The
+ * v1.4 ambient layer was notebook marginalia; this is the wall the notebook
+ * is pinned to.
+ *
+ * Rules, identical to the ambient layer and enforced the same way:
+ *
+ *   · aria-hidden, pointer-events:none, z-index:-1 — never in the tab tree,
+ *     never read, never above a word;
+ *   · inline SVG only — no canvas, no WebGL, no image, no network request;
+ *   · every colour reads `var(--ink)`, so the field recolours with the theme;
+ *   · opacity is `calc(var(--canvas-base) * var(--canvas-zone))`, where the
+ *     theme decides how inked and the section decides how present;
+ *   · compositions are section-aware and stay off-centre — never a wallpaper
+ *     repeat, never a centred motif;
+ *   · roughly half the elements are dropped below 640px;
+ *   · the one slow drift is disabled under prefers-reduced-motion.
+ *
+ * What it must never do: explain a project. Hide this layer and every project
+ * poster still stands on its own; hide the posters and this layer still says
+ * "mathematics / biology / AI" without a single word of body copy.
+ */
+
+export type CanvasZone = 'page' | 'hero' | 'work' | 'background' | 'mathbio' | 'research';
+
+export interface Props {
+  zone: CanvasZone;
+}
+
+const { zone } = Astro.props;
+
+/**
+ * Per-section presence. Multiplied by the theme's `--canvas-base`: a zone is
+ * "how present", a theme is "how inked". One dial each, no per-theme branches.
+ */
+const ZONE_STRENGTH: Record<CanvasZone, number> = {
+  page: 0.55,
+  hero: 1.15,
+  work: 0.8,
+  background: 1,
+  mathbio: 1.15,
+  research: 0.9,
+};
+
+const INK = 'currentColor';
+
+/* ── deterministic pseudo-random: same field on every build ─────────────── */
+const rnd = (i: number) => {
+  const v = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+  return v - Math.floor(v);
+};
+
+/**
+ * Vector field — the mathematics of a state space. A grid of short strokes
+ * whose direction varies smoothly; at wall scale and low opacity it reads as
+ * dynamics, not as decoration.
+ */
+const flowField = (x0: number, y0: number, cols: number, rows: number, step: number) =>
+  Array.from({ length: cols * rows }, (_, k) => {
+    const i = k % cols;
+    const j = Math.floor(k / cols);
+    const x = x0 + i * step;
+    const y = y0 + j * step;
+    const a = Math.sin(x / 210) * 0.95 + Math.cos(y / 165) * 0.85 - 0.3;
+    const len = step * 0.33;
+    return {
+      x1: +(x - Math.cos(a) * len).toFixed(1),
+      y1: +(y - Math.sin(a) * len).toFixed(1),
+      x2: +(x + Math.cos(a) * len).toFixed(1),
+      y2: +(y + Math.sin(a) * len).toFixed(1),
+      keep: rnd(k + 11) > 0.32,
+    };
+  }).filter((s) => s.keep);
+
+/**
+ * Expression matrix fragment — single-cell biology. A block of cells with a
+ * deterministic intensity ramp, cropped by the frame like a figure cut out of
+ * a paper.
+ */
+const matrix = (x0: number, y0: number, cols: number, rows: number, cell: number) =>
+  Array.from({ length: cols * rows }, (_, k) => {
+    const i = k % cols;
+    const j = Math.floor(k / cols);
+    const v = rnd(k * 1.73 + 5);
+    const o = v > 0.9 ? 0.85 : v > 0.79 ? 0.5 : v > 0.7 ? 0.27 : v > 0.63 ? 0.13 : 0;
+    return { x: x0 + i * cell, y: y0 + j * cell, o };
+  }).filter((c) => c.o > 0);
+
+/** Gene / pathway graph — biology as a network, sparse on purpose. */
+const PATHWAY_NODES: Array<[number, number]> = [
+  [980, 520],
+  [1092, 462],
+  [1188, 560],
+  [1064, 622],
+  [1246, 486],
+  [1330, 596],
+  [1150, 700],
+  [1290, 720],
+  [1424, 560],
+  [1010, 742],
+];
+
+const PATHWAY_EDGES: Array<[number, number]> = [
+  [0, 1],
+  [0, 3],
+  [1, 2],
+  [1, 4],
+  [2, 5],
+  [3, 6],
+  [4, 5],
+  [6, 7],
+  [7, 8],
+  [6, 9],
+];
+
+/** Sparse neural / agent graph — layer-to-layer, only two links per node. */
+const LAYER_X = [1040, 1160, 1280, 1400];
+const LAYER_N = [5, 4, 4, 3];
+const GRAPH_NODES = LAYER_N.flatMap((n, li) =>
+  Array.from({ length: n }, (_, i) => {
+    const span = (n - 1) * 56;
+    return [LAYER_X[li], Math.round(300 - span / 2 + i * 56)] as [number, number];
+  }),
+);
+const GRAPH_OFFSET = [0, 5, 9, 12];
+const GRAPH_EDGES: Array<[number, number]> = [];
+for (let li = 0; li < LAYER_N.length - 1; li += 1) {
+  for (let i = 0; i < LAYER_N[li]; i += 1) {
+    const from = GRAPH_OFFSET[li] + i;
+    const targets = [i % LAYER_N[li + 1], (i + 1) % LAYER_N[li + 1]];
+    targets.forEach((t) => GRAPH_EDGES.push([from, GRAPH_OFFSET[li + 1] + t]));
+  }
+}
+
+const HERO_FIELD = flowField(90, 560, 12, 7, 78);
+const MATHBIO_FIELD = flowField(90, 520, 11, 6, 74);
+const WORK_MATRIX = matrix(560, 90, 20, 8, 22);
+const BG_MATRIX = matrix(80, 120, 18, 7, 21);
+---
+
+<div
+  class="canvas-field"
+  data-scientific-canvas
+  data-canvas-zone={zone}
+  aria-hidden="true"
+  style={`--canvas-zone:${ZONE_STRENGTH[zone]}`}
+>
+  <svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="cv-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill={INK} />
+      </marker>
+    </defs>
+
+    <g fill="none" stroke={INK} stroke-width="2.5" stroke-linecap="round">
+      {/* ── mathematics: large-scale notation ──────────────────────────── */}
+      {
+        (zone === 'hero' || zone === 'page') && (
+          <g class="cv-text" fill={INK} stroke="none">
+            <text x="820" y="150" font-size="46" data-canvas-mobile={zone === 'hero' ? 'keep' : 'drop'}>
+              dx/dt = f(x, u, θ)
+            </text>
+            <text x="820" y="204" font-size="22" data-canvas-mobile="drop">state · belief · intervention</text>
+          </g>
+        )
+      }
+
+      {
+        (zone === 'hero' || zone === 'mathbio') && (
+          <g class="cv-text" fill={INK} stroke="none">
+            <text x="880" y="880" font-size="48" data-canvas-mobile="drop">
+              P(H | D) ∝ P(D | H) P(H)
+            </text>
+          </g>
+        )
+      }
+
+      {
+        (zone === 'work' || zone === 'research') && (
+          <g class="cv-text" fill={INK} stroke="none">
+            <text x="72" y="150" font-size="52" data-canvas-mobile="drop">
+              X ∈ ℝⁿˣᵖ
+            </text>
+          </g>
+        )
+      }
+
+      {
+        zone === 'background' && (
+          <g class="cv-text" fill={INK} stroke="none">
+            <text x="80" y="880" font-size="30" data-canvas-mobile="drop">
+              gene → pathway → phenotype
+            </text>
+          </g>
+        )
+      }
+
+      {/* ── mathematics: state-space vector field ──────────────────────── */}
+      {
+        (zone === 'hero' || zone === 'mathbio') && (
+          <g stroke-width="1.6" data-canvas-mobile="drop">
+            {zone === 'hero'
+              ? HERO_FIELD.map((s) => <line x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} />)
+              : MATHBIO_FIELD.map((s) => <line x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} />)}
+          </g>
+        )
+      }
+
+      {/* ── mathematics: coordinates. A research field is measured. ────── */}
+      {
+        (zone === 'hero' || zone === 'page') && (
+          <g data-canvas-mobile={zone === 'hero' ? 'keep' : 'drop'}>
+            <line x1="1180" y1="300" x2="1180" y2="620" stroke-width="2" />
+            <line x1="1180" y1="620" x2="1520" y2="620" stroke-width="2" />
+            {[0, 1, 2, 3, 4].map((i) => (
+              <line x1={1180 + i * 86} y1="620" x2={1180 + i * 86} y2="632" stroke-width="1.6" />
+            ))}
+            {[0, 1, 2, 3].map((i) => (
+              <line x1="1168" y1={620 - i * 80} x2="1180" y2={620 - i * 80} stroke-width="1.6" />
+            ))}
+            <text class="cv-text" x="1536" y="628" font-size="22" fill={INK} stroke="none">
+              t
+            </text>
+            <text class="cv-text" x="1160" y="286" font-size="22" fill={INK} stroke="none" text-anchor="end">
+              x(t)
+            </text>
+          </g>
+        )
+      }
+
+      {/* ── dynamics: one long trajectory across the wall ──────────────── */}
+      {
+        (zone === 'hero' || zone === 'page' || zone === 'mathbio') && (
+          <g data-canvas-mobile={zone === 'mathbio' ? 'drop' : 'keep'}>
+            <path
+              class="cv-drift"
+              d="M-60,300 C 240,300 300,190 560,190 C 820,190 880,360 1140,360 C 1360,360 1460,300 1680,268"
+              stroke-width="2.5"
+            />
+            {[
+              [560, 190],
+              [1140, 360],
+              [1420, 292],
+            ].map(([x, y]) => (
+              <circle cx={x} cy={y} r="7" fill={INK} stroke="none" />
+            ))}
+          </g>
+        )
+      }
+
+      {/* ── biology: expression matrix fragment ────────────────────────── */}
+      {
+        (zone === 'work' || zone === 'background') && (
+          <g stroke="none" data-canvas-mobile={zone === 'background' ? 'keep' : 'drop'}>
+            {(zone === 'work' ? WORK_MATRIX : BG_MATRIX).map((c) => (
+              <rect x={c.x} y={c.y} width="19" height="19" fill={INK} fill-opacity={c.o} />
+            ))}
+          </g>
+        )
+      }
+
+      {/* ── biology: gene / pathway network ────────────────────────────── */}
+      {
+        (zone === 'work' || zone === 'background' || zone === 'research') && (
+          <g data-canvas-mobile="drop">
+            {PATHWAY_EDGES.map(([a, b]) => (
+              <line
+                x1={PATHWAY_NODES[a][0]}
+                y1={PATHWAY_NODES[a][1]}
+                x2={PATHWAY_NODES[b][0]}
+                y2={PATHWAY_NODES[b][1]}
+                stroke-width="1.8"
+                stroke-dasharray="6 7"
+              />
+            ))}
+            {PATHWAY_NODES.map(([x, y], i) => (
+              <circle
+                cx={x}
+                cy={y}
+                r={i % 4 === 0 ? 11 : 7}
+                fill={INK}
+                fill-opacity={i % 4 === 0 ? 1 : 0.5}
+                stroke="none"
+              />
+            ))}
+          </g>
+        )
+      }
+
+      {/* ── biology: potential landscape contours ──────────────────────── */}
+      {
+        (zone === 'work' || zone === 'mathbio') && (
+          <g data-canvas-mobile="drop">
+            <ellipse cx="420" cy="700" rx="300" ry="176" stroke-width="2" stroke-dasharray="9 11" />
+            <ellipse cx="420" cy="700" rx="205" ry="118" stroke-width="2" stroke-dasharray="9 11" />
+            <ellipse cx="420" cy="700" rx="118" ry="66" stroke-width="2.5" />
+          </g>
+        )
+      }
+
+      {/* ── AI: sparse neural / agent graph ────────────────────────────── */}
+      {
+        (zone === 'hero' || zone === 'research') && (
+          <g data-canvas-mobile="drop">
+            {GRAPH_EDGES.map(([a, b]) => (
+              <line
+                x1={GRAPH_NODES[a][0]}
+                y1={GRAPH_NODES[a][1]}
+                x2={GRAPH_NODES[b][0]}
+                y2={GRAPH_NODES[b][1]}
+                stroke-width="1.6"
+                stroke-dasharray="5 8"
+              />
+            ))}
+            {GRAPH_NODES.map(([x, y]) => (
+              <circle cx={x} cy={y} r="9" fill={INK} fill-opacity="0.55" stroke="none" />
+            ))}
+          </g>
+        )
+      }
+
+      {/* ── AI: agent relay, the shape of delegated work ───────────────── */}
+      {
+        zone === 'research' && (
+          <g data-canvas-mobile="keep">
+            {[0, 1, 2, 3].map((i) => (
+              <line x1={180 + i * 200} y1="860" x2={300 + i * 200} y2="860" stroke-width="2" marker-end="url(#cv-arrow)" />
+            ))}
+            {[0, 1, 2, 3, 4].map((i) => (
+              <circle cx={180 + i * 200} cy="860" r="12" fill={INK} fill-opacity="0.6" stroke="none" />
+            ))}
+          </g>
+        )
+      }
+
+      {/* ── notation scale: a bracket is how a matrix is read ─────────── */}
+      {
+        (zone === 'hero' || zone === 'background') && (
+          <g stroke-width="2.5" data-canvas-mobile="drop">
+            <path d="M1470,120 L1470,300 L1486,300" />
+            <path d="M1470,420 L1470,240 L1486,240" />
+            <path d="M1560,120 L1560,300 L1544,300" />
+            <path d="M1560,420 L1560,240 L1544,240" />
+          </g>
+        )
+      }
+    </g>
+  </svg>
+</div>
+
+<style>
+  .canvas-field {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+    color: var(--ink);
+    opacity: calc(var(--canvas-base) * var(--canvas-zone));
+  }
+
+  /* The page zone spans the viewport behind every section. */
+  .canvas-field[data-canvas-zone='page'] {
+    position: fixed;
+    height: 100vh;
+  }
+
+  .canvas-field svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cv-text {
+    font-family: var(--font-mono);
+    letter-spacing: 0.01em;
+  }
+
+  /* A field breathes; it does not animate. Eight pixels, over a minute. */
+  .cv-drift {
+    animation: canvas-drift 72s var(--ease) infinite alternate;
+  }
+
+  @keyframes canvas-drift {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-8px, 10px, 0);
+    }
+  }
+
+  /* A small screen keeps roughly half the marks; the rest are noise there. */
+  @media (max-width: 640px) {
+    .canvas-field [data-canvas-mobile='drop'] {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cv-drift {
+      animation: none;
+    }
+  }
+</style>

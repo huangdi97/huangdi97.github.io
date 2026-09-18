@@ -69,6 +69,12 @@
        Multiplied by a per-section --ambient-zone (0.5–1.3), which puts the
        final value inside 0.025–0.055 for paper. */
     --ambient-base: 0.04;
+
+    /* Scientific canvas (v1.5 sample) — the large-scale mathematics / biology
+       / AI field behind a section. Same discipline as the ambient layer
+       (inline SVG, aria-hidden, theme-coloured), but composed at wall scale
+       and inked to be *felt*: roughly 2.5× the ambient layer. */
+    --canvas-base: 0.13;
   }
 
   [data-theme='white'] {
@@ -114,6 +120,7 @@
     /* Flat white shows ink faster, so the ambient layer sits lower:
        0.0196–0.0364 across zones. */
     --ambient-base: 0.028;
+    --canvas-base: 0.105;
   }
 
   [data-theme='night'] {
@@ -161,6 +168,8 @@
     /* On a dark canvas the marks need more presence to be felt at all:
        0.042–0.078 across zones. */
     --ambient-base: 0.06;
+    /* Dark canvas absorbs ink, so the field has to be inked harder to read. */
+    --canvas-base: 0.185;
   }
 
   :root {
@@ -179,6 +188,10 @@
     /* Scientific ambient layer — per-section strength, set inline by
        ScientificAmbient.astro and multiplied by the theme's --ambient-base. */
     --ambient-zone: 1;
+
+    /* Scientific canvas — per-section strength, set inline by
+       ScientificCanvas.astro and multiplied by the theme's --canvas-base. */
+    --canvas-zone: 1;
 
     /* Motion */
     --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
@@ -824,7 +837,8 @@
   footer.site-footer,
   .mobile-nav,
   .reveal-trigger,
-  .ambient {
+  .ambient,
+  .canvas-field {
     display: none !important;
   }
 

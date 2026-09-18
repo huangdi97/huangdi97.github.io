@@ -33,6 +33,7 @@ pnpm-debug.log*
 _*.log
 _*.txt
 _*.py
+_*.mjs
 
 # Workspace agent data
 .workbuddy/
