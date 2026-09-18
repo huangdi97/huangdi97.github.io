@@ -1,0 +1,125 @@
+---
+import { useT, localizedPath, type Lang } from '../i18n/ui';
+import { SITE } from '../config/site';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const links = [
+  { href: localizedPath(lang, '/projects'), label: t('nav.work') },
+  { href: localizedPath(lang, '/research'), label: t('nav.research') },
+  { href: localizedPath(lang, '/about'), label: t('nav.about') },
+  { href: localizedPath(lang, '/resume'), label: t('nav.resume') },
+];
+---
+
+<div
+  id="mobile-nav"
+  data-mobile-nav
+  class="mobile-nav fixed inset-0 z-[110] hidden bg-canvas md:hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-label={t('nav.menu')}
+  aria-hidden="true"
+>
+  <div class="shell flex h-[68px] items-center justify-between">
+    <span class="font-mono text-[11px] uppercase tracking-[0.16em] text-faint">{t('nav.menu')}</span>
+    <button
+      type="button"
+      data-nav-close
+      class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-ink"
+      aria-label={t('nav.close')}
+    >
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.5" />
+      </svg>
+    </button>
+  </div>
+
+  <nav class="shell" aria-label={t('nav.primary')}>
+    <ul class="border-t border-line">
+      {
+        links.map((link) => (
+          <li class="border-b border-line">
+            <a
+              href={link.href}
+              class="flex min-h-[64px] items-center justify-between text-[1.375rem] tracking-[-0.02em] text-ink"
+            >
+              <span>{link.label}</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.25" />
+              </svg>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
+      <a
+        href={SITE.github}
+        class="link-arrow"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`GitHub ${t('a11y.external')}`}
+      >
+        GitHub
+        <span class="arrow" aria-hidden="true">↗</span>
+      </a>
+      {
+        SITE.email && (
+          <a href={`mailto:${SITE.email}`} class="link-arrow">
+            {SITE.email}
+          </a>
+        )
+      }
+    </div>
+  </nav>
+</div>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+  const panel = document.querySelector<HTMLElement>('[data-mobile-nav]');
+  const closeBtn = panel?.querySelector<HTMLButtonElement>('[data-nav-close]');
+
+  let lastFocused: HTMLElement | null = null;
+
+  function setOpen(open: boolean) {
+    if (!panel || !toggle) return;
+    panel.classList.toggle('hidden', !open);
+    panel.classList.toggle('flex', open);
+    panel.classList.toggle('flex-col', open);
+    panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.body.style.overflow = open ? 'hidden' : '';
+
+    if (open) {
+      lastFocused = document.activeElement as HTMLElement | null;
+      closeBtn?.focus();
+    } else if (lastFocused) {
+      lastFocused.focus();
+      lastFocused = null;
+    }
+  }
+
+  toggle?.addEventListener('click', () => {
+    setOpen(panel?.getAttribute('aria-hidden') === 'true');
+  });
+
+  closeBtn?.addEventListener('click', () => setOpen(false));
+
+  panel?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && panel?.getAttribute('aria-hidden') === 'false') setOpen(false);
+  });
+
+  // Close the panel if the viewport grows past the mobile breakpoint.
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768 && panel?.getAttribute('aria-hidden') === 'false') setOpen(false);
+  });
+</script>

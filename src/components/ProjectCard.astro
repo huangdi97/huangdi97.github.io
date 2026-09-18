@@ -1,0 +1,158 @@
+---
+import { useT, type Lang } from '../i18n/ui';
+import Tag from './Tag.astro';
+import ProjectVisual from './ProjectVisual.astro';
+import { projectHref, type ProjectEntry } from '../lib/projects';
+
+export interface Props {
+  project: ProjectEntry;
+  lang: Lang;
+  index: number;
+}
+
+const { project, lang, index } = Astro.props;
+const t = useT(lang);
+const d = project.data;
+
+const href = projectHref(lang, d.slug);
+const statusKey = `status.${d.status.toLowerCase()}`;
+---
+
+<article class="pcard" data-groups={d.groups.join(' ')} data-slug={d.slug}>
+  <div class="pcard-visual">
+    <ProjectVisual variant={d.visual} label={`${d.title} — ${d.category}`} />
+  </div>
+
+  <div class="pcard-body">
+    <div class="pcard-meta">
+      <span class="index-num">{String(index + 1).padStart(2, '0')}</span>
+      <span class="mono">{d.category}</span>
+    </div>
+
+    <h3 class="h3 pcard-title">
+      <a href={href}>{d.title}</a>
+    </h3>
+
+    <p class="pcard-thesis">{d.summary}</p>
+    <p class="body-muted pcard-desc">{d.description}</p>
+
+    {
+      d.tags.length > 0 && (
+        <ul class="pcard-tags">
+          {d.tags.map((tag) => (
+            <li>
+              <Tag text={tag} />
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <div class="pcard-actions">
+      <a href={href} class="link-arrow">
+        {t('work.case')}
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+      {
+        d.repo && (
+          <a href={d.repo} class="link-arrow" target="_blank" rel="noopener noreferrer">
+            {t('work.repo')}
+            <span class="arrow" aria-hidden="true">
+              ↗
+            </span>
+          </a>
+        )
+      }
+      <span class="pcard-status">{t(statusKey)}</span>
+    </div>
+  </div>
+</article>
+
+<style>
+  .pcard {
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+    transition:
+      border-color var(--dur-base) var(--ease),
+      transform var(--dur-base) var(--ease);
+  }
+
+  .pcard:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-3px);
+  }
+
+  .pcard[hidden] {
+    display: none;
+  }
+
+  .pcard-visual {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .pcard-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.5rem;
+  }
+
+  .pcard-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .pcard-title a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+
+  .pcard-thesis {
+    margin-top: 0.75rem;
+    font-size: 1.0625rem;
+    line-height: 1.45;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+
+  .pcard-desc {
+    margin-top: 0.625rem;
+    font-size: 0.9375rem;
+  }
+
+  .pcard-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+  }
+
+  .pcard-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: auto;
+    padding-top: 1.5rem;
+  }
+
+  .pcard-status {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-left: auto;
+  }
+</style>

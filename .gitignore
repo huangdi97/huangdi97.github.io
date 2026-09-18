@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.yarn/
+
+# Build output
+dist/
+.output/
+.astro/
+.vercel/
+.netlify/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Testing artifacts
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+.qa-screens/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local scratch files (audit / build captures)
+_*.log
+_*.txt
+
+# OS junk
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE / editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+*~
+
+# Temporary
+*.tmp
+*.temp
+*.bak

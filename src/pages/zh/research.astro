@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import ResearchArea from '../../components/ResearchArea.astro';
+import { getResearch } from '../../data/research';
+import { useT } from '../../i18n/ui';
+
+const lang = 'zh' as const;
+const t = useT(lang);
+const areas = getResearch(lang);
+
+const path = '/zh/research/';
+const enPath = '/research/';
+const zhPath = '/zh/research/';
+---
+
+<BaseLayout
+  title="研究方向"
+  description="五个研究方向：AI 驱动的科学发现、智能体系统、AI 与健康及计算生物学、仿真与数字孪生，以及本地优先的个人智能。"
+  lang={lang}
+  path={path}
+  enPath={enPath}
+  zhPath={zhPath}
+  ogImage="/og/research.png"
+>
+  <section class="shell section">
+    <SectionHeading
+      as="h1"
+      eyebrow={t('research.eyebrow')}
+      title="研究方向"
+      lead={t('research.lead')}
+    />
+
+    <div class="research-body">
+      {areas.map((area) => <ResearchArea area={area} lang={lang} headingLevel="h2" />)}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .research-body {
+    margin-top: clamp(2rem, 4vw, 3.5rem);
+  }
+</style>

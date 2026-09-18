@@ -1,0 +1,104 @@
+---
+/**
+ * Hero system diagram: four capability nodes, light hairline connections,
+ * and a very slow breathing pulse. SVG only — no canvas, no WebGL, no cost
+ * to first paint. Motion is disabled under prefers-reduced-motion, and the
+ * diagram is complete without it.
+ */
+
+const nodes = [
+  { id: 'discovery', label: 'DISCOVERY', x: 30, y: 70, cx: 100, cy: 90, delay: '0s' },
+  { id: 'health', label: 'HEALTH', x: 310, y: 70, cx: 380, cy: 90, delay: '0.9s' },
+  { id: 'simulation', label: 'SIMULATION', x: 30, y: 250, cx: 100, cy: 270, delay: '1.8s' },
+  { id: 'agents', label: 'AGENTS', x: 310, y: 250, cx: 380, cy: 270, delay: '2.7s' },
+];
+---
+
+<div class="hero-system" aria-hidden="true">
+  <svg viewBox="0 0 480 360" class="diagram" xmlns="http://www.w3.org/2000/svg">
+    <!-- Square edges -->
+    <g stroke="rgba(0,0,0,0.16)" stroke-width="1" fill="none">
+      <line x1="170" y1="90" x2="310" y2="90" />
+      <line x1="170" y1="270" x2="310" y2="270" />
+      <line x1="100" y1="110" x2="100" y2="250" />
+      <line x1="380" y1="110" x2="380" y2="250" />
+    </g>
+
+    <!-- Spokes to the centre -->
+    <g stroke="rgba(0,0,0,0.13)" stroke-width="1" stroke-dasharray="3 4" fill="none">
+      <line x1="100" y1="90" x2="240" y2="180" />
+      <line x1="380" y1="90" x2="240" y2="180" />
+      <line x1="100" y1="270" x2="240" y2="180" />
+      <line x1="380" y1="270" x2="240" y2="180" />
+    </g>
+
+    <circle class="hero-core" cx="240" cy="180" r="3.5" fill="var(--accent)" />
+
+    {
+      nodes.map((n) => (
+        <g class="hero-node" style={`--delay:${n.delay}`}>
+          <rect
+            x={n.x}
+            y={n.y}
+            width="140"
+            height="40"
+            rx="2"
+            fill="#FFFFFF"
+            stroke="rgba(0,0,0,0.14)"
+            stroke-width="1"
+          />
+          <text class="dg-node" x={n.cx} y={n.cy + 4} text-anchor="middle">
+            {n.label}
+          </text>
+        </g>
+      ))
+    }
+  </svg>
+</div>
+
+<style>
+  .hero-system {
+    width: 100%;
+  }
+
+  .hero-node {
+    animation: breathe 6.5s var(--ease) infinite;
+    animation-delay: var(--delay, 0s);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .hero-core {
+    animation: core-pulse 6.5s var(--ease) infinite;
+  }
+
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 0.82;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes core-pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+      r: 3.5;
+    }
+    50% {
+      opacity: 1;
+      r: 5;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-node,
+    .hero-core {
+      animation: none !important;
+      opacity: 1;
+    }
+  }
+</style>

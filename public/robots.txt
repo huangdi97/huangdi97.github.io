@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# The site is fully static; there is nothing to hide from crawlers and no
+# tracking, analytics or search-only resources to block.
+Disallow:
+
+Sitemap: https://huangdi97.github.io/sitemap-index.xml

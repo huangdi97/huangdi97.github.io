@@ -1,0 +1,135 @@
+---
+import { useT, type Lang } from '../i18n/ui';
+import type { ResearchArea as Area } from '../data/research';
+
+export interface Props {
+  area: Area;
+  lang: Lang;
+  /** Heading level for the area title. */
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { area, lang, headingLevel = 'h3' } = Astro.props;
+const t = useT(lang);
+const Heading = headingLevel;
+---
+
+<article class="research-area">
+  <div class="area-head">
+    <span class="index-num">{area.index}</span>
+    <Heading class="h3 area-title" id={area.slug}>{area.title}</Heading>
+  </div>
+
+  <div class="area-body">
+    <div class="area-question">
+      <p class="mono">{t('research.question')}</p>
+      <p class="question">{area.question}</p>
+    </div>
+
+    <div class="area-block">
+      <p class="mono">{t('research.interests')}</p>
+      <ul class="area-list">
+        {area.interests.map((i) => <li>{i}</li>)}
+      </ul>
+    </div>
+
+    {
+      area.projects.length > 0 && (
+        <div class="area-block">
+          <p class="mono">{t('research.projects')}</p>
+          <ul class="area-links">
+            {area.projects.map((p) => (
+              <li>
+                <a href={p.href} class="link-arrow">
+                  {p.label}
+                  <span class="arrow" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+  </div>
+</article>
+
+<style>
+  .research-area {
+    display: grid;
+    gap: 1.5rem 3rem;
+    padding-block: 2.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 1024px) {
+    .research-area {
+      grid-template-columns: 18rem 1fr;
+      gap: 3rem;
+    }
+  }
+
+  .area-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .area-title {
+    max-width: 20ch;
+  }
+
+  .area-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  .question {
+    margin-top: 0.5rem;
+    font-size: 1.125rem;
+    line-height: 1.5;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    max-width: 52ch;
+  }
+
+  .area-block {
+    max-width: 62ch;
+  }
+
+  .area-list,
+  .area-links {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .area-list li {
+    position: relative;
+    padding-left: 1.25rem;
+    color: var(--muted);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+
+  .area-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.72em;
+    width: 8px;
+    height: 1px;
+    background: var(--faint);
+  }
+
+  .area-links {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+  }
+</style>

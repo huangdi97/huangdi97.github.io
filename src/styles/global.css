@@ -1,0 +1,582 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Design tokens — Hao Lei / Personal AI Lab
+   One quiet editorial system: off-white paper, near-black ink, a single
+   restrained electric blue used only for emphasis.
+   ========================================================================== */
+
+@layer base {
+  :root {
+    /* Surfaces */
+    --canvas: #f7f7f4;
+    --card: #ffffff;
+    --night: #111111;
+    --night-soft: #1a1a1a;
+
+    /* Ink */
+    --ink: #111111;
+    --muted: #666666;
+    --faint: #8a8a85;
+    --night-ink: #f5f5f5;
+    --night-muted: #a1a1a1;
+
+    /* Lines */
+    --line: rgba(0, 0, 0, 0.1);
+    --line-strong: rgba(0, 0, 0, 0.18);
+    --night-line: rgba(255, 255, 255, 0.14);
+
+    /* Accent — used sparingly */
+    --accent: #315cff;
+    --accent-soft: rgba(49, 92, 255, 0.08);
+
+    /* Typography */
+    --font-sans:
+      'Inter', 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+      'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+    --font-mono:
+      'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+    /* Layout */
+    --shell: 1200px;
+    --gutter: 1.5rem;
+    --header-h: 68px;
+
+    /* Motion */
+    --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+    --dur-fast: 150ms;
+    --dur-base: 260ms;
+    --dur-slow: 420ms;
+
+    color-scheme: light;
+  }
+
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-h) + 1.5rem);
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.65;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Never allow a stray element to create horizontal scroll. */
+  html,
+  body {
+    max-width: 100%;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 500;
+    letter-spacing: -0.022em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: var(--ink);
+    color: var(--canvas);
+  }
+
+  /* Focus: always visible, never removed. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Respect user motion preferences globally. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   Layout primitives
+   ========================================================================== */
+
+@layer components {
+  .shell {
+    width: 100%;
+    max-width: var(--shell);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  @media (min-width: 768px) {
+    .shell {
+      padding-inline: 2.5rem;
+    }
+  }
+  @media (min-width: 1280px) {
+    .shell {
+      padding-inline: 3.5rem;
+    }
+  }
+
+  .section {
+    padding-block: clamp(3.5rem, 8vw, 7.5rem);
+  }
+
+  .section-tight {
+    padding-block: clamp(2.5rem, 5vw, 4.5rem);
+  }
+
+  .night {
+    background-color: var(--night);
+    color: var(--night-ink);
+  }
+
+  .night .muted {
+    color: var(--night-muted);
+  }
+
+  /* Eyebrow / section label */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .eyebrow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+    max-width: 6rem;
+  }
+
+  .night .eyebrow {
+    color: var(--night-muted);
+  }
+  .night .eyebrow::after {
+    background: var(--night-line);
+  }
+
+  /* Display typography — editorial, left-aligned, never centered */
+  .display {
+    font-size: clamp(2.5rem, 7.2vw, 5.5rem);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    font-weight: 500;
+  }
+
+  .h1 {
+    font-size: clamp(2.25rem, 5.4vw, 4rem);
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+  }
+
+  .h2 {
+    font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+    line-height: 1.1;
+    letter-spacing: -0.026em;
+  }
+
+  .h3 {
+    font-size: clamp(1.15rem, 2vw, 1.5rem);
+    line-height: 1.25;
+    letter-spacing: -0.018em;
+  }
+
+  .lead {
+    font-size: clamp(1.0625rem, 1.6vw, 1.3125rem);
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 46ch;
+  }
+
+  .body-muted {
+    color: var(--muted);
+    max-width: 68ch;
+  }
+
+  .muted {
+    color: var(--muted);
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  /* Buttons — 44px minimum touch target */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 1.25rem;
+    border-radius: 2px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    border: 1px solid transparent;
+    transition:
+      background-color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease),
+      transform var(--dur-fast) var(--ease);
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--canvas);
+    border-color: var(--ink);
+  }
+  .btn-primary:hover {
+    background: #000;
+    transform: translateY(-2px);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .btn-outline:hover {
+    border-color: var(--ink);
+    background: rgba(0, 0, 0, 0.03);
+    transform: translateY(-2px);
+  }
+
+  .night .btn-outline {
+    color: var(--night-ink);
+    border-color: var(--night-line);
+  }
+  .night .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Animated inline link with underline motion */
+  .link-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    position: relative;
+    padding-block: 0.25rem;
+  }
+
+  .link-arrow::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0.1rem;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-base) var(--ease);
+  }
+
+  .link-arrow:hover::after,
+  .link-arrow:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  .link-arrow .arrow {
+    transition: transform var(--dur-base) var(--ease);
+  }
+  .link-arrow:hover .arrow,
+  .link-arrow:focus-visible .arrow {
+    transform: translateX(4px);
+  }
+
+  /* Card */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    transition:
+      border-color var(--dur-base) var(--ease),
+      transform var(--dur-base) var(--ease);
+  }
+
+  /* Tag */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 0.3rem 0.55rem;
+    background: rgba(255, 255, 255, 0.6);
+  }
+
+  .night .tag {
+    color: var(--night-muted);
+    border-color: var(--night-line);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  /* Thin horizontal rule */
+  .rule {
+    height: 1px;
+    background: var(--line);
+    border: 0;
+  }
+  .night .rule {
+    background: var(--night-line);
+  }
+
+  /* Index number used in editorial lists */
+  .index-num {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Long-form editorial prose for case studies */
+  .prose-editorial {
+    max-width: 68ch;
+  }
+  .prose-editorial p {
+    margin-block: 1rem;
+    color: var(--muted);
+    line-height: 1.72;
+  }
+  .prose-editorial h2,
+  .prose-editorial h3 {
+    color: var(--ink);
+  }
+  .prose-editorial h3 {
+    font-size: 1.0625rem;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  .prose-editorial strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .prose-editorial ul {
+    margin-block: 1rem;
+    padding-left: 1.1rem;
+    list-style: none;
+  }
+  .prose-editorial li {
+    position: relative;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+    line-height: 1.7;
+  }
+  .prose-editorial li::before {
+    content: '';
+    position: absolute;
+    left: -1.1rem;
+    top: 0.72em;
+    width: 5px;
+    height: 1px;
+    background: var(--faint);
+  }
+  .prose-editorial a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .prose-editorial code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: rgba(0, 0, 0, 0.045);
+    padding: 0.1em 0.35em;
+    border-radius: 2px;
+  }
+  .prose-editorial blockquote {
+    border-left: 2px solid var(--line-strong);
+    padding-left: 1.1rem;
+    margin-block: 1.5rem;
+    color: var(--muted);
+  }
+
+  /* Diagrams */
+  .diagram {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+  }
+
+  .diagram text {
+    font-family: var(--font-mono);
+  }
+
+  .dg-label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    fill: var(--faint);
+  }
+
+  .dg-node {
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    fill: var(--ink);
+  }
+
+  /* Scroll-reveal: visible by default, upgraded by JS when supported */
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity var(--dur-slow) var(--ease),
+      transform var(--dur-slow) var(--ease);
+  }
+
+  .js .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .js .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .stroke-line {
+    border-top: 1px solid var(--line);
+  }
+  .night .stroke-line {
+    border-top-color: var(--night-line);
+  }
+  .grid-lines {
+    background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
+    background-size: 25% 100%;
+  }
+}
+
+/* ==========================================================================
+   Print — the /resume route is designed to print to PDF cleanly.
+   ========================================================================== */
+
+@media print {
+  :root {
+    --canvas: #ffffff;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .no-print,
+  header.site-header,
+  footer.site-footer,
+  .mobile-nav,
+  .reveal-trigger {
+    display: none !important;
+  }
+
+  .shell {
+    max-width: none;
+    padding-inline: 0;
+  }
+
+  .section,
+  .section-tight {
+    padding-block: 0.75rem;
+  }
+
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.75em;
+    color: #555;
+    word-break: break-all;
+  }
+
+  .card {
+    border-color: #ddd;
+    break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  p,
+  li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  @page {
+    margin: 16mm 14mm;
+  }
+}

@@ -1,0 +1,99 @@
+---
+import { useT, localizedPath, type Lang } from '../i18n/ui';
+import { SITE } from '../config/site';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer night no-print mt-auto">
+  <div class="shell section-tight">
+    <div class="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
+      <div class="max-w-md">
+        <p class="font-mono text-[13px] uppercase tracking-[0.18em] text-night-ink">HAO LEI</p>
+        <p class="mt-3 text-[0.9375rem] text-[#a1a1a1]">{SITE.tagline}</p>
+        <p class="mt-6 text-[0.8125rem] text-[#8a8a8a]">{t('footer.built')}</p>
+      </div>
+
+      <div class="flex flex-col gap-8 sm:flex-row sm:gap-16">
+        <nav aria-label={t('nav.primary')}>
+          <ul class="flex flex-col gap-1">
+            <li>
+              <a
+                href={localizedPath(lang, '/projects')}
+                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
+              >
+                {t('nav.work')}
+              </a>
+            </li>
+            <li>
+              <a
+                href={localizedPath(lang, '/research')}
+                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
+              >
+                {t('nav.research')}
+              </a>
+            </li>
+            <li>
+              <a
+                href={localizedPath(lang, '/about')}
+                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
+              >
+                {t('nav.about')}
+              </a>
+            </li>
+            <li>
+              <a
+                href={localizedPath(lang, '/resume')}
+                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
+              >
+                {t('nav.resume')}
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="flex flex-col gap-1">
+          <a
+            href={SITE.github}
+            class="inline-flex min-h-[44px] items-center gap-2 text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
+            <span aria-hidden="true" class="text-[0.75rem]">↗</span>
+          </a>
+          {
+            SITE.email ? (
+              <a
+                href={`mailto:${SITE.email}`}
+                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
+              >
+                {SITE.email}
+              </a>
+            ) : (
+              <span class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#8a8a8a]">
+                {t('contact.viaGithub')}
+              </span>
+            )
+          }
+          <div class="flex min-h-[44px] items-center">
+            <LanguageSwitcher lang={lang} variant="footer" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="rule my-10" />
+
+    <p class="font-mono text-[11px] uppercase tracking-[0.12em] text-[#8a8a8a]">
+      © {year} Hao Lei — {t('footer.rights')}
+    </p>
+  </div>
+</footer>

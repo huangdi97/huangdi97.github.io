@@ -1,0 +1,117 @@
+---
+import { useT, localizedPath, type Lang } from '../i18n/ui';
+import { SITE } from '../config/site';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import MobileNav from './MobileNav.astro';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const links = [
+  { href: localizedPath(lang, '/projects'), label: t('nav.work') },
+  { href: localizedPath(lang, '/research'), label: t('nav.research') },
+  { href: localizedPath(lang, '/about'), label: t('nav.about') },
+  { href: localizedPath(lang, '/resume'), label: t('nav.resume') },
+];
+
+const home = localizedPath(lang, '/');
+const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
+
+function isActive(href: string): boolean {
+  const clean = href.replace(/\/+$/, '') || '/';
+  if (clean === currentPath) return true;
+  return clean !== '/' && currentPath.startsWith(clean);
+}
+---
+
+<header
+  class="site-header sticky top-0 z-[100] border-b border-transparent bg-canvas/85 backdrop-blur-[6px] transition-colors duration-200"
+  data-site-header
+>
+  <div class="shell flex h-[68px] items-center justify-between gap-4">
+    <a
+      href={home}
+      class="font-mono text-[13px] font-medium uppercase tracking-[0.18em] text-ink"
+      aria-label={`${SITE.nameEn} — ${SITE.tagline}`}
+    >
+      HAO LEI
+    </a>
+
+    <nav class="hidden md:block" aria-label={t('nav.primary')}>
+      <ul class="flex items-center gap-1">
+        {
+          links.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                aria-current={isActive(link.href) ? 'page' : undefined}
+                class:list={[
+                  'relative inline-flex min-h-[44px] items-center px-3 text-[0.9375rem] transition-colors duration-150',
+                  isActive(link.href) ? 'text-ink' : 'text-muted hover:text-ink',
+                ]}
+              >
+                {link.label}
+                {isActive(link.href) && (
+                  <span
+                    class="absolute inset-x-3 bottom-[10px] h-px bg-ink"
+                    aria-hidden="true"
+                  />
+                )}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-1">
+      <a
+        href={SITE.github}
+        class="hidden min-h-[44px] min-w-[44px] items-center justify-center text-muted transition-colors duration-150 hover:text-ink sm:inline-flex"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`GitHub ${t('a11y.external')}`}
+      >
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-2.92-.88-2.92-2.9 0-.83.29-1.5.78-2.03-.08-.2-.34-1 .07-2.07 0 0 .62-.2 2.03.78a6.9 6.9 0 0 1 1.85-.25c.63 0 1.26.09 1.85.25 1.41-.98 2.03-.78 2.03-.78.41 1.07.15 1.87.07 2.07.49.53.78 1.2.78 2.03 0 2.03-1.15 2.7-2.93 2.9.3.26.56.76.56 1.54 0 1.11-.01 2-.01 2.28 0 .21.15.46.55.38A7.99 7.99 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+          />
+        </svg>
+      </a>
+
+      <LanguageSwitcher lang={lang} />
+
+      <button
+        type="button"
+        data-nav-toggle
+        class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-ink md:hidden"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+        aria-label={t('nav.menu')}
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<MobileNav lang={lang} />
+
+<script>
+  // A restrained scrolled state: hairline border + slightly stronger blur.
+  const header = document.querySelector<HTMLElement>('[data-site-header]');
+  if (header) {
+    const onScroll = () => {
+      header.classList.toggle('border-line', window.scrollY > 8);
+      header.classList.toggle('border-transparent', window.scrollY <= 8);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+</script>

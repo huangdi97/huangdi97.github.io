@@ -1,0 +1,53 @@
+---
+export interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  href?: string;
+  linkLabel?: string;
+  /** Heading level — pages set this to keep the outline correct. */
+  as?: 'h1' | 'h2';
+  id?: string;
+}
+
+const { eyebrow, title, lead, href, linkLabel, as = 'h2', id } = Astro.props;
+const Heading = as;
+---
+
+<div class="section-head">
+  {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+  <div class="head-row">
+    <Heading class:list={[as === 'h1' ? 'h1' : 'h2', 'head-title']} id={id}>{title}</Heading>
+    {
+      href && linkLabel && (
+        <a href={href} class="link-arrow">
+          {linkLabel}
+          <span class="arrow" aria-hidden="true">
+            →
+          </span>
+        </a>
+      )
+    }
+  </div>
+  {lead && <p class="lead">{lead}</p>}
+</div>
+
+<style>
+  .section-head {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .head-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+  }
+
+  .head-title {
+    max-width: 22ch;
+  }
+</style>

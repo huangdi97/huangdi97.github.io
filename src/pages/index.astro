@@ -1,0 +1,413 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ProjectShowcase from '../components/ProjectShowcase.astro';
+import HeroSystem from '../components/HeroSystem.astro';
+import Timeline from '../components/Timeline.astro';
+import { SITE } from '../config/site';
+import { useT, localizedPath } from '../i18n/ui';
+import { getFeaturedProjects, projectsHref } from '../lib/projects';
+import { getResearch } from '../data/research';
+import { getHow } from '../data/how';
+import { OSS_HIGHLIGHTS } from '../data/oss';
+
+const lang = 'en' as const;
+const t = useT(lang);
+
+const featured = await getFeaturedProjects(lang, 5);
+const research = getResearch(lang);
+const how = getHow(lang);
+
+const path = '/';
+const enPath = '/';
+const zhPath = '/zh/';
+
+const personLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: SITE.nameEn,
+  alternateName: SITE.nameZh,
+  url: SITE.url,
+  sameAs: [SITE.github],
+  ...(SITE.email ? { email: `mailto:${SITE.email}` } : {}),
+  knowsAbout: SITE.focusAreas.map((a) => a.en),
+};
+
+const websiteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: `${SITE.nameEn} — Personal AI Lab`,
+  url: SITE.url,
+  inLanguage: 'en',
+  description: SITE.description.en,
+  author: { '@type': 'Person', name: SITE.nameEn },
+};
+---
+
+<BaseLayout
+  title={`${SITE.nameEn} — Personal AI Lab`}
+  description={SITE.description.en}
+  lang={lang}
+  path={path}
+  enPath={enPath}
+  zhPath={zhPath}
+  ogImage="/og/home.png"
+  type="profile"
+  jsonLd={[personLd, websiteLd]}
+>
+  <!-- ─────────────────────────── HERO ─────────────────────────── -->
+  <section class="shell hero">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">{t('hero.eyebrow')}</p>
+        <h1 class="display hero-title">{t('hero.title')}</h1>
+        <p class="hero-sub">{t('hero.subtitle')}</p>
+        <p class="hero-statement">{t('hero.statement')}</p>
+        <p class="lead hero-support">{t('hero.support')}</p>
+
+        <div class="hero-actions">
+          <a href={projectsHref(lang)} class="btn btn-primary">{t('hero.cta.work')}</a>
+          <a
+            href={SITE.github}
+            class="btn btn-outline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t('hero.cta.github')}
+          </a>
+          <a href={localizedPath(lang, '/resume')} class="btn btn-outline">
+            {t('hero.cta.resume')}
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-figure">
+        <HeroSystem />
+      </div>
+    </div>
+
+    <div class="hero-capabilities">
+      <p class="mono">{t('hero.capabilities')}</p>
+      <ul>
+        {SITE.focusAreas.map((area) => <li>{area.en}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── SELECTED WORK ────────────────────── -->
+  <section class="shell section" id="work">
+    <SectionHeading
+      eyebrow={t('work.eyebrow')}
+      title={t('work.title')}
+      lead={t('work.lead')}
+      href={projectsHref(lang)}
+      linkLabel={t('work.all')}
+    />
+
+    <div class="showcase-list">
+      {featured.map((project, i) => <ProjectShowcase project={project} lang={lang} index={i} />)}
+    </div>
+  </section>
+
+  <!-- ──────────────────────── RESEARCH ────────────────────────── -->
+  <section class="shell section">
+    <SectionHeading
+      eyebrow={t('research.eyebrow')}
+      title={t('research.title')}
+      lead={t('research.lead')}
+      href={localizedPath(lang, '/research')}
+      linkLabel={t('research.all')}
+    />
+
+    <ul class="research-list">
+      {
+        research.map((area) => (
+          <li>
+            <a href={`${localizedPath(lang, '/research')}#${area.slug}`} class="research-row">
+              <span class="index-num">{area.index}</span>
+              <span class="research-row-title">{area.title}</span>
+              <span class="research-row-question">{area.question}</span>
+              <span class="research-row-arrow" aria-hidden="true">
+                →
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- ─────────────────────── HOW I WORK ───────────────────────── -->
+  <section class="shell section">
+    <SectionHeading eyebrow={t('how.eyebrow')} title={t('how.title')} lead={t('how.lead')} />
+    <Timeline steps={how} />
+  </section>
+
+  <!-- ─────────────────────── OPEN SOURCE ──────────────────────── -->
+  <section class="shell section">
+    <SectionHeading
+      eyebrow={t('oss.eyebrow')}
+      title={t('oss.title')}
+      lead={t('oss.lead')}
+      href={SITE.github}
+      linkLabel={t('oss.all')}
+    />
+
+    <ul class="oss-list">
+      {
+        OSS_HIGHLIGHTS.map((repo) => (
+          <li>
+            <a
+              href={repo.url}
+              class="oss-item"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="oss-name">{repo.name}</span>
+              <span class="oss-desc">{repo.descriptionEn}</span>
+              <span class="oss-lang">{repo.language}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- ───────────────────────── ABOUT CTA ──────────────────────── -->
+  <section class="shell section-tight">
+    <div class="cta">
+      <div>
+        <h2 class="h2">{t('about.cta.title')}</h2>
+        <p class="lead cta-body">{t('about.cta.body')}</p>
+      </div>
+      <a href={localizedPath(lang, '/about')} class="btn btn-primary">
+        {t('about.cta.link')}
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Hero */
+  .hero {
+    padding-top: clamp(2.5rem, 6vw, 5rem);
+    padding-bottom: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .hero-grid {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+  }
+
+  @media (min-width: 900px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: 4rem;
+    }
+  }
+
+  .hero-title {
+    margin-top: 1.25rem;
+  }
+
+  .hero-sub {
+    margin-top: 1rem;
+    font-family: var(--font-mono);
+    font-size: clamp(0.8125rem, 1.4vw, 0.9375rem);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .hero-statement {
+    margin-top: 1.75rem;
+    font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+    line-height: 1.32;
+    letter-spacing: -0.024em;
+    max-width: 24ch;
+  }
+
+  .hero-support {
+    margin-top: 1.25rem;
+    max-width: 44ch;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2.25rem;
+  }
+
+  .hero-figure {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .hero-figure {
+      display: block;
+    }
+  }
+
+  .hero-capabilities {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .hero-capabilities ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2.5rem;
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+  }
+
+  .hero-capabilities li {
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  /* Selected work */
+  .showcase-list {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3rem, 7vw, 6rem);
+    margin-top: clamp(2.5rem, 5vw, 4.5rem);
+  }
+
+  /* Research list */
+  .research-list {
+    list-style: none;
+    margin: clamp(2rem, 4vw, 3rem) 0 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .research-row {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 0.25rem 1rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--line);
+    transition: background-color var(--dur-base) var(--ease);
+  }
+
+  @media (min-width: 900px) {
+    .research-row {
+      grid-template-columns: 3rem 16rem minmax(0, 1fr) 2rem;
+      align-items: baseline;
+      gap: 2rem;
+    }
+  }
+
+  .research-row:hover {
+    background: rgba(0, 0, 0, 0.015);
+  }
+
+  .research-row-title {
+    font-size: 1.125rem;
+    letter-spacing: -0.018em;
+  }
+
+  .research-row-question {
+    grid-column: 2;
+    font-size: 0.9375rem;
+    color: var(--muted);
+    max-width: 60ch;
+  }
+
+  @media (min-width: 900px) {
+    .research-row-question {
+      grid-column: 3;
+    }
+  }
+
+  .research-row-arrow {
+    display: none;
+    color: var(--faint);
+    transition: transform var(--dur-base) var(--ease);
+  }
+
+  @media (min-width: 900px) {
+    .research-row-arrow {
+      display: block;
+      grid-column: 4;
+      text-align: right;
+    }
+
+    .research-row:hover .research-row-arrow {
+      transform: translateX(4px);
+      color: var(--ink);
+    }
+  }
+
+  /* Open source */
+  .oss-list {
+    list-style: none;
+    margin: clamp(2rem, 4vw, 3rem) 0 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .oss-item {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  @media (min-width: 900px) {
+    .oss-item {
+      grid-template-columns: 14rem minmax(0, 1fr) 6rem;
+      gap: 2rem;
+      align-items: baseline;
+    }
+  }
+
+  .oss-name {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    letter-spacing: 0.02em;
+  }
+
+  .oss-desc {
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  .oss-lang {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  @media (min-width: 900px) {
+    .oss-lang {
+      text-align: right;
+    }
+  }
+
+  /* About CTA */
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: clamp(1.75rem, 4vw, 3rem);
+  }
+
+  .cta-body {
+    margin-top: 0.75rem;
+  }
+</style>

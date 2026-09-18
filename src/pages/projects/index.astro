@@ -1,0 +1,179 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { SITE } from '../../config/site';
+import { useT } from '../../i18n/ui';
+import { getProjects, FILTER_LABELS, PROJECT_FILTERS } from '../../lib/projects';
+
+const lang = 'en' as const;
+const t = useT(lang);
+
+const projects = await getProjects(lang);
+
+const path = '/projects/';
+const enPath = '/projects/';
+const zhPath = '/zh/projects/';
+
+const collectionLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `Work — ${SITE.nameEn}`,
+  url: new URL(path, SITE.url).href,
+  inLanguage: 'en',
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: projects.length,
+    itemListElement: projects.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: p.data.title,
+      url: new URL(`/projects/${p.data.slug}/`, SITE.url).href,
+    })),
+  },
+};
+---
+
+<BaseLayout
+  title="Work"
+  description="Selected systems in AI, health, computational biology, simulation and local-first infrastructure — with full case studies."
+  lang={lang}
+  path={path}
+  enPath={enPath}
+  zhPath={zhPath}
+  ogImage="/og/projects.png"
+  jsonLd={collectionLd}
+>
+  <section class="shell section">
+    <SectionHeading
+      as="h1"
+      eyebrow={t('work.eyebrow')}
+      title="Work"
+      lead="Every project below has a full case study: the problem, the architecture, the decisions and what is actually built."
+    />
+
+    <div class="filter-bar" role="group" aria-label={t('filter.label')}>
+      <button type="button" class="filter-btn is-active" data-filter="all" aria-pressed="true">
+        {t('filter.all')}
+      </button>
+      {
+        PROJECT_FILTERS.map((key) => (
+          <button type="button" class="filter-btn" data-filter={key} aria-pressed="false">
+            {FILTER_LABELS[key].en}
+          </button>
+        ))
+      }
+      <p
+        class="filter-count"
+        aria-live="polite"
+        data-filter-count
+        data-unit={t('filter.count')}
+      >
+        {projects.length} {t('filter.count')}
+      </p>
+    </div>
+
+    <div class="project-grid" data-project-grid>
+      {projects.map((project, i) => <ProjectCard project={project} lang={lang} index={i} />)}
+    </div>
+
+    <p class="filter-empty" data-filter-empty hidden>{t('filter.empty')}</p>
+  </section>
+</BaseLayout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+  const cards = document.querySelectorAll<HTMLElement>('[data-groups]');
+  const count = document.querySelector<HTMLElement>('[data-filter-count]');
+  const empty = document.querySelector<HTMLElement>('[data-filter-empty]');
+  const total = cards.length;
+
+  function apply(filter: string) {
+    let visible = 0;
+
+    cards.forEach((card) => {
+      const groups = (card.dataset.groups ?? '').split(' ').filter(Boolean);
+      const show = filter === 'all' || groups.includes(filter);
+      card.hidden = !show;
+      if (show) visible += 1;
+    });
+
+    buttons.forEach((btn) => {
+      const active = btn.dataset.filter === filter;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+
+    if (count) count.textContent = `${visible} ${count.dataset.unit ?? ''}`.trim();
+    if (empty) empty.hidden = visible !== 0;
+    void total;
+  }
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => apply(btn.dataset.filter ?? 'all'));
+  });
+</script>
+
+<style>
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: clamp(2rem, 4vw, 3rem);
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .filter-btn {
+    min-height: 44px;
+    padding: 0 0.875rem;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: transparent;
+    font-size: 0.875rem;
+    color: var(--muted);
+    transition:
+      color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease),
+      background-color var(--dur-fast) var(--ease);
+  }
+
+  .filter-btn:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  .filter-btn.is-active {
+    color: var(--canvas);
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .filter-count {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .project-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+
+  @media (min-width: 700px) {
+    .project-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .filter-empty {
+    margin-top: 2.5rem;
+    color: var(--muted);
+  }
+</style>

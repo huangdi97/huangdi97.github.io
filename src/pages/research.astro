@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ResearchArea from '../components/ResearchArea.astro';
+import { getResearch } from '../data/research';
+import { useT } from '../i18n/ui';
+
+const lang = 'en' as const;
+const t = useT(lang);
+const areas = getResearch(lang);
+
+const path = '/research/';
+const enPath = '/research/';
+const zhPath = '/zh/research/';
+---
+
+<BaseLayout
+  title="Research"
+  description="Five research directions: AI for scientific discovery, agentic systems, AI for health and computational biology, simulation and digital twins, and local-first personal intelligence."
+  lang={lang}
+  path={path}
+  enPath={enPath}
+  zhPath={zhPath}
+  ogImage="/og/research.png"
+>
+  <section class="shell section">
+    <SectionHeading
+      as="h1"
+      eyebrow={t('research.eyebrow')}
+      title="Research"
+      lead={t('research.lead')}
+    />
+
+    <div class="research-body">
+      {areas.map((area) => <ResearchArea area={area} lang={lang} headingLevel="h2" />)}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .research-body {
+    margin-top: clamp(2rem, 4vw, 3.5rem);
+  }
+</style>

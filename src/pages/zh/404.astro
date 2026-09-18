@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { useT, localizedPath } from '../../i18n/ui';
+
+const lang = 'zh' as const;
+const t = useT(lang);
+
+const path = '/zh/404/';
+---
+
+<BaseLayout
+  title="404 — 页面不存在"
+  description="这个页面已经离开系统边界。"
+  lang={lang}
+  path={path}
+  enPath="/404.html"
+  zhPath="/zh/404/"
+  ogImage="/og/default.png"
+>
+  <section class="shell notfound">
+    <p class="eyebrow">错误</p>
+    <h1 class="display notfound-code">{t('notfound.title')}</h1>
+    <p class="notfound-body">{t('notfound.body')}</p>
+
+    <div class="notfound-actions">
+      <a href={localizedPath(lang, '/')} class="btn btn-primary">
+        {t('notfound.home')}
+        <span aria-hidden="true">→</span>
+      </a>
+      <a href={localizedPath(lang, '/projects')} class="btn btn-outline">{t('nav.work')}</a>
+    </div>
+
+    <p class="notfound-alt">
+      <a href="/404.html">{t('lang.switch')}</a>
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .notfound {
+    padding-top: clamp(4rem, 12vw, 9rem);
+    padding-bottom: clamp(4rem, 10vw, 8rem);
+    max-width: 44ch;
+  }
+
+  .notfound-code {
+    margin-top: 1.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .notfound-body {
+    margin-top: 1.5rem;
+    font-size: 1.125rem;
+    color: var(--muted);
+  }
+
+  .notfound-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2.5rem;
+  }
+
+  .notfound-alt {
+    margin-top: 3rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .notfound-alt a:hover {
+    color: var(--ink);
+  }
+</style>
