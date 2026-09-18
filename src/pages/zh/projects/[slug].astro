@@ -6,6 +6,7 @@ import ProjectMeta from '../../../components/ProjectMeta.astro';
 import ArchitectureDiagram from '../../../components/ArchitectureDiagram.astro';
 import ProjectReality from '../../../components/ProjectReality.astro';
 import Tag from '../../../components/Tag.astro';
+import CaseContents from '../../../components/CaseContents.astro';
 import { SITE } from '../../../config/site';
 import { useT } from '../../../i18n/ui';
 import { projectsHref, projectHref, nextProject, getProjects } from '../../../lib/projects';
@@ -29,7 +30,7 @@ const all = await getProjects(lang);
 const entry = all.find((e) => e.data.slug === slug);
 if (!entry) throw new Error(`Unknown project: ${slug}`);
 
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 const d = entry.data;
 const upNext = nextProject(all, d.slug);
 
@@ -107,6 +108,7 @@ const ld: Record<string, unknown>[] = [
           stack={d.stack}
           publicCode={evidence?.publicCode}
           reality={evidence ? evidence.reality[lang] : undefined}
+          headline={evidence ? evidence.headline[lang] : undefined}
         />
       </div>
 
@@ -157,6 +159,8 @@ const ld: Record<string, unknown>[] = [
       </div>
 
       <aside class="case-aside">
+        <CaseContents headings={headings} lang={lang} />
+
         {
           steps.length > 0 && (
             <section class="aside-block">

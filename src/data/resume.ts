@@ -25,7 +25,7 @@ import { getContactLinks } from './contact';
  * `evidence.ts` for that discipline.
  */
 
-export type ResumeItem = { label: string; value?: string; href?: string };
+export type ResumeItem = { id?: string; label: string; value?: string; href?: string };
 
 export type ResumeEntry = {
   id: string;
@@ -122,59 +122,91 @@ const PROFILE_TEXT = {
   ],
 };
 
+/**
+ * Selected projects, keyed by slug so a PDF variant can pick its own subset and
+ * order without a second copy of the wording.
+ *
+ * TaiYi · Lingjing is deliberately absent: it is a written research concept with
+ * no repository, prototype or validation result, and a résumé Selected Projects
+ * list is read as a claim about work that exists.
+ */
 const PROJECT_ITEMS: Record<Lang, ResumeItem[]> = {
   en: [
     {
+      id: 'wennian',
       label: 'ZhiShen · WenNian',
       value: 'AI aging assessment, structured interviewing and intervention decision support.',
       href: '/projects/wennian',
     },
     {
+      id: 'hycell',
       label: 'HyCell',
       value: 'AI virtual-cell infrastructure for biological representation, transition modeling and simulation.',
       href: '/projects/hycell',
     },
     {
-      label: 'TaiYi Lingjing / 太一·灵境',
-      value: 'Agentic discovery platform connecting biology, evidence, simulation and experimentation.',
-      href: '/projects/taiyi-lingjing',
+      id: 'morn',
+      label: 'Morn',
+      value:
+        'Agent runtime for persistent work — Rust workspace, durable two-node execution, capability packs and scripted verification.',
+      href: '/projects/morn',
     },
     {
-      label: 'Pet AI Health',
-      value: 'AI-native pet health platform across observation, risk assessment, consultation and care workflows.',
-      href: '/projects/pet-ai-health',
+      id: 'biopulse',
+      label: 'BioPulse',
+      value: 'Agent-native workspace for life-science workflows — Python stack, MIT licensed, public repository.',
+      href: '/projects/biopulse',
     },
     {
+      id: 'pdig',
       label: 'PDIG',
       value: 'Local-first personal dependency and digital-infrastructure graph across native platforms.',
       href: '/projects/pdig',
     },
+    {
+      id: 'pet-ai-health',
+      label: 'Pet AI Health',
+      value: 'AI-native pet health platform across observation, risk assessment, consultation and care workflows.',
+      href: '/projects/pet-ai-health',
+    },
   ],
   zh: [
     {
+      id: 'wennian',
       label: '知身·问年',
       value: 'AI 衰老评估、主动追问与干预决策系统。',
       href: '/zh/projects/wennian',
     },
     {
+      id: 'hycell',
       label: 'HyCell',
       value: '面向生物表示、状态转移建模与仿真的 AI 虚拟细胞基础设施。',
       href: '/zh/projects/hycell',
     },
     {
-      label: '太一·灵境',
-      value: '连接生物学、证据、仿真与实验的智能体发现平台。',
-      href: '/zh/projects/taiyi-lingjing',
+      id: 'morn',
+      label: 'Morn',
+      value:
+        '面向长期任务的智能体运行底座 — Rust workspace、双节点持久化执行、能力包与脚本化验证。',
+      href: '/zh/projects/morn',
     },
     {
-      label: 'Pet AI Health',
-      value: '覆盖观察、风险评估、问诊与照护流程的 AI 原生宠物健康平台。',
-      href: '/zh/projects/pet-ai-health',
+      id: 'biopulse',
+      label: 'BioPulse',
+      value: '面向生命科学工作流的 Agent-native 工作台 — Python 技术栈，MIT 许可证，代码公开。',
+      href: '/zh/projects/biopulse',
     },
     {
+      id: 'pdig',
       label: 'PDIG',
       value: '跨原生平台的本地优先个人依赖与数字基础设施图谱。',
       href: '/zh/projects/pdig',
+    },
+    {
+      id: 'pet-ai-health',
+      label: 'Pet AI Health',
+      value: '覆盖观察、风险评估、问诊与照护流程的 AI 原生宠物健康平台。',
+      href: '/zh/projects/pet-ai-health',
     },
   ],
 };

@@ -3,13 +3,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import ProjectShowcase from '../components/ProjectShowcase.astro';
 import HeroSystem from '../components/HeroSystem.astro';
-import Timeline from '../components/Timeline.astro';
+import NowStrip from '../components/NowStrip.astro';
+import BackgroundTimeline from '../components/BackgroundTimeline.astro';
+import ProcessRail from '../components/ProcessRail.astro';
 import { SITE } from '../config/site';
 import { useT, localizedPath } from '../i18n/ui';
 import { getFeaturedProjects, projectsHref } from '../lib/projects';
 import { getResearch } from '../data/research';
+import { getBackground } from '../data/background';
 import { getHow } from '../data/how';
 import { OSS_CAPTURED_AT, OSS_HIGHLIGHTS } from '../data/oss';
+import ResearchRow from '../components/ResearchRow.astro';
 import { personSchema } from '../data/profile';
 
 const lang = 'en' as const;
@@ -18,6 +22,14 @@ const t = useT(lang);
 const featured = await getFeaturedProjects(lang, 5);
 const research = getResearch(lang);
 const how = getHow(lang);
+const background = getBackground(lang);
+
+/**
+ * Research is split by tier, not by taste: a direction tied to inspectable code
+ * is never rendered as the twin of a written concept.
+ */
+const activeResearch = research.filter((area) => area.tier === 'active');
+const conceptResearch = research.filter((area) => area.tier === 'concept');
 
 const path = '/';
 const enPath = '/';
@@ -86,6 +98,9 @@ const websiteLd = {
     </div>
   </section>
 
+  <!-- ────────────────────── NOW / CURRENT FOCUS ───────────────── -->
+  <NowStrip lang={lang} />
+
   <!-- ─────────────────────── SELECTED WORK ────────────────────── -->
   <section class="shell section" id="work">
     <SectionHeading
@@ -101,6 +116,21 @@ const websiteLd = {
     </div>
   </section>
 
+  <!-- ───────────────────────── BACKGROUND ──────────────────────── -->
+  <section class="shell section">
+    <SectionHeading
+      eyebrow={t('background.eyebrow')}
+      title={background.title}
+      lead={t('background.intro')}
+    />
+
+    <div class="bg-copy">
+      {background.paragraphs.map((paragraph) => <p class="body-muted">{paragraph}</p>)}
+    </div>
+
+    <BackgroundTimeline lang={lang} />
+  </section>
+
   <!-- ──────────────────────── RESEARCH ────────────────────────── -->
   <section class="shell section">
     <SectionHeading
@@ -111,28 +141,25 @@ const websiteLd = {
       linkLabel={t('research.all')}
     />
 
-    <ul class="research-list">
-      {
-        research.map((area) => (
-          <li>
-            <a href={`${localizedPath(lang, '/research')}#${area.slug}`} class="research-row">
-              <span class="index-num">{area.index}</span>
-              <span class="research-row-title">{area.title}</span>
-              <span class="research-row-question">{area.question}</span>
-              <span class="research-row-arrow" aria-hidden="true">
-                →
-              </span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
+    <div class="research-tier">
+      <p class="research-tier-label mono">{t('research.active')}</p>
+      <ul class="research-list">
+        {activeResearch.map((area) => <ResearchRow area={area} lang={lang} />)}
+      </ul>
+    </div>
+
+    <div class="research-tier">
+      <p class="research-tier-label mono">{t('research.concepts')}</p>
+      <ul class="research-list">
+        {conceptResearch.map((area) => <ResearchRow area={area} lang={lang} />)}
+      </ul>
+    </div>
   </section>
 
   <!-- ─────────────────────── HOW I WORK ───────────────────────── -->
   <section class="shell section">
     <SectionHeading eyebrow={t('how.eyebrow')} title={t('how.title')} lead={t('how.lead')} />
-    <Timeline steps={how} />
+    <ProcessRail steps={how} />
   </section>
 
   <!-- ─────────────────────── OPEN SOURCE ──────────────────────── -->
@@ -153,6 +180,12 @@ const websiteLd = {
               <span class="oss-name">{repo.name}</span>
               <span class="oss-desc">{repo.descriptionEn}</span>
               <span class="oss-facts">
+                <span class="oss-fact">
+                  <span class="oss-fact-k">{t('oss.role')}</span>
+                  <span class="oss-fact-v" data-role={repo.role}>
+                    {t(`oss.role.${repo.role}`)}
+                  </span>
+                </span>
                 <span class="oss-fact">
                   <span class="oss-fact-k">{t('oss.language')}</span>
                   <span class="oss-fact-v">{repo.language ?? '—'}</span>
@@ -180,11 +213,36 @@ const websiteLd = {
   <!-- ───────────────────────── ABOUT CTA ──────────────────────── -->
   <section class="shell section-tight">
     <div class="cta">
-      <div>
-        <h2 class="h2">{t('about.cta.title')}</h2>
-        <p class="lead cta-body">{t('about.cta.body')}</p>
+      <div class="cta-copy">
+        <p class="eyebrow cta-eyebrow">{t('about.context.eyebrow')}</p>
+        <h2 class="h2 cta-name">{SITE.name}</h2>
+        <p class="lead cta-body">{t('about.context.line')}</p>
+
+        <ul class="cta-links">
+          {SITE.emails.map((email) => (
+            <li>
+              <a href={`mailto:${email.value}`} class="cta-link">
+                <span class="cta-link-k">{email.label[lang]}</span>
+                <span class="cta-link-v">{email.value}</span>
+              </a>
+            </li>
+          ))}
+          <li>
+            <a href={SITE.github} class="cta-link" target="_blank" rel="noopener noreferrer">
+              <span class="cta-link-k">GitHub</span>
+              <span class="cta-link-v">{SITE.githubHandle}</span>
+            </a>
+          </li>
+          <li>
+            <a href={localizedPath(lang, '/resume')} class="cta-link">
+              <span class="cta-link-k">{t('nav.resume')}</span>
+              <span class="cta-link-v">PDF</span>
+            </a>
+          </li>
+        </ul>
       </div>
-      <a href={localizedPath(lang, '/about')} class="btn btn-primary">
+
+      <a href={localizedPath(lang, '/about')} class="btn btn-primary cta-btn">
         {t('about.cta.link')}
         <span aria-hidden="true">→</span>
       </a>
@@ -283,70 +341,34 @@ const websiteLd = {
     margin-top: clamp(2.5rem, 5vw, 4.5rem);
   }
 
+  /* Background */
+  .bg-copy {
+    display: grid;
+    gap: 0.875rem;
+    max-width: 72ch;
+    margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  }
+
+  .bg-copy + :global(.bt) {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
   /* Research list */
+  .research-tier + .research-tier {
+    margin-top: clamp(2rem, 4vw, 2.75rem);
+  }
+
+  .research-tier-label {
+    font-size: 0.6875rem;
+    color: var(--faint);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
   .research-list {
     list-style: none;
-    margin: clamp(2rem, 4vw, 3rem) 0 0;
+    margin: 0;
     padding: 0;
-    border-top: 1px solid var(--line);
-  }
-
-  .research-row {
-    display: grid;
-    grid-template-columns: 2.5rem 1fr;
-    gap: 0.25rem 1rem;
-    padding: 1.5rem 0;
-    border-bottom: 1px solid var(--line);
-    transition: background-color var(--dur-base) var(--ease);
-  }
-
-  @media (min-width: 900px) {
-    .research-row {
-      grid-template-columns: 3rem 16rem minmax(0, 1fr) 2rem;
-      align-items: baseline;
-      gap: 2rem;
-    }
-  }
-
-  .research-row:hover {
-    background: rgba(0, 0, 0, 0.015);
-  }
-
-  .research-row-title {
-    font-size: 1.125rem;
-    letter-spacing: -0.018em;
-  }
-
-  .research-row-question {
-    grid-column: 2;
-    font-size: 0.9375rem;
-    color: var(--muted);
-    max-width: 60ch;
-  }
-
-  @media (min-width: 900px) {
-    .research-row-question {
-      grid-column: 3;
-    }
-  }
-
-  .research-row-arrow {
-    display: none;
-    color: var(--faint);
-    transition: transform var(--dur-base) var(--ease);
-  }
-
-  @media (min-width: 900px) {
-    .research-row-arrow {
-      display: block;
-      grid-column: 4;
-      text-align: right;
-    }
-
-    .research-row:hover .research-row-arrow {
-      transform: translateX(4px);
-      color: var(--ink);
-    }
   }
 
   /* Open source */
@@ -426,11 +448,16 @@ const websiteLd = {
     margin-top: 1.25rem;
   }
 
+  /* A role is assigned by hand; flagship and research are read first. */
+  .oss-fact-v[data-role='flagship'] {
+    color: var(--ink);
+  }
+
   /* About CTA */
   .cta {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 2rem;
     background: var(--card);
@@ -439,7 +466,60 @@ const websiteLd = {
     padding: clamp(1.75rem, 4vw, 3rem);
   }
 
+  .cta-copy {
+    min-width: 0;
+  }
+
+  /* The shared eyebrow draws a trailing rule; inside a panel it reads as noise. */
+  .cta-eyebrow::after {
+    display: none;
+  }
+
+  .cta-name {
+    margin-top: 0.5rem;
+  }
+
   .cta-body {
-    margin-top: 0.75rem;
+    margin-top: 0.5rem;
+    max-width: 52ch;
+  }
+
+  .cta-links {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+  }
+
+  .cta-link {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.5rem;
+  }
+
+  .cta-link-k {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .cta-link-v {
+    font-size: 0.875rem;
+    color: var(--ink);
+  }
+
+  .cta-link:hover .cta-link-v {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+
+  .cta-btn {
+    flex-shrink: 0;
   }
 </style>

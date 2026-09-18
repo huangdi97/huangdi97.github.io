@@ -38,14 +38,21 @@ const en = {
   'hero.cta.resume': 'Resume',
   'hero.capabilities': 'Capabilities',
 
+  'now.eyebrow': 'NOW',
+  'now.updated': 'Updated',
+
   'work.eyebrow': 'Selected Work',
   'work.title': 'Selected Work',
   'work.lead':
-    'Five projects at five different levels of completion — from a public MVP with tests to a written research program. Each page says which it is.',
+    'Five projects whose state you can check yourself — public repositories, real artifacts, honest labels. Nothing here is a rendered mockup.',
   'work.all': 'View all projects',
   'work.case': 'View Case Study',
   'work.repo': 'Repository',
   'work.more': 'More Experiments',
+
+  'background.eyebrow': 'Background',
+  'background.intro':
+    'Where the life-science training comes from, and why it still shapes how these systems get built.',
 
   'research.eyebrow': 'What I am exploring',
   'research.title': 'Research',
@@ -55,6 +62,9 @@ const en = {
   'research.interests': 'Current interests',
   'research.projects': 'Related projects',
   'research.all': 'All research directions',
+  'research.active': 'Active / Building',
+  'research.concepts': 'Concepts / Exploring',
+  'concept.notstarted': 'Not started',
 
   'how.eyebrow': 'From idea to system',
   'how.title': 'How I Work',
@@ -68,6 +78,11 @@ const en = {
   'oss.all': 'View GitHub profile',
   'oss.language': 'Language',
   'oss.license': 'License',
+  'oss.role': 'Role',
+  'oss.role.flagship': 'Flagship',
+  'oss.role.research': 'Research',
+  'oss.role.agent-system': 'Agent System',
+  'oss.role.tooling': 'Tooling',
   'oss.nolicense': 'No license detected',
   'oss.updated': 'Updated',
   'oss.snapshot': 'Metadata snapshot',
@@ -77,6 +92,9 @@ const en = {
   'about.cta.body':
     'How I approach systems, what I am building, and where the work is going.',
   'about.cta.link': 'Read more',
+  'about.context.eyebrow': 'A little more context',
+  'about.context.line':
+    'AI systems engineer with a life-science and computational biology background.',
 
   'meta.year': 'Year',
   'meta.status': 'Status',
@@ -201,13 +219,19 @@ const zh: Dict = {
   'hero.cta.resume': '简历',
   'hero.capabilities': '能力方向',
 
+  'now.eyebrow': '当前',
+  'now.updated': '更新于',
+
   'work.eyebrow': '精选项目',
   'work.title': '精选项目',
-  'work.lead': '五个项目处于五个不同的完成度——从带测试的公开 MVP，到只有成文纲领的研究计划。每个页面都会说明它属于哪一种。',
+  'work.lead': '五个可以自己打开核查的项目——公开仓库、真实产物、如实标注。这里没有为不存在的产品绘制的界面假图。',
   'work.all': '查看全部项目',
   'work.case': '查看案例',
   'work.repo': '代码仓库',
   'work.more': '更多实验',
+
+  'background.eyebrow': '背景',
+  'background.intro': '生命科学训练从何而来，以及它为何至今仍在影响这些系统的构建方式。',
 
   'research.eyebrow': '正在探索',
   'research.title': '研究方向',
@@ -216,6 +240,9 @@ const zh: Dict = {
   'research.interests': '当前兴趣',
   'research.projects': '关联项目',
   'research.all': '查看全部研究方向',
+  'research.active': '进行中 / 在构建',
+  'research.concepts': '概念 / 在探索',
+  'concept.notstarted': '尚未开始',
 
   'how.eyebrow': '从想法到系统',
   'how.title': '工作方式',
@@ -227,6 +254,11 @@ const zh: Dict = {
   'oss.all': '查看 GitHub 主页',
   'oss.language': '语言',
   'oss.license': '许可证',
+  'oss.role': '定位',
+  'oss.role.flagship': '主项目',
+  'oss.role.research': '研究',
+  'oss.role.agent-system': '智能体系统',
+  'oss.role.tooling': '工具',
   'oss.nolicense': '未检测到许可证',
   'oss.updated': '更新于',
   'oss.snapshot': '元数据快照',
@@ -235,6 +267,9 @@ const zh: Dict = {
   'about.cta.title': '关于',
   'about.cta.body': '我如何构建系统、正在做什么，以及这些工作将走向哪里。',
   'about.cta.link': '了解更多',
+  'about.context.eyebrow': '更多背景',
+  'about.context.line':
+    '具备生命科学与计算生物学背景的 AI 系统 / Agent 工程开发者。',
 
   'meta.year': '年份',
   'meta.status': '状态',

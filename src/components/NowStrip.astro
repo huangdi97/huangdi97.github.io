@@ -1,0 +1,137 @@
+---
+import { useT, type Lang } from '../i18n/ui';
+import { getNow, NOW_UPDATED_AT } from '../data/now';
+
+/**
+ * NOW strip.
+ *
+ * Deliberately not a card wall: no panels, no borders around items — just a
+ * short horizontal rail between the hero and Selected Work. Its job is to
+ * answer "what is happening right now" in under three seconds, and to be the
+ * only place on the page where current status is written.
+ *
+ * Height budget on desktop: ~110–150px including the label row.
+ */
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+const items = getNow(lang);
+---
+
+<section class="shell now" aria-labelledby="now-label">
+  <div class="now-head">
+    <p class="eyebrow now-label" id="now-label">{t('now.eyebrow')}</p>
+    <p class="mono now-updated">
+      {t('now.updated')} — {NOW_UPDATED_AT}
+    </p>
+  </div>
+
+  <ul class="now-list">
+    {
+      items.map((item) => (
+        <li class="now-item">
+          <a href={item.href} class="now-link">
+            <span class="now-title">{item.title}</span>
+            <span class="now-status">{item.status}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .now {
+    padding-block: clamp(1.25rem, 2.5vw, 2rem);
+    border-top: 1px solid var(--line);
+  }
+
+  .now-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+  }
+
+  /* The shared eyebrow draws a trailing rule; it reads as noise at this size. */
+  .now-label::after {
+    display: none;
+  }
+
+  .now-updated {
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .now-list {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  @media (min-width: 760px) {
+    .now-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .now-item {
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 760px) {
+    .now-item + .now-item {
+      border-left: 1px solid var(--line);
+      padding-left: 1.5rem;
+    }
+  }
+
+  .now-link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.875rem;
+    padding-block: 0.875rem;
+  }
+
+  .now-title {
+    font-size: 1.0625rem;
+    letter-spacing: -0.018em;
+    color: var(--ink);
+  }
+
+  .now-link:hover .now-title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+
+  .now-status {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  @media (min-width: 1100px) {
+    .now-link {
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+  }
+
+  @media print {
+    .now {
+      border-top: 0;
+    }
+  }
+</style>

@@ -6,7 +6,7 @@ import { glob } from 'astro/loaders';
  *
  * Metadata lives in frontmatter so pages never hard-code project copy.
  * The long-form case-study narrative lives in the Markdown/MDX body under a
- * fixed heading structure:
+ * fixed heading structure. Most projects use:
  *
  *   ## Overview
  *   ## Problem
@@ -16,10 +16,21 @@ import { glob } from 'astro/loaders';
  *   ## Architecture
  *   ## Core Capabilities
  *   ## Technical Decisions
- *   ## Engineering
- *   ## Validation
  *   ## Current Status
- *   ## What I Learned
+ *   ## Next
+ *
+ * A **concept** that has not been implemented (TaiYi Lingjing) uses a different
+ * structure on purpose, so it can never read like a build report:
+ *
+ *   ## Overview
+ *   ## Motivation
+ *   ## Research Questions
+ *   ## Proposed Discovery Loop
+ *   ## Proposed Architecture
+ *   ## Design Principles
+ *   ## What Must Be Validated
+ *   ## First Implementation Milestone
+ *   ## Current Status
  *   ## Next
  *
  * `repo` is only set when the repository has been verified to exist and to be
@@ -45,6 +56,14 @@ const projectSchema = z.object({
   /** Two to three lines of plain explanation. */
   description: z.string(),
   tags: z.array(z.string()).default([]),
+  /**
+   * Homepage Selected Work membership.
+   *
+   * Reserved for work that is actually being done or whose engineering output
+   * can be checked. A concept with nothing public does not belong here — for
+   * that, see research.ts and the Projects / Research index pages, which still
+   * link it.
+   */
   featured: z.boolean().default(false),
   order: z.number().int().default(99),
   /** Only present when verified public. */
@@ -55,7 +74,7 @@ const projectSchema = z.object({
   /** Filter buckets on /projects. */
   groups: z.array(z.string()).default([]),
   /** Which unified system diagram to render. */
-  visual: z.enum(['aging', 'cell', 'discovery', 'pet', 'infra']),
+  visual: z.enum(['aging', 'cell', 'discovery', 'pet', 'infra', 'runtime', 'pulse']),
   /** Short honest status sentence shown under the meta block. */
   statusNote: z.string().optional(),
   /** Extra facts for the project meta block. */

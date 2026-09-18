@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { test, expect, type Page } from '@playwright/test';
 
 /**
@@ -296,6 +299,87 @@ async function collectConsoleErrors(page: Page): Promise<string[]> {
   page.on('pageerror', (err) => errors.push(String(err)));
   return errors;
 }
+
+const PDF_VARIANTS = [
+  {
+    id: 'ai-agent',
+    file: 'Hao-Lei-AI-Agent-Resume-ZH.pdf',
+    projects: ['Morn', 'BioPulse', '知身·问年', 'HyCell'],
+  },
+  {
+    id: 'ai-lifescience',
+    file: 'Hao-Lei-AI-LifeScience-Resume-ZH.pdf',
+    projects: ['知身·问年', 'HyCell', 'BioPulse', 'Morn'],
+  },
+];
+
+/**
+ * Text is extracted from the rendered file — never from the source data — so a
+ * claim that survives only in the browser cannot slip onto paper. Chinese
+ * headings arrive as separate glyphs, so matching runs against a squashed
+ * string with no whitespace at all.
+ */
+async function pdfRaw(file: string): Promise<string> {
+  const bytes = readFileSync(join(process.cwd(), 'public', 'resume', file));
+  const doc = await getDocument({ data: new Uint8Array(bytes), useSystemFonts: true }).promise;
+  let raw = '';
+  for (let i = 1; i <= doc.numPages; i += 1) {
+    const page = await doc.getPage(i);
+    const content = await page.getTextContent();
+    raw += `${content.items.map((item) => ('str' in item ? item.str : '')).join('')}\n`;
+  }
+  return raw;
+}
+
+function squashed(raw: string): string {
+  return raw.replace(/\s+/g, '');
+}
+
+/** The Selected Projects block, bounded by whichever section follows it. */
+function projectsBlock(text: string): string {
+  const start = text.indexOf('精选项目');
+  expect(start, 'Selected Projects heading missing from PDF').toBeGreaterThan(-1);
+  const next = ['技术领域', '开源']
+    .map((title) => text.indexOf(title, start))
+    .filter((index) => index > start);
+  const end = next.length > 0 ? Math.min(...next) : start + 900;
+  return text.slice(start, end);
+}
+
+test.describe('resume PDFs', () => {
+  for (const variant of PDF_VARIANTS) {
+    test(`${variant.id} publishes the public identity only`, async () => {
+      const text = squashed(await pdfRaw(variant.file));
+      expect(text, 'gmail missing').toContain(GMAIL);
+      expect(text, 'qq mail missing').toContain(QQ);
+      expect(text, 'phone leaked into PDF').not.toContain(PHONE);
+      expect(text, 'private email leaked into PDF').not.toContain(PRIVATE_EMAIL);
+
+      const bytes = readFileSync(join(process.cwd(), 'public', 'resume', variant.file));
+      const doc = await getDocument({ data: new Uint8Array(bytes), useSystemFonts: true }).promise;
+      const meta = await doc.getMetadata();
+      expect(meta.info?.Title).toBe('Hao Lei — Resume');
+      expect(meta.info?.Author).toBe('Hao Lei');
+    });
+
+    test(`${variant.id} Selected Projects carry no TaiYi and follow its order`, async () => {
+      const block = projectsBlock(squashed(await pdfRaw(variant.file)));
+      expect(block, 'TaiYi must not appear in Selected Projects').not.toContain('太一');
+      expect(block, 'TaiYi must not appear in Selected Projects').not.toContain('TaiYi');
+
+      const positions = variant.projects.map((name) => {
+        const index = block.indexOf(name);
+        expect(index, `missing project ${name} in ${variant.file}`).toBeGreaterThan(-1);
+        return index;
+      });
+      for (let i = 1; i < positions.length; i += 1) {
+        expect(positions[i] > positions[i - 1], `project order drifted in ${variant.file}`).toBe(
+          true,
+        );
+      }
+    });
+  }
+});
 
 test.describe('structured identity', () => {
   test('Person JSON-LD exposes only the public identity', async ({ page }) => {

@@ -56,6 +56,14 @@ const VARIANTS = [
       'opensource',
       'contact',
     ],
+    /**
+     * Selected Projects subset and order for the AI / Agent reviewer.
+     *
+     * Agent-systems work leads; the health prototypes follow. Nothing here is
+     * invented for the variant — every entry exists in `resume.ts`, this only
+     * chooses which four a given reviewer should read first.
+     */
+    projectItems: ['morn', 'biopulse', 'wennian', 'hycell'],
   },
   {
     id: 'ai-lifescience',
@@ -74,6 +82,8 @@ const VARIANTS = [
       'opensource',
       'contact',
     ],
+    /** Life-science framing: biology-facing work leads, systems work follows. */
+    projectItems: ['wennian', 'hycell', 'biopulse', 'morn'],
   },
 ];
 
@@ -155,7 +165,7 @@ async function renderVariant(browser, base, variant) {
   await page.addStyleTag({ content: PRINT_OVERRIDES });
 
   await page.evaluate(
-    ({ order, position }) => {
+    ({ order, position, projectItems }) => {
       const doc = document.querySelector('.resume');
       const blocks = new Map(
         [...doc.querySelectorAll('[data-resume-section]')].map((n) => [n.dataset.resumeSection, n]),
@@ -165,13 +175,34 @@ async function renderVariant(browser, base, variant) {
         const node = blocks.get(id);
         if (node) doc.insertBefore(node, anchor);
       }
+
+      // Selected Projects per variant: same facts, different reading order, and
+      // nothing else. Items not named here are dropped from this variant only.
+      const projects = doc.querySelector('[data-resume-section="projects"]');
+      if (projects) {
+        const items = new Map(
+          [...projects.querySelectorAll('[data-resume-item]')].map((n) => [
+            n.dataset.resumeItem,
+            n,
+          ]),
+        );
+        const list = projects.querySelector('.resume-projects');
+        for (const id of projectItems) {
+          const node = items.get(id);
+          if (node) list.appendChild(node);
+        }
+        for (const [id, node] of items) {
+          if (!projectItems.includes(id)) node.remove();
+        }
+      }
+
       const variantLine = doc.querySelector('[data-resume-variant]');
       if (variantLine) {
         variantLine.textContent = position;
         variantLine.removeAttribute('hidden');
       }
     },
-    { order: variant.order, position: variant.position },
+    { order: variant.order, position: variant.position, projectItems: variant.projectItems },
   );
 
   const out = path.join(OUT_DIR, variant.file);

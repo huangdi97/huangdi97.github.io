@@ -3,81 +3,74 @@ title: 'TaiYi Lingjing / 太一·灵境'
 slug: 'taiyi-lingjing'
 year: 2026
 status: 'Research'
-category: 'AI Discovery Platform · Agents · Scientific Intelligence'
-summary: 'An agentic discovery platform connecting biology, evidence, simulation and experimentation.'
+category: 'AI-native Scientific Discovery · Research Concept'
+summary: 'A proposed AI-native scientific discovery environment connecting evidence, biological state, simulation and experiment design.'
 description: >-
-  A research program for an AI-native scientific discovery environment. It
-  connects biological state, evidence retrieval, mechanistic simulation and
-  experiment planning into one auditable loop, with agents coordinating each
-  stage and an evidence audit layer that every claim must pass.
+  A concept and research direction for an AI-native scientific discovery
+  environment. This is a proposed design — engineering implementation has not
+  started. Nothing here has been built, prototyped or validated.
 tags: ['Agents', 'RAG', 'Knowledge Graph', 'Simulation', 'Causal Reasoning']
-featured: true
-order: 3
-role: 'System design and research'
+featured: false
+order: 9
+role: 'Concept and research design'
 groups: ['agents', 'ai-science']
 visual: 'discovery'
-statusNote: 'Research program and system design. No public repository — no code link is shown.'
-stack: ['Agents', 'RAG', 'Knowledge graph', 'PBPK / QSP / ODE', 'Bayesian optimisation']
+statusNote: 'Concept and research direction. Engineering implementation has not started — there is no repository, prototype or validation result.'
+stack: ['Concept design', 'Proposed architecture', 'Evidence provenance', 'PBPK / QSP / ODE (intended)', 'Bayesian optimisation (intended)']
 ---
 
 ## Overview
 
-TaiYi Lingjing (太一·灵境) is a research program for an AI-native scientific
-discovery environment: one loop that starts from a biological question and
-ends at a ranked, evidence-backed experiment plan.
+TaiYi Lingjing (太一·灵境) is a proposed AI-native scientific discovery
+environment: one loop that would start from a biological question and end at a
+ranked, evidence-backed experiment plan.
 
-The environment is organised around five subsystems — **Bio**, **Discovery**,
-**Experiment**, **Evidence** and **Human** — with agents coordinating the
-hand-offs between them.
+The proposed environment is organised around five subsystems — **Bio**,
+**Discovery**, **Experiment**, **Evidence** and **Human** — with agents
+intended to coordinate the hand-offs between them.
 
-Disclosure up front: this is a design and research program, not a released
-system. There is no public repository, and this page deliberately shows no
-code link. Everything below describes the architecture and the reasoning
-behind it, and marks what is designed versus what is not built.
+Status first, because it determines how the rest of this page should be read:
+this is a **concept and research direction**. Engineering implementation has
+**not started**. There is no repository, no prototype, no deployment and no
+validation result. Everything below describes a design that is intended, not a
+system that runs.
 
-## Problem
+## Motivation
 
 Scientific discovery tooling is fragmented in a way that destroys provenance.
 
 Retrieval lives in one tool, knowledge graphs in another, simulation in a
-third, and experiment planning in a spreadsheet. Each hand-off is manual, and
-each manual hand-off loses context: which evidence supported this hypothesis,
-which assumptions the simulation encoded, which parameter the planner actually
+third, experiment planning in a spreadsheet. Each hand-off is manual, and each
+manual hand-off loses context: which evidence supported this hypothesis, which
+assumptions the simulation encoded, which parameter the planner actually
 optimised.
 
-The result is that a hypothesis can look well-supported while being two
-transfer steps away from the evidence that supposedly supports it. When the
-chain is broken, the failure is invisible — there is no artifact that records
-where it broke.
+The consequence is that a hypothesis can look well-supported while sitting two
+transfer steps away from the evidence that supposedly supports it. When that
+chain breaks, the break is invisible — no artifact records where it happened.
+The motivating question is narrow enough to be answerable: if provenance were
+captured at generation time rather than reconstructed later, how much of that
+loss would become detectable?
 
-## Why It Matters
+## Research Questions
 
-A discovery system is only useful if a scientist can audit it. That means:
+1. **Can provenance be captured at generation time?** A claim should carry its
+   citation or an explicit assumption marker the moment it is produced. Whether
+   that is enforceable across retrieval, simulation and planning is an open
+   question.
+2. **Does closing the loop change the hypotheses?** If simulation output is fed
+   back as retrieval constraints, do the resulting candidate hypotheses differ
+   measurably from a single-pass pipeline?
+3. **Where should a discovery loop defer to a person?** Deferral points are
+   usually discovered by accident. Treating the human as a subsystem means
+   asking whether they can be specified in advance.
+4. **Can conservative failure be designed in?** A discovery system should be
+   able to report uncertainty rather than fill a gap with plausible text. What
+   interface makes that the default rather than the exception?
 
-- Every claim resolves to a citation or an explicitly labelled assumption.
-- Every simulated trajectory records the model, parameters and mechanism used.
-- Every recommended experiment states what result would falsify the
-  hypothesis behind it.
+## Proposed Discovery Loop
 
-Without those, the system produces text that reads like science without being
-checkable — which is worse than producing nothing, because it consumes
-someone's experiment budget.
-
-## Product / Research Thesis
-
-1. **Discovery is a loop, not a pipeline.** Simulation output should change
-   what gets retrieved; experiment results should change what gets simulated.
-2. **Mechanistic and learned models should be coupled, not chosen between.**
-   PBPK / QSP / ODE models carry interpretable structure; learned components
-   carry coverage where mechanism is unknown.
-3. **Evidence audit is infrastructure, not a review step.** Provenance has to
-   be captured at generation time, because it cannot be reconstructed later.
-4. **The human is a subsystem.** Where the loop defers to a person is a
-   design decision, not a gap.
-
-## System Design
-
-The loop, in one pass:
+The intended loop, in one pass:
 
 ```text
 question → evidence retrieval → hypothesis (knowledge graph)
@@ -85,120 +78,113 @@ question → evidence retrieval → hypothesis (knowledge graph)
         → human review → back to retrieval with new constraints
 ```
 
-The audit stage is not terminal. Its output feeds back into retrieval as new
-constraints, which is what makes this a loop rather than a report generator.
+The audit stage would not be terminal. Its output is intended to feed back into
+retrieval as new constraints, which is what separates a loop from a report
+generator.
 
-## Architecture
+Nothing here has been implemented. The loop is a specification of control flow,
+not a description of behaviour observed in a running system.
 
-**Bio.** Biological state representation: targets, pathways, cell systems and
-perturbation effects. This is the substrate hypotheses are expressed over, and
-it is where HyCell's compact-state work plugs in.
+## Proposed Architecture
 
-**Discovery.** Retrieval-augmented hypothesis generation over primary
-literature, grounded in a knowledge graph rather than free text similarity
-alone. Candidates are generated with their supporting evidence attached.
+**Bio.** Would hold biological state representation: targets, pathways, cell
+systems and perturbation effects. This is intended to be the substrate
+hypotheses are expressed over, and the place where HyCell's compact-state work
+could eventually plug in.
 
-**Experiment.** Simulation and experiment planning. Mechanistic layers
-(PBPK / QSP / ODE) handle interpretable dynamics; Bayesian optimisation
-handles experimental design under a limited budget; causal reasoning
-separates what an intervention is expected to cause from what has merely been
-observed together.
+**Discovery.** Would perform retrieval-augmented hypothesis generation over
+primary literature, grounded in a knowledge graph rather than free-text
+similarity alone. Candidates would be generated with their supporting evidence
+attached.
 
-**Evidence.** Provenance capture and audit. Every generated claim carries
-either a citation or an explicit assumption marker, and the audit layer
-rejects claims that can produce neither.
+**Experiment.** Would cover simulation and experiment planning. A mechanistic
+layer (PBPK / QSP / ODE) is intended to carry interpretable dynamics; Bayesian
+optimisation is planned for experimental design under a limited budget; causal
+reasoning is intended to separate what an intervention is expected to cause
+from what has merely been observed together.
 
-**Human.** Review, override and escalation. The loop states where it needs a
-person, and keeps the decision record with the hypothesis.
+**Evidence.** Would capture provenance and run audits. Every generated claim
+would carry either a citation or an explicit assumption marker, and the audit
+layer is intended to reject claims that can produce neither.
 
-## Core Capabilities
+**Human.** Would handle review, override and escalation. The design intent is
+that the loop states where it needs a person and keeps the decision record with
+the hypothesis.
 
-**Retrieval grounded in structure.** RAG over primary evidence, constrained
-by a knowledge graph so retrieval returns candidates that are structurally
-plausible rather than merely textually similar.
+Each of the five is a proposal. No subsystem interface exists in code, and no
+repository is planned for publication before the first milestone below.
 
-**Simulation with recorded mechanism.** Each trajectory records which model
-family produced it, with what parameters, under which assumptions.
+## Design Principles
 
-**Experiment design under budget.** Bayesian optimisation proposes the next
-experiment, with the acquisition criterion exposed rather than hidden — a
-scientist should be able to see what the planner is optimising.
+**Discovery is a loop, not a pipeline.** Simulation output should change what
+gets retrieved; experiment results should change what gets simulated.
 
-**Causal separation.** Explicit distinction between observational association
-and expected interventional effect, so a plan does not quietly upgrade
-correlation into causation.
+**Mechanistic and learned models should be coupled, not chosen between.**
+PBPK / QSP / ODE models carry interpretable structure; learned components carry
+coverage where mechanism is unknown.
 
-**Evidence audit.** Structured output stating, per claim: supported by
-citation, supported by assumption, or unsupported.
+**Evidence audit is infrastructure, not a review step.** Provenance has to be
+captured at generation time, because it cannot be reconstructed later.
 
-## Technical Decisions
+**The human is a subsystem.** Where the loop defers to a person is a design
+decision, not a gap.
 
-**Knowledge graph as substrate, not visualisation.** The graph is where
-hypotheses live and where retrieval is constrained. A graph rendered after the
-fact is a diagram; a graph used for constraint is infrastructure.
-
-**Evidence captured at generation time.** Provenance cannot be reconstructed
-afterwards. The generator is required to emit it.
+**Knowledge graph as substrate, not visualisation.** A graph rendered after the
+fact is a diagram; a graph used to constrain retrieval would be
+infrastructure.
 
 **Explicit assumption markers.** An unlabelled assumption is the primary way
-these systems mislead. A claim that rests on an assumption is still useful —
-but only if it says so.
+these systems mislead. A claim resting on an assumption is still useful — but
+only if it says so.
 
-**Deferral designed in.** The Human subsystem exists because some decisions
-should not be automated. Encoding that as a subsystem keeps it from being
-treated as a missing feature.
+## What Must Be Validated
 
-## Engineering
-
-The program is specified as subsystem contracts first: what each stage
-accepts, what it emits, and what it must refuse to emit. Implementation
-follows the contracts rather than the reverse, so a stage can be replaced
-without changing the loop.
-
-Where a subsystem already exists as a working prototype elsewhere in this
-portfolio — compact biological state from HyCell, structured interview and
-auditor patterns from ZhiShen · WenNian — the design reuses those interfaces instead of
-defining new ones.
-
-## Validation
-
-No results are reported here, because no validated system exists yet. The
-validation plan is part of the design:
+Because nothing has been built, no validation result exists. The following is
+the set of checks the design would have to pass before any completion claim
+would be defensible:
 
 - **Provenance recall** — sample generated claims and trace each to a citation
   or an explicit assumption marker; measure the fraction that cannot be traced.
 - **Simulation reproducibility** — a recorded trajectory must be re-runnable
   from its recorded model, parameters and version.
 - **Planner honesty** — proposed experiments must state a falsification
-  condition; plans without one are rejected.
-- **Human-subsystem latency** — measure how often the loop defers, and whether
+  condition; plans without one would be rejected.
+- **Human-subsystem latency** — how often the loop defers, and whether
   deferrals cluster where the design expects them.
+
+Each of these is a criterion, not a result.
+
+## First Implementation Milestone
+
+The smallest piece that would make the rest testable, defined now so it stays
+honest later:
+
+1. Write the **Evidence** audit layer first and run it against hand-written
+   hypotheses, so its failure modes are visible before any generator exists.
+2. Express the **Bio** subsystem contract over a compact biological state
+   representation rather than inventing one.
+3. Connect one **retrieval** path to one **simulation** family end to end —
+   and stop there until that single path is auditable.
+
+No date is attached to this milestone, because no work has started.
 
 ## Current Status
 
-Research program and system design. The subsystem contracts, the loop
-structure and the evidence-audit requirements are specified. Implementation is
-partial and not released, and there is no public repository.
+Concept and research direction only.
 
-This page is intentionally the only artifact: no repository link is shown,
-because none can be verified.
+Engineering implementation has not started.
 
-## What I Learned
+There is no repository, prototype, deployment or validation result.
 
-Designing the audit stage before the retrieval stage changed the shape of the
-system. Once every claim must carry provenance at generation time, retrieval
-has to return structured candidates with citations attached, which rules out
-most of the obvious implementations — and that constraint is worth having.
-
-The second lesson is that "the human reviews it" is not a design. Naming the
-Human subsystem forced the question of *where* the loop defers, and the answer
-turned out to be specifiable.
+The architecture shown on this page describes the intended system, not an
+implemented one. This page is deliberately the only artifact, and no code link
+is shown because none could be verified.
 
 ## Next
 
-- Implement the Bio subsystem contract over an existing compact-state
-  representation.
-- Build the evidence-audit layer first and run it against manually written
-  hypotheses, so the failure modes are visible before generation exists.
-- Add one mechanistic simulation family end to end before adding a second.
-- Publish the subsystem contracts as a specification document.
+- Publish the subsystem contracts as a written specification before writing
+  any service code.
+- Decide whether the first retrieval path uses structured literature sources or
+  an existing knowledge graph, and record why.
+- Revisit whether the five-subsystem split survives contact with the first
+  working Evidence layer — the decomposition is a hypothesis too.

@@ -11,7 +11,7 @@ description: >-
   coordination — with explicit escalation to a veterinarian and adapters for
   external care providers.
 tags: ['Multimodal', 'Health Assessment', 'Care Workflow', 'Provider Adapters']
-featured: true
+featured: false
 order: 4
 role: 'Product architecture and system design'
 groups: ['ai-health', 'agents']

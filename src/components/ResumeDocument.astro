@@ -144,7 +144,7 @@ const eyebrow = lang === 'zh' ? '简历' : 'Resume';
         {block.kind === 'projects' && (
           <ul class="resume-projects">
             {block.items.map((item) => (
-              <li>
+              <li data-resume-item={item.id}>
                 <a href={item.href}>
                   <span class="resume-label">{item.label}</span>
                 </a>

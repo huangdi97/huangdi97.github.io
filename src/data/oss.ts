@@ -12,6 +12,8 @@
  *  - anything private, unconfirmed or renamed is simply absent from this list.
  */
 
+export type OssRole = 'flagship' | 'research' | 'agent-system' | 'tooling';
+
 export type OssRepo = {
   name: string;
   url: string;
@@ -22,6 +24,13 @@ export type OssRepo = {
   updatedAt: string;
   descriptionEn: string;
   descriptionZh: string;
+  /**
+   * What this repository *is* to the portfolio — written by hand, never
+   * inferred from the language or inferred from commit counts. `flagship` is
+   * reserved for work this site builds a case around; `tooling` for utilities
+   * that support something else.
+   */
+  role: OssRole;
   /** Shown on the home page open-source strip. */
   highlight?: boolean;
 };
@@ -36,6 +45,7 @@ export const OSS_REPOS: OssRepo[] = [
     language: 'Python',
     license: null,
     updatedAt: '2026-07-01',
+    role: 'flagship',
     descriptionEn:
       'Aging-intervention decision engine: multi-clock assessment, structured health interview, white-label reporting.',
     descriptionZh: '衰老干预决策引擎：多时钟衰老评估、结构化健康访谈、白标报告生成。',
@@ -47,6 +57,7 @@ export const OSS_REPOS: OssRepo[] = [
     language: 'Python',
     license: null,
     updatedAt: '2026-07-22',
+    role: 'research',
     descriptionEn:
       'Cellular world-model prototype: compact belief-state transitions, verifiers, planners and real-matrix smoke validation.',
     descriptionZh: '细胞世界模型原型：紧凑信念状态转移、校验器、规划器与真实矩阵冒烟验证。',
@@ -58,6 +69,7 @@ export const OSS_REPOS: OssRepo[] = [
     language: 'Python',
     license: 'MIT',
     updatedAt: '2026-07-17',
+    role: 'flagship',
     descriptionEn: 'Agent-native workspace for life-science workflows.',
     descriptionZh: '面向生命科学工作流的 Agent-native 工作台。',
     highlight: true,
@@ -68,6 +80,7 @@ export const OSS_REPOS: OssRepo[] = [
     language: 'Python',
     license: 'Apache-2.0',
     updatedAt: '2026-08-17',
+    role: 'agent-system',
     descriptionEn: 'Semantic persistent open-ended co-evolutionary world OS.',
     descriptionZh: '语义持久化、开放式协同演化的世界操作系统。',
     highlight: true,
@@ -78,6 +91,7 @@ export const OSS_REPOS: OssRepo[] = [
     language: 'Rust',
     license: null,
     updatedAt: '2026-08-16',
+    role: 'agent-system',
     descriptionEn: 'Systems-level operating environment written in Rust.',
     descriptionZh: '使用 Rust 编写的系统级运行环境。',
   },
@@ -87,6 +101,7 @@ export const OSS_REPOS: OssRepo[] = [
     language: 'Go',
     license: null,
     updatedAt: '2026-08-21',
+    role: 'tooling',
     descriptionEn: 'Local network service discovery scanner.',
     descriptionZh: '本地网络服务发现扫描工具。',
   },
@@ -96,6 +111,7 @@ export const OSS_REPOS: OssRepo[] = [
     language: 'HTML',
     license: null,
     updatedAt: '2026-08-26',
+    role: 'tooling',
     descriptionEn: 'Pricing page for the 知身 (ZhiShen) health assessment product.',
     descriptionZh: '知身健康评估产品的定价页。',
   },

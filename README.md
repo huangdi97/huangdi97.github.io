@@ -156,7 +156,12 @@ Allowed `status` values: `Active`, `Research`, `Prototype`, `Stable`, `Archived`
 
 Then mirror it at `src/content/projects/zh/<slug>.md` with the **same slug** and
 frontmatter keys. Product names stay untranslated (`WenNian / 知身·问年`,
-`HyCell`, `TaiYi Lingjing / 太一·灵境`).
+`HyCell`, `Morn`, `BioPulse`, `TaiYi Lingjing / 太一·灵境`).
+
+`status: Research` means exactly what it says: the work is written down — a
+specification, a design or a research direction — and nothing more. A project
+whose target system does not exist yet must say so on the page, in both
+languages, and must never be described with implementation language.
 
 ### Rules that keep the site honest
 

@@ -8,6 +8,16 @@ export type ResearchArea = {
   question: string;
   interests: string[];
   projects: { label: string; href: string }[];
+  /**
+   * Which homepage group this direction belongs to.
+   *
+   * `active`  — tied to code that exists and can be inspected.
+   * `concept` — a written direction whose target system does not exist yet.
+   *
+   * The distinction is a truth claim, not a style choice: the two are never
+   * rendered as equally finished.
+   */
+  tier: 'active' | 'concept';
 };
 
 const en: ResearchArea[] = [
@@ -28,6 +38,7 @@ const en: ResearchArea[] = [
       { label: 'TaiYi Lingjing', href: '/projects/taiyi-lingjing' },
       { label: 'HyCell', href: '/projects/hycell' },
     ],
+    tier: 'concept',
   },
   {
     id: 'agents',
@@ -43,9 +54,10 @@ const en: ResearchArea[] = [
       'Runtime observability: what the agent saw, what it decided, and why.',
     ],
     projects: [
-      { label: 'TaiYi Lingjing', href: '/projects/taiyi-lingjing' },
+      { label: 'Morn', href: '/projects/morn' },
       { label: 'ZhiShen · WenNian', href: '/projects/wennian' },
     ],
+    tier: 'active',
   },
   {
     id: 'health',
@@ -62,9 +74,11 @@ const en: ResearchArea[] = [
     ],
     projects: [
       { label: 'ZhiShen · WenNian', href: '/projects/wennian' },
+      { label: 'BioPulse', href: '/projects/biopulse' },
       { label: 'HyCell', href: '/projects/hycell' },
       { label: 'Pet AI Health', href: '/projects/pet-ai-health' },
     ],
+    tier: 'active',
   },
   {
     id: 'simulation',
@@ -83,6 +97,7 @@ const en: ResearchArea[] = [
       { label: 'HyCell', href: '/projects/hycell' },
       { label: 'ZhiShen · WenNian', href: '/projects/wennian' },
     ],
+    tier: 'active',
   },
   {
     id: 'local-first',
@@ -98,6 +113,7 @@ const en: ResearchArea[] = [
       'Native UI where the platform expects native, rather than one web shell everywhere.',
     ],
     projects: [{ label: 'PDIG', href: '/projects/pdig' }],
+    tier: 'active',
   },
 ];
 
@@ -118,6 +134,7 @@ const zh: ResearchArea[] = [
       { label: 'TaiYi Lingjing / 太一·灵境', href: '/zh/projects/taiyi-lingjing' },
       { label: 'HyCell', href: '/zh/projects/hycell' },
     ],
+    tier: 'concept',
   },
   {
     id: 'agents',
@@ -132,9 +149,10 @@ const zh: ResearchArea[] = [
       '运行时可观测：它看到了什么、决定了什么、为什么。',
     ],
     projects: [
-      { label: 'TaiYi Lingjing / 太一·灵境', href: '/zh/projects/taiyi-lingjing' },
+      { label: 'Morn', href: '/zh/projects/morn' },
       { label: '知身·问年', href: '/zh/projects/wennian' },
     ],
+    tier: 'active',
   },
   {
     id: 'health',
@@ -150,9 +168,11 @@ const zh: ResearchArea[] = [
     ],
     projects: [
       { label: '知身·问年', href: '/zh/projects/wennian' },
+      { label: 'BioPulse', href: '/zh/projects/biopulse' },
       { label: 'HyCell', href: '/zh/projects/hycell' },
       { label: 'Pet AI Health', href: '/zh/projects/pet-ai-health' },
     ],
+    tier: 'active',
   },
   {
     id: 'simulation',
@@ -170,6 +190,7 @@ const zh: ResearchArea[] = [
       { label: 'HyCell', href: '/zh/projects/hycell' },
       { label: '知身·问年', href: '/zh/projects/wennian' },
     ],
+    tier: 'active',
   },
   {
     id: 'local-first',
@@ -184,6 +205,7 @@ const zh: ResearchArea[] = [
       '在平台期待原生的地方使用原生 UI，而不是一套 Web 壳到处套。',
     ],
     projects: [{ label: 'PDIG', href: '/zh/projects/pdig' }],
+    tier: 'active',
   },
 ];
 

@@ -1,0 +1,88 @@
+---
+import { useT, type Lang } from '../i18n/ui';
+
+/**
+ * Case-study contents.
+ *
+ * Appears only above 1100px, where there is room for a second column that does
+ * not compete with the body text. Below that width it is absent entirely rather
+ * than collapsed into a dropdown — a six-item list is not worth a disclosure
+ * widget.
+ */
+
+export interface Props {
+  headings: { depth: number; slug: string; text: string }[];
+  lang: Lang;
+}
+
+const { headings, lang } = Astro.props;
+const t = useT(lang);
+const entries = headings.filter((h) => h.depth === 2);
+---
+
+{
+  entries.length > 1 && (
+    <nav class="contents" aria-label={t('project.contents')}>
+      <p class="eyebrow contents-label">{t('project.contents')}</p>
+      <ol>
+        {entries.map((entry, i) => (
+          <li>
+            <a href={`#${entry.slug}`}>
+              <span class="contents-index">{String(i + 1).padStart(2, '0')}</span>
+              <span class="contents-text">{entry.text}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
+
+<style>
+  .contents {
+    display: none;
+  }
+
+  @media (min-width: 1100px) {
+    .contents {
+      display: block;
+    }
+  }
+
+  .contents-label::after {
+    display: none;
+  }
+
+  .contents ol {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .contents a {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: 0.5rem;
+    align-items: baseline;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--muted);
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .contents a:hover,
+  .contents a:focus-visible {
+    color: var(--ink);
+  }
+
+  .contents-index {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

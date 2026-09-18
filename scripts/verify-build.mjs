@@ -44,7 +44,7 @@ console.log(`Verifying ${files.length} files, ${htmlFiles.length} HTML pages…`
 
 /* ------------------------------------------------------------------ routes */
 
-const SLUGS = ['wennian', 'hycell', 'taiyi-lingjing', 'pet-ai-health', 'pdig'];
+const SLUGS = ['wennian', 'hycell', 'morn', 'biopulse', 'taiyi-lingjing', 'pet-ai-health', 'pdig'];
 const EXPECTED_ROUTES = [
   '/index.html',
   '/404.html',

@@ -9,7 +9,7 @@ description: >-
   一套宠物健康产品架构：从主人观察出发，经过多模态信号接入、风险评估、问诊与照护协调，
   并明确设计向执业兽医升级的路径，以及面向外部照护服务方的适配器。
 tags: ['多模态', '健康评估', '照护流程', '服务方适配器']
-featured: true
+featured: false
 order: 4
 role: '产品架构与系统设计'
 groups: ['ai-health', 'agents']

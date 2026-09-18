@@ -100,7 +100,7 @@ console.log('Generating OG images…');
 const pages = [
   { file: 'home.png', title: 'Hao Lei', subtitle: 'Building intelligent systems for discovery, health, simulation and autonomous work.' },
   { file: 'default.png', title: 'Hao Lei', subtitle: 'AI × Life Science × Agents' },
-  { file: 'projects.png', title: 'Work', subtitle: 'Five systems, built end to end.' },
+  { file: 'projects.png', title: 'Work', subtitle: 'Seven projects, each labelled with what actually exists.' },
   { file: 'research.png', title: 'Research', subtitle: 'Five directions, each tied to something built.' },
   { file: 'about.png', title: 'About', subtitle: 'AI systems at the intersection of science, health and autonomous software.' },
   { file: 'resume.png', title: 'Resume', subtitle: 'AI systems, agents, computational biology, digital health, simulation.' },
@@ -109,7 +109,9 @@ const pages = [
 const projects = [
   { file: 'wennian.png', title: 'ZhiShen · WenNian', subtitle: 'AI aging assessment and intervention decision system.' },
   { file: 'hycell.png', title: 'HyCell', subtitle: 'AI virtual-cell infrastructure for biological representation and simulation.' },
-  { file: 'taiyi-lingjing.png', title: 'TaiYi Lingjing', subtitle: 'An agentic discovery platform for biology, evidence, simulation and experiment.' },
+  { file: 'morn.png', title: 'Morn', subtitle: 'Work and organisation control plane in Rust.' },
+  { file: 'biopulse.png', title: 'BioPulse', subtitle: 'Agent-native workbench for life-science workflows.' },
+  { file: 'taiyi-lingjing.png', title: 'TaiYi Lingjing', subtitle: 'Research concept — an AI-native discovery environment. Not started.' },
   { file: 'pet-ai-health.png', title: 'Pet AI Health', subtitle: 'Observation, risk assessment, consultation and care workflows.' },
   { file: 'pdig.png', title: 'PDIG', subtitle: 'A local-first personal digital-infrastructure graph.' },
 ];

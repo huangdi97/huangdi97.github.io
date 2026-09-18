@@ -1,0 +1,109 @@
+---
+import { getBackground } from '../data/background';
+import type { Lang } from '../i18n/ui';
+
+/**
+ * Background timeline — horizontal on desktop, vertical on mobile.
+ *
+ * No photograph and no generated illustration. Each node carries a title and
+ * exactly one line of detail; anything longer turns this into résumé copy again.
+ */
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { nodes } = getBackground(lang);
+---
+
+<ol class="bt">
+  {
+    nodes.map((node) => (
+      <li class="bt-item">
+        <h3 class="bt-title">{node.title}</h3>
+        <p class="bt-line">{node.line}</p>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .bt {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .bt-item {
+    position: relative;
+    padding: 1.125rem 0 1.125rem 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bt-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1.6rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--faint);
+  }
+
+  .bt-item:last-child::before {
+    background: var(--accent);
+  }
+
+  @media (min-width: 900px) {
+    .bt {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      border-top: 0;
+      border-bottom: 0;
+    }
+
+    .bt-item {
+      padding: 1.25rem 1.25rem 0 0;
+      border-bottom: 0;
+      border-left: 1px solid var(--line);
+      padding-left: 1.25rem;
+      min-height: 0;
+    }
+
+    .bt-item:first-child {
+      border-left: 0;
+      padding-left: 0;
+    }
+
+    .bt-item::before {
+      top: 0.4rem;
+      left: 1.25rem;
+    }
+
+    .bt-item:first-child::before {
+      left: 0;
+    }
+  }
+
+  .bt-title {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .bt-line {
+    margin-top: 0.4rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 30ch;
+  }
+</style>

@@ -73,6 +73,14 @@ export type ProjectEvidence = {
   reality: Bi;
   publicCode: 'open' | 'none';
   /**
+   * Proof line tokens shown under a featured card.
+   *
+   * Every token must describe something a visitor can check — a repository,
+   * a verified artifact, a stated limit. Never a metric, never a ranking,
+   * never a percentage. Three tokens maximum, rendered as micro-type.
+   */
+  proof: Bi[];
+  /**
    * Date the publicly inspectable evidence was last read (ISO 8601).
    *
    * An active project moves faster than its public snapshot. Recording the
@@ -91,6 +99,11 @@ const wennian: ProjectEvidence = {
   headline: { en: 'Open-source MVP', zh: '开源 MVP' },
   reality: { en: 'Code, tests, UI, API and deployment files are public.', zh: '代码、测试、界面、接口与部署文件均已公开。' },
   publicCode: 'open',
+  proof: [
+    { en: 'Public repository', zh: '公开仓库' },
+    { en: 'Open-source MVP', zh: '开源 MVP' },
+    { en: 'Active development', zh: '持续迭代' },
+  ],
   snapshot: { date: '2026-09-18' },
   rows: [
     {
@@ -301,6 +314,11 @@ const hycell: ProjectEvidence = {
   headline: { en: 'Research prototype', zh: '研究原型' },
   reality: { en: 'Runnable v0.1 prototype with real acceptance scripts.', zh: '可运行的 v0.1 原型，附带真实验收脚本。' },
   publicCode: 'open',
+  proof: [
+    { en: 'Public repository', zh: '公开仓库' },
+    { en: 'Research prototype', zh: '研究原型' },
+    { en: 'Real-data pipeline', zh: '真实数据链路' },
+  ],
   rows: [
     {
       label: { en: 'Schema and data contracts', zh: '模式与数据契约' },
@@ -528,41 +546,74 @@ docs/    model_card, design_summary, limitations, ACCEPTANCE,
 
 /* ------------------------------------------------------------ TaiYi Lingjing */
 
+/**
+ * TaiYi Lingjing is a concept and research direction.
+ *
+ * Owner-confirmed fact (v1.3): engineering implementation has not started.
+ * Nothing here may imply a prototype, a subsystem, a validation result or a
+ * codebase — so every row below is either `designed` (written down) or
+ * `planned` / `not-public` (nothing to inspect). The `partial` state is not
+ * used for this project.
+ */
 const taiyi: ProjectEvidence = {
-  headline: { en: 'Research program', zh: '研究计划' },
-  reality: { en: 'No public repository and no released system.', zh: '无公开仓库，无已发布系统。' },
+  headline: { en: 'Concept / Not Started', zh: '概念设计 / 尚未开始' },
+  reality: {
+    en: 'A written research concept. Engineering implementation has not started.',
+    zh: '仅有一份成文的研究概念设计。工程实现尚未开始。',
+  },
   publicCode: 'none',
+  proof: [
+    { en: 'Research concept', zh: '研究概念' },
+    { en: 'Not started', zh: '尚未开始' },
+    { en: 'Nothing published', zh: '无公开产物' },
+  ],
   rows: [
     {
-      label: { en: 'System architecture', zh: '系统架构' },
+      label: { en: 'Research framing', zh: '研究问题界定' },
       state: 'designed',
       note: {
-        en: 'A five-subsystem decomposition — Bio, Evidence, Simulation, Experiment, Human — described on this page. Nothing here can be cross-checked against code.',
-        zh: '本页描述了 Bio / Evidence / Simulation / Experiment / Human 五子系统划分。此处内容无法与代码交叉核验。',
+        en: 'The problem statement, scope and motivation are written down. Nothing beyond text exists.',
+        zh: '问题陈述、范围与动议已成文。除文字之外没有任何产物。',
       },
     },
     {
-      label: { en: 'Subsystem contracts', zh: '子系统契约' },
+      label: { en: 'Proposed architecture', zh: '拟议架构' },
       state: 'designed',
       note: {
-        en: 'Interface shapes and evidence-provenance rules are specified in prose only.',
-        zh: '接口形态与证据溯源规则仅有文字层面的说明。',
+        en: 'A five-subsystem decomposition — Bio, Discovery, Experiment, Evidence, Human — described on this page as an intended design. No code can be cross-checked against it.',
+        zh: '本页描述的 Bio / Discovery / Experiment / Evidence / Human 五子系统划分属于拟议设计，无法与任何代码交叉核验。',
       },
     },
     {
-      label: { en: 'Research design', zh: '研究设计' },
+      label: { en: 'Discovery loop', zh: '发现闭环' },
       state: 'designed',
       note: {
-        en: 'The discovery loop — hypothesis, retrieval, simulation, experiment proposal, evidence audit — is laid out as an operating model, not an implemented pipeline.',
-        zh: '发现闭环（假设、检索、仿真、实验提案、证据审计）以运行模型的形式呈现，并非已实现的流水线。',
+        en: 'The loop — hypothesis, retrieval, simulation, experiment proposal, evidence audit — is specified as an operating model, not implemented as a pipeline.',
+        zh: '假设 → 检索 → 仿真 → 实验提案 → 证据审计这条闭环被规定为一种运行模型，并未被实现为流水线。',
       },
     },
     {
-      label: { en: 'Prototype code', zh: '原型代码' },
-      state: 'not-public',
+      label: { en: 'Engineering implementation', zh: '工程实现' },
+      state: 'planned',
       note: {
-        en: 'Reported as partial. Nothing is published, so no claim about its state can be verified by a visitor.',
-        zh: '据称为部分原型。没有任何内容公开，访问者无法核实其状态。',
+        en: 'Not started. The first milestone is named on this page and nothing precedes it.',
+        zh: '尚未开始。本页面给出了第一个里程碑，在此之前没有任何实现工作。',
+      },
+    },
+    {
+      label: { en: 'Prototype', zh: '原型' },
+      state: 'planned',
+      note: {
+        en: 'None. No partial prototype, no unreleased prototype, nothing to show or withhold.',
+        zh: '不存在。既没有完整原型，也没有未发布的部分原型，没有任何可展示或需要隐藏的内容。',
+      },
+    },
+    {
+      label: { en: 'Validation', zh: '验证' },
+      state: 'planned',
+      note: {
+        en: 'No validation has run because there is nothing to validate. What would have to be true is written down instead.',
+        zh: '没有可验证的对象，因此未做任何验证。取而代之，本页面写明了将来必须通过哪些检验。',
       },
     },
     {
@@ -577,8 +628,8 @@ const taiyi: ProjectEvidence = {
       title: { en: 'How to read this page', zh: '如何阅读本页' },
       source: { en: 'Site editorial standard.', zh: '本站编写准则。' },
       caption: {
-        en: 'This is a research program with a written brief, not a system you can inspect. Everything below describes intent and design. Where an artifact would normally be cited, none exists yet.',
-        zh: '这是一个有书面纲领的研究计划，而非可供检视的系统。以下内容描述的是意图与设计。通常在需要引用实物的位置，目前尚无实物。',
+        en: 'This is a research concept with a written brief, not a system you can inspect. Everything below describes intent. Where an artifact would normally be cited, none exists — and none is implied.',
+        zh: '这是一份有书面纲领的研究概念，而不是可供检视的系统。以下内容描述的是意图。通常在需要引用实物的位置，目前没有任何实物——也不断言其存在。',
       },
     },
   ],
@@ -590,6 +641,10 @@ const pet: ProjectEvidence = {
   headline: { en: 'Design study', zh: '设计研究' },
   reality: { en: 'Architecture and workflow design only.', zh: '仅包含架构与流程设计。' },
   publicCode: 'none',
+  proof: [
+    { en: 'Product architecture', zh: '产品架构' },
+    { en: 'Not public', zh: '未公开' },
+  ],
   rows: [
     {
       label: { en: 'Product architecture', zh: '产品架构' },
@@ -648,6 +703,11 @@ const pdig: ProjectEvidence = {
   headline: { en: 'Specification and design', zh: '规范与设计' },
   reality: { en: 'Spec-level work. No public artifact to inspect.', zh: '规范层工作，无公开实物可检视。' },
   publicCode: 'none',
+  proof: [
+    { en: 'Canonical specification', zh: 'Canonical 规范' },
+    { en: 'Cross-platform design', zh: '跨平台设计' },
+    { en: 'Nothing published', zh: '无公开产物' },
+  ],
   rows: [
     {
       label: { en: 'Canonical specification', zh: '权威规范' },
@@ -713,9 +773,396 @@ const pdig: ProjectEvidence = {
   ],
 };
 
+/* -------------------------------------------------------------------- Morn */
+
+/**
+ * Morn — work and organisation control plane.
+ *
+ * Everything below was read from the public repository (`huangdi97/morn`):
+ * the README, the committed workspace layout and the reported test surface.
+ * Reported test counts are quoted, never re-run: this site does not claim a
+ * pass rate for a suite it did not execute.
+ */
+const morn: ProjectEvidence = {
+  headline: { en: 'Distributed runtime', zh: '分布式运行底座' },
+  reality: {
+    en: 'A Rust workspace with four product surfaces, a Tauri desktop shell and a scripted full verification run.',
+    zh: '一个 Rust workspace，含四个产品界面、Tauri 桌面外壳与脚本化的全量验收流程。',
+  },
+  publicCode: 'open',
+  snapshot: { date: '2026-09-18' },
+  proof: [
+    { en: 'Public repository', zh: '公开仓库' },
+    { en: 'Rust workspace', zh: 'Rust workspace' },
+    { en: 'Desktop application', zh: '桌面应用' },
+  ],
+  rows: [
+    {
+      label: { en: 'Semantic kernel', zh: '语义内核' },
+      state: 'built',
+      note: {
+        en: 'Identity, workspace, policy, approval, an append-only ledger and versioned contracts in `morn-kernel`. The README states that providers and plugins cannot redefine these.',
+        zh: '身份、工作空间、策略、审批、只追加账本与版本化契约都在 `morn-kernel` 内。README 明确：provider 与插件无法重定义这些原语。',
+      },
+    },
+    {
+      label: { en: 'Operational world', zh: '运行世界层' },
+      state: 'built',
+      note: {
+        en: 'Objects, relations, events, state snapshots, state diffs and outcomes behind a governed action gateway with four effect classes (E0–E3).',
+        zh: '对象、关系、事件、状态快照、状态差异与结果，统一由受治理的动作网关收口，四类效应（E0–E3）。',
+      },
+    },
+    {
+      label: { en: 'Work and organisation layer', zh: '工作与组织层' },
+      state: 'built',
+      note: {
+        en: 'Work packages, acceptance specs, durable runtimes, role slots, members and actors, with representation contracts kept as data.',
+        zh: '工作包、验收规格、持久化运行时、角色槽位、成员与 actor，其间的关系以契约数据的形式保存。',
+      },
+    },
+    {
+      label: { en: 'Evolution layer', zh: '演进层' },
+      state: 'built',
+      note: {
+        en: 'Candidate / branch / evaluation / promotion with production separation, a solution compiler, certification and rollback points — `morn-evolution`, `morn-foundry`, `morn-assurance`.',
+        zh: '候选 / 分支 / 评估 / 晋升，并与生产环境隔离，配套方案编译器、认证与回滚点——`morn-evolution`、`morn-foundry`、`morn-assurance`。',
+      },
+    },
+    {
+      label: { en: 'Capability fabric', zh: '能力织物层' },
+      state: 'built',
+      note: {
+        en: 'Replaceable providers, runtimes and connectors behind stable contracts. Connectors may only write through governed tokens.',
+        zh: '可替换的 provider、运行时与连接器都藏在稳定契约之后。连接器只能通过受治理的 token 写入。',
+      },
+    },
+    {
+      label: { en: 'Two-node durable runtime', zh: '双节点持久化运行时' },
+      state: 'built',
+      note: {
+        en: 'Claim, checkpoint, lease, failover and dedupe across two nodes in `morn-node` and `morn-process`.',
+        zh: '`morn-node` 与 `morn-process` 中实现了跨双节点的领取、检查点、租约、故障转移与去重。',
+      },
+    },
+    {
+      label: { en: 'Domain SDK and pack lifecycle', zh: '领域 SDK 与包生命周期' },
+      state: 'built',
+      note: {
+        en: 'Install, enable, disable, upgrade and uninstall for domain packs and plugins, with preserved history and path / name safety checks.',
+        zh: '领域包与插件的安装、启用、停用、升级、卸载，保留历史并做路径与命名安全校验。',
+      },
+    },
+    {
+      label: { en: 'Product surfaces', zh: '产品界面' },
+      state: 'built',
+      note: {
+        en: 'Workbench, Studio, Console and Hub on one axum backend with a React / Vite frontend, plus a Tauri v2 desktop shell and a developer CLI.',
+        zh: 'Workbench、Studio、Console、Hub 四个界面共用一个 axum 后端与 React / Vite 前端，另有 Tauri v2 桌面外壳与开发者命令行工具。',
+      },
+    },
+    {
+      label: { en: 'Scripted full verification', zh: '脚本化全量验收' },
+      state: 'built',
+      note: {
+        en: '`scripts/run_all.ps1` covers fmt, clippy, Rust tests, frontend typecheck / lint / tests / build, the desktop build and UI + E2E smokes.',
+        zh: '`scripts/run_all.ps1` 覆盖 fmt、clippy、Rust 测试、前端 typecheck / lint / 测试 / 构建、桌面端构建，以及 UI 与 E2E 冒烟。',
+      },
+    },
+    {
+      label: { en: 'Test suite', zh: '测试套件' },
+      state: 'built',
+      note: {
+        en: 'The README reports 218+ Rust tests with none ignored, including chaos, conformance, migration / security and end-to-end packages. This site does not re-run them, so no pass rate is claimed.',
+        zh: 'README 报告 Rust 测试 218+ 条且无忽略项，含 chaos、一致性、迁移 / 安全与端到端等包。本站未重新运行这些测试，因此不宣称任何通过率。',
+      },
+    },
+    {
+      label: { en: 'License', zh: '许可证' },
+      state: 'partial',
+      note: {
+        en: 'The README states "MIT OR Apache-2.0"; GitHub detects no LICENSE file, so the license status is unresolved — treated as unclear rather than settled.',
+        zh: 'README 声明“MIT OR Apache-2.0”，但 GitHub 未检测到 LICENSE 文件，因此许可证状态尚未确定——应视为“未明确”而非“已确定”。',
+      },
+    },
+    {
+      label: { en: 'Real DeepSeek harness smoke', zh: '真实 DeepSeek Harness 冒烟' },
+      state: 'planned',
+      note: {
+        en: 'Blocker B-001 in the README: a real smoke test needs an official distribution or real credentials. The Morn-side provider contract is reported to pass against fixtures. No fake success is reported.',
+        zh: 'README 中的阻塞项 B-001：真实冒烟需要官方发行版或真实凭据。Morn 侧 provider 契约据称在 fixture 上通过。没有伪造任何成功结果。',
+      },
+    },
+    {
+      label: { en: 'BioLab real-data pilot', zh: 'BioLab 真实数据试点' },
+      state: 'planned',
+      note: {
+        en: 'Blocker G4-B-002: a lawful real dataset is required. Core pipeline contracts are reported to pass with fixture-controlled records.',
+        zh: '阻塞项 G4-B-002：需要一份合法取得的真实数据集。核心流水线契约据称在 fixture 受控记录上通过。',
+      },
+    },
+  ],
+  panels: [
+    {
+      kind: 'tree',
+      title: { en: 'Workspace layout', zh: 'Workspace 结构' },
+      source: {
+        en: 'GitHub API — huangdi97/morn tree listing, read 2026-09-18.',
+        zh: 'GitHub API — huangdi97/morn 目录清单，2026-09-18 读取。',
+      },
+      sourceUrl: 'https://github.com/huangdi97/morn',
+      caption: {
+        en: 'Twenty-two crates, ordered kernel → world / work → capability → app. The domain pack is separate and feature-gated.',
+        zh: '22 个 crate，顺序为 kernel → world / work → capability → app。领域包独立存在并以 feature 开关隔离。',
+      },
+      body: `morn/
+├── crates/                      22 crates
+│   ├── morn-kernel              identity, workspace, policy, approval, ledger
+│   ├── morn-world               objects, relations, events, state snapshots
+│   ├── morn-work                work packages, acceptance specs, runtimes
+│   ├── morn-organization        role slots, members
+│   ├── morn-actor               actors and representation contracts
+│   ├── morn-evolution           candidate / branch / evaluation / promotion
+│   ├── morn-foundry             solution compiler, managed work, pilots
+│   ├── morn-assurance           certification, rollback points
+│   ├── morn-capability          replaceable providers behind contracts
+│   ├── morn-harness             runtime harnesses
+│   ├── morn-runtime             execution runtimes
+│   ├── morn-integration         connectors writing through governed tokens
+│   ├── morn-node                claim / checkpoint / lease / failover
+│   ├── morn-process             process intelligence
+│   ├── morn-domain-sdk          public SDK for domain packs
+│   ├── morn-package             pack and plugin lifecycle
+│   ├── morn-artifact            immutable, versioned artifacts
+│   ├── morn-store               persistence
+│   ├── morn-core-tests          shared core test fixtures
+│   ├── morn-opint               operations intelligence
+│   ├── morn-cli                 developer CLI
+│   └── morn-app                 server binary (http://127.0.0.1:8090)
+├── frontend/                    React + Vite + TypeScript (four surfaces)
+├── src-tauri/                   Tauri v2 desktop shell
+├── domain-packs/                biolab-reference (feature-gated)
+├── scripts/                     run_all.ps1, domain boundary guard
+├── docs/                        architecture, developer guide, deployment, security
+├── reports/                     Goal 1–5 and v1 GA reports
+└── .github/workflows/           CI: fmt / clippy / backend / frontend / E2E / desktop`,
+    },
+    {
+      kind: 'terminal',
+      title: { en: 'Documented entry points', zh: '文档中的运行入口' },
+      source: { en: 'morn README.md — quoted verbatim.', zh: 'morn README.md — 逐字引用。' },
+      sourceUrl: 'https://github.com/huangdi97/morn#readme',
+      caption: {
+        en: 'The quickstart is the contract: backend, frontend, CLI and the full verification script.',
+        zh: '快速上手本身即是契约：后端、前端、命令行工具与全量验收脚本。',
+      },
+      body: `cargo build --workspace --all-features
+cargo run -p morn-app --bin server --all-features   # http://127.0.0.1:8090
+
+cd frontend && npm install && npm run dev           # http://127.0.0.1:5173
+
+cargo run -p morn-cli -- doctor
+cargo run -p morn-cli -- status
+
+# full verification: fmt / clippy / tests / frontend / Tauri / UI + E2E
+powershell -ExecutionPolicy Bypass -File scripts/run_all.ps1`,
+    },
+    {
+      kind: 'list',
+      title: { en: 'Stated invariants and blockers', zh: '声明的不变量与阻塞项' },
+      source: { en: 'morn README.md.', zh: 'morn README.md。' },
+      sourceUrl: 'https://github.com/huangdi97/morn#readme',
+      items: [
+        { en: 'Core is domain-neutral: it starts and runs with zero domain packs.', zh: '内核领域无关：零领域包也能启动并运行。' },
+        { en: 'Runtimes and providers cannot commit canonical world state directly.', zh: '运行时与 provider 不能直接提交权威世界状态。' },
+        { en: 'Artifacts are immutable — edits create new versions with lineage.', zh: '产物不可变——修改会生成带血缘的新版本。' },
+        { en: 'Evolution never mutates production; promotion creates a rollback point.', zh: '演进不改动生产环境；晋升会生成回滚点。' },
+        { en: 'E3 irreversible effects require approval; E2 requires a compensation plan.', zh: 'E3 不可逆效应需要审批；E2 需要补偿方案。' },
+        { en: 'Blocker B-001: real DeepSeek harness smoke needs real credentials.', zh: '阻塞项 B-001：真实 DeepSeek Harness 冒烟需要真实凭据。' },
+        { en: 'Blocker G4-B-002: a real BioLab data pilot needs a lawful dataset.', zh: '阻塞项 G4-B-002：BioLab 真实数据试点需要合法数据集。' },
+      ],
+    },
+  ],
+};
+
+/* ---------------------------------------------------------------- BioPulse */
+
+/**
+ * BioPulse — agent-native workbench for life-science commercial workflows.
+ *
+ * Read from the public repository (`huangdi97/BioPulse`) on 2026-09-18: the
+ * README and the full tree listing. Every row below maps to something present
+ * in that tree.
+ */
+const biopulse: ProjectEvidence = {
+  headline: { en: 'Agent-native workbench', zh: 'Agent-native 工作台' },
+  reality: {
+    en: 'A public FastAPI cloud service with seven agent packages, a four-surface front end and an MIT license detected by GitHub.',
+    zh: '一个公开的 FastAPI 云服务，含七个智能体包、四端前端，GitHub 检测到 MIT 许可证。',
+  },
+  publicCode: 'open',
+  snapshot: { date: '2026-09-18' },
+  proof: [
+    { en: 'Public repository', zh: '公开仓库' },
+    { en: 'MIT license', zh: 'MIT 许可证' },
+    { en: 'Agent-native workbench', zh: 'Agent-native 工作台' },
+  ],
+  rows: [
+    {
+      label: { en: 'Agent runtime', zh: '智能体运行时' },
+      state: 'built',
+      note: {
+        en: '`cloud/app/agent_runtime` implements the execution loop, retry and circuit-breaker behaviour, a dead-letter queue, error taxonomy, metrics and a tool bridge.',
+        zh: '`cloud/app/agent_runtime` 实现了执行循环、重试与熔断、死信队列、错误分类、指标与工具桥接。',
+      },
+    },
+    {
+      label: { en: 'Seven agent packages', zh: '七个智能体包' },
+      state: 'built',
+      note: {
+        en: '`agents/` holds compliance monitor, anomaly analysis, sales suggestion, sales coach analyst, knowledge worker, opportunity scanner and competitor crawler.',
+        zh: '`agents/` 下为合规监控、异常分析、销售建议、销售教练、知识、商机扫描与竞品爬取七个包。',
+      },
+    },
+    {
+      label: { en: 'Safety guard layers', zh: '安全护栏分层' },
+      state: 'built',
+      note: {
+        en: 'Layered safety profiles and guards under `cloud/app/agents`, with dedicated L1 / L3 tests in the public suite.',
+        zh: '`cloud/app/agents` 下存在分层安全档案与护栏，公开测试中有专门的 L1 / L3 用例。',
+      },
+    },
+    {
+      label: { en: 'Memory and retrieval', zh: '记忆与检索' },
+      state: 'built',
+      note: {
+        en: 'Vector memory and RAG ingestion modules are present, with tests in `tests/agent_runtime`.',
+        zh: '存在向量记忆与 RAG 接入模块，`tests/agent_runtime` 中有对应测试。',
+      },
+    },
+    {
+      label: { en: 'Compliance and inference engines', zh: '合规与推演引擎' },
+      state: 'built',
+      note: {
+        en: '`cloud/app/compliance` and `cloud/app/analysis` plus `cloud/app/eval` implement the cross-audit and inference-evaluation side described in the README.',
+        zh: '`cloud/app/compliance`、`cloud/app/analysis` 与 `cloud/app/eval` 承载 README 描述的交叉稽核与推演评估能力。',
+      },
+    },
+    {
+      label: { en: 'Four product surfaces', zh: '四端产品界面' },
+      state: 'built',
+      note: {
+        en: '`frontend/` (React management console), `web/`, `mobile_app/` (Flutter) and `weapp/` (WeChat mini program) are all present in the tree, with `deploy/` for Nginx + TLS.',
+        zh: '目录树中存在 `frontend/`（React 管理端）、`web/`、`mobile_app/`（Flutter）与 `weapp/`（微信小程序），并有 `deploy/` 承载 Nginx + TLS 配置。',
+      },
+    },
+    {
+      label: { en: 'Test suite', zh: '测试套件' },
+      state: 'built',
+      note: {
+        en: '`tests/` covers the agent runtime, the agents themselves, services, the front end and the mini program, plus `cloud/tests`. This site does not re-run them, so no pass rate is claimed.',
+        zh: '`tests/` 覆盖智能体运行时、各智能体、服务、前端与小程序，另有 `cloud/tests`。本站未重新运行这些测试，因此不宣称任何通过率。',
+      },
+    },
+    {
+      label: { en: 'License', zh: '许可证' },
+      state: 'validated',
+      note: {
+        en: 'MIT, detected by GitHub and stated in the README — the only project in this portfolio whose license is machine-confirmed rather than unresolved.',
+        zh: 'MIT，由 GitHub 检测并由 README 声明——这是本作品集中唯一许可证被机器确认、而非处于未定状态的项目。',
+      },
+    },
+    {
+      label: { en: 'Real tenant deployment', zh: '真实客户部署' },
+      state: 'not-public',
+      note: {
+        en: '`tenant_configs/` and `deploy/` exist in the tree, but no running deployment or customer reference can be checked from outside.',
+        zh: '目录树中存在 `tenant_configs/` 与 `deploy/`，但外部无法核实是否有真实运行中部署或客户案例。',
+      },
+    },
+    {
+      label: { en: 'Model accuracy claims', zh: '模型准确性主张' },
+      state: 'planned',
+      note: {
+        en: 'The README describes an inference engine with confidence intervals and back-testing, but publishes no benchmark. No accuracy number is claimed here.',
+        zh: 'README 描述了带置信区间与回溯验证的推演器，但未发布任何基准测试。此处不宣称任何准确性指标。',
+      },
+    },
+  ],
+  panels: [
+    {
+      kind: 'tree',
+      title: { en: 'Repository index', zh: '仓库目录' },
+      source: {
+        en: 'GitHub API — huangdi97/BioPulse tree listing, read 2026-09-18.',
+        zh: 'GitHub API — huangdi97/BioPulse 目录清单，2026-09-18 读取。',
+      },
+      sourceUrl: 'https://github.com/huangdi97/BioPulse',
+      caption: {
+        en: 'One cloud service, four client surfaces, and the agent packages beside them — 1,297 Python files in total.',
+        zh: '一个云服务、四个客户端界面，外加并列的智能体包——全仓库共 1297 个 Python 文件。',
+      },
+      body: `BioPulse/
+├── cloud/                  FastAPI service (953 files)
+│   └── app/
+│       ├── agent_runtime/  execution loop, retry, circuit breaker, tool bridge
+│       ├── agents/         layered safety profiles and guards
+│       ├── analysis/       inference and causal chain evaluation
+│       ├── compliance/     cross-audit and flow verification
+│       ├── eval/           evaluation harness
+│       ├── repositories/   persistence layer
+│       ├── routers/        REST surface
+│       ├── schema/         typed request / response models
+│       └── migrations/
+├── agents/                 7 packages: compliance, anomaly, sales suggestion,
+│                           sales coach, knowledge, opportunity, competitor
+├── frontend/               React 18 + Vite management console
+├── web/                    React web client
+├── mobile_app/             Flutter (Android / iOS, offline-first)
+├── weapp/                  WeChat mini program
+├── tests/                  agent_runtime, agents, services, frontend, weapp
+├── deploy/                 Nginx + TLS, backup, CI / CD
+└── LICENSE                 MIT (detected by GitHub)`,
+    },
+    {
+      kind: 'terminal',
+      title: { en: 'Documented entry points', zh: '文档中的运行入口' },
+      source: { en: 'BioPulse README.md — quoted verbatim.', zh: 'BioPulse README.md — 逐字引用。' },
+      sourceUrl: 'https://github.com/huangdi97/BioPulse#readme',
+      caption: {
+        en: 'Quoted verbatim from the README so the commands on this page match the repository.',
+        zh: '逐字引用 README，使本页命令与仓库保持一致。',
+      },
+      body: `python -m venv venv && source venv/bin/activate
+pip install -r cloud/requirements.txt
+cp .env.example .env                          # DEEPSEEK_API_KEY etc.
+
+python -c "from cloud.app.database import init_db; init_db()"
+uvicorn cloud.app.main:app --reload --port 8000
+
+curl http://localhost:8000/agent-gateway/execute \\
+  -H "Content-Type: application/json" \\
+  -d '{"agent_key":"analyst","goal":"分析最近的拜访数据"}'
+
+python3 -m pytest cloud/app/tests/ -v`,
+    },
+    {
+      kind: 'note',
+      title: { en: 'What this page does not claim', zh: '本页不主张什么' },
+      source: { en: 'Site editorial standard.', zh: '本站编写准则。' },
+      caption: {
+        en: 'No deployment, customer, revenue or accuracy figure is published here. The README states production readiness in infrastructure terms — Prometheus, Nginx, backups, CI — which is exactly how far this page goes.',
+        zh: '此处不发布任何部署量、客户、营收或准确性数字。README 所说的“生产就绪”是基础设施层面的——Prometheus、Nginx、备份、CI——本页的表述到此为止。',
+      },
+    },
+  ],
+};
+
 export const PROJECT_EVIDENCE: Record<string, ProjectEvidence> = {
   wennian,
   hycell,
+  morn,
+  biopulse,
   'taiyi-lingjing': taiyi,
   'pet-ai-health': pet,
   pdig,

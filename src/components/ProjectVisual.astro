@@ -10,7 +10,7 @@
 let seq = 0;
 
 export interface Props {
-  variant: 'aging' | 'cell' | 'discovery' | 'pet' | 'infra';
+  variant: 'aging' | 'cell' | 'discovery' | 'pet' | 'infra' | 'runtime' | 'pulse';
   /** Short description for screen readers. */
   label: string;
 }
@@ -294,6 +294,135 @@ const trend = bars.map((b, i) => `${i === 0 ? 'M' : 'L'}${b.x + BAR_W / 2},${b.y
           ONE CANONICAL MODEL
         </text>
         <circle cx="140" cy="120" r="4" fill="var(--accent)" />
+      </g>
+    )
+  }
+  {
+    variant === 'runtime' && (
+      <g>
+        {[
+          { x: 60, label: 'PROPOSAL', accent: false },
+          { x: 200, label: 'POLICY', accent: false },
+          { x: 340, label: 'GATEWAY', accent: true },
+          { x: 480, label: 'COMMIT', accent: false },
+        ].map((n, i) => (
+          <g>
+            <rect
+              x={n.x}
+              y="192"
+              width="90"
+              height="36"
+              fill="#FFFFFF"
+              stroke={n.accent ? 'var(--accent)' : 'rgba(0,0,0,0.28)'}
+              stroke-width={n.accent ? '1.5' : '1.25'}
+            />
+            <text class="dg-node" x={n.x + 45} y="214" text-anchor="middle">
+              {n.label}
+            </text>
+            {i < 3 && (
+              <line
+                x1={n.x + 90}
+                y1="210"
+                x2={n.x + 140}
+                y2="210"
+                stroke="rgba(0,0,0,0.42)"
+                stroke-width="1.25"
+                marker-end={`url(#${uid}-arrow)`}
+              />
+            )}
+          </g>
+        ))}
+        <text class="dg-label" x="385" y="178" text-anchor="middle">
+          E0 – E3 EFFECTS
+        </text>
+        <rect x="200" y="292" width="240" height="30" fill="#FFFFFF" stroke="rgba(0,0,0,0.28)" stroke-width="1.25" />
+        <text class="dg-node" x="320" y="312" text-anchor="middle">
+          APPEND-ONLY LEDGER
+        </text>
+        <path
+          d="M525,228 C525,268 400,268 368,292"
+          fill="none"
+          stroke="rgba(0,0,0,0.28)"
+          stroke-width="1"
+          marker-end={`url(#${uid}-arrow)`}
+        />
+        <text class="dg-label" x="320" y="354" text-anchor="middle">
+          VERIFY · OUTCOME
+        </text>
+      </g>
+    )
+  }
+
+  {
+    variant === 'pulse' && (
+      <g>
+        {[
+          { x: 80, y: 118, label: 'QUESTION' },
+          { x: 80, y: 206, label: 'RECORDS' },
+          { x: 80, y: 294, label: 'SIGNALS' },
+        ].map((n) => (
+          <g>
+            <rect
+              x={n.x}
+              y={n.y - 15}
+              width="110"
+              height="30"
+              fill="#FFFFFF"
+              stroke="rgba(0,0,0,0.22)"
+              stroke-width="1"
+            />
+            <text class="dg-node" x={n.x + 55} y={n.y + 4} text-anchor="middle">
+              {n.label}
+            </text>
+            <line
+              x1={n.x + 110}
+              y1={n.y}
+              x2="238"
+              y2={n.y}
+              stroke="rgba(0,0,0,0.22)"
+              stroke-width="1"
+            />
+          </g>
+        ))}
+
+        <rect x="240" y="180" width="160" height="52" fill="#FFFFFF" stroke="var(--accent)" stroke-width="1.5" />
+        <text class="dg-node" x="320" y="204" text-anchor="middle">
+          AGENT RUNTIME
+        </text>
+        <text class="dg-label" x="320" y="221" text-anchor="middle">
+          LOOP · RETRY · BREAKER
+        </text>
+
+        {[
+          { x: 450, y: 118, label: 'ANALYSIS' },
+          { x: 450, y: 206, label: 'COMPLIANCE' },
+          { x: 450, y: 294, label: 'PLAN' },
+        ].map((n) => (
+          <g>
+            <line x1="402" y1={n.y} x2={n.x} y2={n.y} stroke="rgba(0,0,0,0.22)" stroke-width="1" />
+            <rect
+              x={n.x}
+              y={n.y - 15}
+              width="110"
+              height="30"
+              fill="#FFFFFF"
+              stroke="rgba(0,0,0,0.22)"
+              stroke-width="1"
+            />
+            <text class="dg-node" x={n.x + 55} y={n.y + 4} text-anchor="middle">
+              {n.label}
+            </text>
+          </g>
+        ))}
+
+        <line x1="320" y1="232" x2="320" y2="292" stroke="rgba(0,0,0,0.22)" stroke-width="1" />
+        <rect x="240" y="292" width="160" height="30" fill="#FFFFFF" stroke="rgba(0,0,0,0.28)" stroke-width="1.25" />
+        <text class="dg-node" x="320" y="312" text-anchor="middle">
+          AUDIT RECORD
+        </text>
+        <text class="dg-label" x="320" y="352" text-anchor="middle">
+          FOUR CLIENT SURFACES
+        </text>
       </g>
     )
   }

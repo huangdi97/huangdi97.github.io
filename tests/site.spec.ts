@@ -5,6 +5,8 @@ const ROUTES = [
   '/projects/',
   '/projects/wennian/',
   '/projects/hycell/',
+  '/projects/morn/',
+  '/projects/biopulse/',
   '/projects/taiyi-lingjing/',
   '/projects/pet-ai-health/',
   '/projects/pdig/',
@@ -14,6 +16,10 @@ const ROUTES = [
   '/zh/',
   '/zh/projects/',
   '/zh/projects/wennian/',
+  '/zh/projects/hycell/',
+  '/zh/projects/morn/',
+  '/zh/projects/biopulse/',
+  '/zh/projects/taiyi-lingjing/',
   '/zh/research/',
   '/zh/about/',
   '/zh/resume/',
@@ -49,10 +55,114 @@ test.describe('homepage', () => {
     await expect(page.locator('h2', { hasText: 'Selected Work' })).toBeVisible();
   });
 
-  test('lists five featured projects', async ({ page }) => {
+  test('hero keeps the AI × Life Science × Agents line', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('.hero-sub')).toContainText('AI × Life Science × Agents');
+  });
+
+  test('lists at most five featured projects, in the confirmed order', async ({ page }) => {
     await page.goto('/');
     const cards = page.locator('article.showcase');
     await expect(cards).toHaveCount(5);
+
+    const titles = await cards.locator('h3 a').allInnerTexts();
+    expect(titles.map((title) => title.trim())).toEqual([
+      'ZhiShen · WenNian',
+      'HyCell',
+      'Morn',
+      'BioPulse',
+      'PDIG',
+    ]);
+  });
+
+  test('selected work never features TaiYi', async ({ page }) => {
+    await page.goto('/');
+    const showcase = page.locator('article.showcase');
+    await expect(showcase.getByText('TaiYi Lingjing')).toHaveCount(0);
+    await expect(showcase.getByRole('link', { name: /TaiYi/ })).toHaveCount(0);
+  });
+
+  test('each featured project carries a proof line', async ({ page }) => {
+    await page.goto('/');
+    const proofs = page.locator('article.showcase [data-proof]');
+    await expect(proofs).toHaveCount(5);
+    // A proof token is a checkable fact. Never a metric, never a percentage.
+    for (const banned of ['%', 'production-ready', 'enterprise', '95']) {
+      await expect(proofs.first(), `proof contains ${banned}`).not.toContainText(banned);
+    }
+  });
+
+  test('NOW strip and background section are present', async ({ page }) => {
+    await page.goto('/');
+    const now = page.locator('section[aria-labelledby="now-label"]');
+    await expect(now).toBeVisible();
+    await expect(now.locator('.now-item')).toHaveCount(3);
+    await expect(now).toContainText('Updated');
+
+    await expect(page.locator('h2', { hasText: 'From biology to AI systems' })).toBeVisible();
+    await expect(page.locator('ol.bt .bt-item')).toHaveCount(5);
+  });
+
+  test('research is split into active and concept tiers', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('Active / Building')).toBeVisible();
+    await expect(page.getByText('Concepts / Exploring')).toBeVisible();
+
+    const concepts = page.locator('.research-tier').nth(1);
+    await expect(concepts).toContainText('AI for Scientific Discovery');
+    await expect(concepts).toContainText('Concept / Not Started');
+    await expect(concepts.getByRole('link', { name: /TaiYi Lingjing/ })).toBeVisible();
+  });
+
+  test('TaiYi case study states that implementation has not started', async ({ page }) => {
+    await page.goto('/projects/taiyi-lingjing/');
+    const body = page.locator('main');
+
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('TaiYi Lingjing');
+    await expect(body).toContainText('not started');
+    await expect(page.locator('.case-meta')).toContainText('Concept / Not Started');
+
+    // No claim that any part of it has been built.
+    for (const banned of [
+      'partial implementation',
+      'prototype implementation',
+      'implemented subsystem',
+      'working prototype',
+      'validated architecture',
+      'research prototype',
+      'lessons learned from implementation',
+    ]) {
+      await expect(body, `banned phrase: ${banned}`).not.toContainText(new RegExp(banned, 'i'));
+    }
+
+    // The banned word list must also hold in Chinese.
+    await page.goto('/zh/projects/taiyi-lingjing/');
+    const zhBody = page.locator('main');
+    await expect(zhBody).toContainText('尚未开始');
+    await expect(zhBody).not.toContainText(/部分实现|已完成实现|系统已经实现/);
+  });
+
+  test('TaiYi evidence table never uses PARTIAL', async ({ page }) => {
+    await page.goto('/projects/taiyi-lingjing/');
+    await expect(page.locator('#reality')).toBeVisible();
+    await expect(page.locator('.state-badge[data-state="partial"]')).toHaveCount(0);
+    await expect(page.locator('.state-badge[data-state="planned"]').first()).toBeVisible();
+  });
+
+  test('about CTA carries name, context line and contact links', async ({ page }) => {
+    await page.goto('/');
+    const cta = page.locator('.cta');
+    await expect(cta).toContainText('A little more context');
+    await expect(cta).toContainText('Hao Lei');
+    await expect(cta).toContainText(
+      'AI systems engineer with a life-science and computational biology background.',
+    );
+    await expect(cta.locator('a[href^="mailto:"]')).toHaveCount(2);
+    await expect(cta.getByRole('link', { name: /GitHub/ })).toHaveAttribute(
+      'href',
+      'https://github.com/huangdi97',
+    );
+    await expect(cta.getByRole('link', { name: 'Resume' })).toHaveAttribute('href', '/resume/');
   });
 
   test('hero diagram is exposed as an image with a label', async ({ page }) => {
@@ -66,14 +176,15 @@ test.describe('projects', () => {
   test('filter narrows the grid without navigating', async ({ page }) => {
     await page.goto('/projects/');
     const cards = page.locator('article[data-groups]');
-    await expect(cards).toHaveCount(5);
+    await expect(cards).toHaveCount(7);
 
     await page.getByRole('button', { name: 'Infrastructure' }).click();
-    await expect(page.locator('article[data-groups]:visible')).toHaveCount(1);
+    await expect(page.locator('article[data-groups]:visible')).toHaveCount(2);
     await expect(page.locator('article[data-slug="pdig"]')).toBeVisible();
+    await expect(page.locator('article[data-slug="morn"]')).toBeVisible();
 
     await page.getByRole('button', { name: 'All' }).click();
-    await expect(page.locator('article[data-groups]:visible')).toHaveCount(5);
+    await expect(page.locator('article[data-groups]:visible')).toHaveCount(7);
   });
 
   test('case study renders its full structure', async ({ page }) => {
@@ -221,6 +332,26 @@ test.describe('resume', () => {
 
     // The record is complete — the page no longer carries a "pending" notice.
     await expect(page.getByText(/no verified record|unverified/i)).toHaveCount(0);
+  });
+
+  test('selected projects exclude TaiYi and include Morn and BioPulse', async ({ page }) => {
+    await page.goto('/resume/');
+    const projects = page.locator('[data-resume-section="projects"]');
+    await expect(projects).toBeVisible();
+    await expect(projects).not.toContainText('TaiYi');
+    await expect(projects).not.toContainText('太一');
+    for (const name of ['ZhiShen · WenNian', 'HyCell', 'Morn', 'BioPulse']) {
+      await expect(projects.getByRole('link', { name, exact: true })).toBeVisible();
+    }
+  });
+
+  test('Chinese resume selected projects carry the same correction', async ({ page }) => {
+    await page.goto('/zh/resume/');
+    const projects = page.locator('[data-resume-section="projects"]');
+    await expect(projects).not.toContainText('太一');
+    for (const name of ['知身·问年', 'HyCell', 'Morn', 'BioPulse']) {
+      await expect(projects.getByRole('link', { name, exact: true })).toBeVisible();
+    }
   });
 
   test('only offers downloads for PDFs that resolve', async ({ page }) => {
