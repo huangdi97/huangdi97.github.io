@@ -5,4 +5,4 @@ Allow: /
 # tracking, analytics or search-only resources to block.
 Disallow:
 
-Sitemap: https://huangdi97.github.io/sitemap-index.xml
+Sitemap: https://haoleilab.com/sitemap-index.xml

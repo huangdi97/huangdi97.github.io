@@ -6,14 +6,16 @@ import sitemap from '@astrojs/sitemap';
 /**
  * Canonical public origin.
  *
- * The deployment target is the GitHub Pages user site `huangdi97.github.io`,
- * which serves at the repository root, so `base` stays `/`.
+ * The published custom domain is the serving origin: GitHub Pages answers
+ * `huangdi97.github.io` with a 301 to `haoleilab.com`, so canonical URLs,
+ * the sitemap and OG images all point at the domain. The repository itself
+ * is the user site `huangdi97.github.io`, which serves at the root — `base`
+ * stays `/`.
  *
- * If the repository is ever renamed to a project site (`<user>.github.io/<repo>`),
- * set `base` to `/<repo>`; `site` + `base` then produce correct absolute URLs
- * everywhere, including the sitemap and canonical tags.
+ * If the custom domain is ever removed, set this back to
+ * `https://huangdi97.github.io`.
  */
-const SITE = 'https://huangdi97.github.io';
+const SITE = 'https://haoleilab.com';
 
 export default defineConfig({
   site: SITE,

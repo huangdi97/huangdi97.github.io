@@ -9,8 +9,13 @@
  */
 
 export const SITE = {
-  /** Canonical origin — must match `site` in astro.config.mjs. */
-  url: 'https://huangdi97.github.io',
+  /**
+   * Canonical origin — must match `site` in astro.config.mjs.
+   *
+   * The custom domain is live: GitHub Pages answers huangdi97.github.io with a
+   * 301 to this origin, so canonicals, the sitemap and OG images use it.
+   */
+  url: 'https://haoleilab.com',
   /** Published custom domain. The CNAME file is committed in public/. */
   domain: 'haoleilab.com',
 

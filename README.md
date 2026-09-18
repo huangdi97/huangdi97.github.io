@@ -10,8 +10,8 @@ Personal brand · Technical portfolio · Research portfolio · Recruiting landin
 
 | | |
 | --- | --- |
-| Canonical (GitHub Pages) | <https://huangdi97.github.io> |
-| Custom domain | <https://haoleilab.com> |
+| Custom domain (canonical) | <https://haoleilab.com> |
+| GitHub Pages | <https://huangdi97.github.io> (301 → custom domain) |
 
 English is the default language. Simplified Chinese is served under `/zh`.
 

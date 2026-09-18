@@ -184,7 +184,7 @@ test.describe('seo', () => {
   test('home declares canonical and hreflang alternates', async ({ page }) => {
     await page.goto('/');
     const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
-    expect(canonical).toBe('https://huangdi97.github.io/');
+    expect(canonical).toBe('https://haoleilab.com/');
     await expect(page.locator('link[hreflang="en"]')).toHaveCount(1);
     await expect(page.locator('link[hreflang="zh-Hans"]')).toHaveCount(1);
     await expect(page.locator('meta[property="og:image"]')).toHaveCount(1);
