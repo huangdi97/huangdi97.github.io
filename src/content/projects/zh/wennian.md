@@ -3,19 +3,19 @@ title: 'WenNian / 知身·问年'
 slug: 'wennian'
 year: 2026
 status: 'Active'
-category: 'AI 健康 · 衰老智能 · 数字孪生'
+category: 'AI 健康 · 衰老智能 · 决策支持'
 summary: 'AI 衰老评估、主动追问、连续感知与干预决策系统。'
 description: >-
   面向衰老干预的决策引擎。基于常规血检指标运行多时钟生物学年龄评估，通过主动追问把模糊主诉
   转化为结构化评估维度，并输出带置信区间与稽核记录的干预优先级。
-tags: ['衰老时钟', '多智能体', '数字孪生', '决策支持', 'Python']
+tags: ['衰老时钟', '多智能体', '干预优先级', '决策支持', 'Python']
 featured: true
 order: 1
 repo: 'https://github.com/huangdi97/WenNian'
 role: '系统设计、架构与工程实现'
 groups: ['ai-health', 'agents']
 visual: 'aging'
-statusNote: '开源 MVP，GPLv3。仅输出评估结果，不是诊断工具。'
+statusNote: '开源 MVP。仅输出评估结果，不是诊断工具。许可证状态未定：README 声明 GPLv3，GitHub 未检测到 LICENSE 文件。'
 stack: ['Python 3.10+', 'FastAPI', 'Gradio', 'pytest', 'YAML 配置']
 ---
 
@@ -113,7 +113,9 @@ stack: ['Python 3.10+', 'FastAPI', 'Gradio', 'pytest', 'YAML 配置']
 
 ## 当前状态
 
-开源版本是覆盖上述三项能力的 MVP，以 GPLv3 发布，作为可自托管的本地应用分发。
+开源版本是覆盖上述三项能力的 MVP，作为可自托管的本地应用分发。
+
+关于许可证有一处尚未确定：README 声明 GPLv3，但 GitHub 未在该仓库检测到 LICENSE 文件。在这一点被澄清之前，许可证状态应视为“未确认”而非“已确定”。
 
 明确不在范围内：它不是诊断设备，不提供医疗建议，不开具处方。报告中明确声明其内容仅描述健康趋势，不构成医疗诊断。
 

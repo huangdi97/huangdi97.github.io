@@ -3,6 +3,7 @@ import { useT, type Lang } from '../i18n/ui';
 import Tag from './Tag.astro';
 import ProjectVisual from './ProjectVisual.astro';
 import { projectHref, type ProjectEntry } from '../lib/projects';
+import { getProjectEvidence } from '../data/evidence';
 
 export interface Props {
   project: ProjectEntry;
@@ -16,6 +17,14 @@ const d = project.data;
 
 const href = projectHref(lang, d.slug);
 const statusKey = `status.${d.status.toLowerCase()}`;
+
+/** Keeps the index page honest about how finished each project really is. */
+const evidence = getProjectEvidence(d.slug);
+const realityLabel = evidence
+  ? evidence.publicCode === 'open'
+    ? t('publiccode.open')
+    : t('publiccode.none')
+  : null;
 ---
 
 <article class="pcard" data-groups={d.groups.join(' ')} data-slug={d.slug}>
@@ -35,6 +44,17 @@ const statusKey = `status.${d.status.toLowerCase()}`;
 
     <p class="pcard-thesis">{d.summary}</p>
     <p class="body-muted pcard-desc">{d.description}</p>
+
+    {
+      evidence && (
+        <p class="pcard-reality">
+          <span class="reality-pill" data-code={evidence.publicCode}>
+            {evidence.headline[lang]}
+          </span>
+          <span class="reality-code">{realityLabel}</span>
+        </p>
+      )
+    }
 
     {
       d.tags.length > 0 && (
@@ -127,6 +147,42 @@ const statusKey = `status.${d.status.toLowerCase()}`;
   .pcard-desc {
     margin-top: 0.625rem;
     font-size: 0.9375rem;
+  }
+
+  .pcard-reality {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin: 1.125rem 0 0;
+  }
+
+  .reality-pill {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.55rem;
+    border-radius: 2px;
+    border: 1px solid var(--line-strong);
+    background: rgba(0, 0, 0, 0.035);
+    color: var(--ink);
+  }
+
+  .reality-pill[data-code='none'] {
+    border-style: dashed;
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .reality-code {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
   }
 
   .pcard-tags {

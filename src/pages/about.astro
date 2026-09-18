@@ -44,11 +44,33 @@ const profileLd = {
   jsonLd={profileLd}
 >
   <article class="shell section">
-    <header class="about-head">
-      <p class="eyebrow">About</p>
-      <h1 class="display about-name">HAO LEI</h1>
-      <p class="about-headline">{about.headline}</p>
-    </header>
+    <div class:list={['about-top', SITE.portrait && 'about-top-with-portrait']}>
+      <header class="about-head">
+        <p class="eyebrow">About</p>
+        <h1 class="display about-name">HAO LEI</h1>
+        <p class="about-headline">{about.headline}</p>
+      </header>
+
+      {
+        /*
+         * Portrait slot. Rendered only when SITE.portrait points at a real
+         * image. With no photograph the page keeps its text-only layout —
+         * nothing here invents a face.
+         */
+        SITE.portrait && (
+          <figure class="about-portrait">
+            <img
+              src={SITE.portrait}
+              width="480"
+              height="600"
+              alt={t('about.portraitAlt')}
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        )
+      }
+    </div>
 
     <div class="about-intro">
       {about.intro.map((p) => <p>{p}</p>)}
@@ -105,6 +127,33 @@ const profileLd = {
 </BaseLayout>
 
 <style>
+  .about-top {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    align-items: end;
+  }
+
+  @media (min-width: 900px) {
+    .about-top-with-portrait {
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 3rem;
+    }
+  }
+
+  .about-portrait {
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--card);
+  }
+
+  .about-portrait img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
   .about-head {
     max-width: 44ch;
   }

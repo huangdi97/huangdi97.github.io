@@ -1,0 +1,435 @@
+---
+/**
+ * Implementation status matrix + evidence panels for one project.
+ *
+ * This is the page-level answer to "what actually exists".
+ * Every row carries a state; every state has a public definition in the legend.
+ */
+import { useT, type Lang } from '../i18n/ui';
+import EvidencePanel from './EvidencePanel.astro';
+import type { ProjectEvidence, RealityState } from '../data/evidence';
+
+export interface Props {
+  evidence: ProjectEvidence;
+  lang: Lang;
+  /** Numeric prefix for lightbox dialog ids — keeps ids unique per page. */
+  idPrefix?: string;
+}
+
+const { evidence, lang, idPrefix = 'ev' } = Astro.props;
+const t = useT(lang);
+const isZh = lang === 'zh';
+const text = (v: { en: string; zh: string }) => (isZh ? v.zh : v.en);
+
+const rows = evidence.rows;
+
+/** Which states actually appear here — the legend only explains those. */
+const used: RealityState[] = [];
+for (const row of rows) {
+  if (!used.includes(row.state)) used.push(row.state);
+}
+
+const order: RealityState[] = [
+  'built',
+  'validated',
+  'partial',
+  'prototype',
+  'designed',
+  'planned',
+  'not-public',
+];
+const legend = order.filter((s) => used.includes(s));
+
+const publicCodeLabel =
+  evidence.publicCode === 'open' ? t('publiccode.open') : t('publiccode.none');
+---
+
+<section class="reality-block" id="reality">
+  <div class="reality-head">
+    <p class="eyebrow">{t('evidence.reality')}</p>
+    <h2 class="h3 reality-title">{text(evidence.reality)}</h2>
+    <p class="reality-lead">{t('evidence.lead')}</p>
+  </div>
+
+  <dl class="reality-pubcode">
+    <dt>{t('meta.publicCode')}</dt>
+    <dd>
+      <span class="reality-codeflag" data-open={evidence.publicCode === 'open'}>
+        {publicCodeLabel}
+      </span>
+    </dd>
+  </dl>
+
+  <table class="reality-table">
+    <caption class="reality-caption">{t('evidence.tableCaption')}</caption>
+    <thead>
+      <tr>
+        <th scope="col">Component</th>
+        <th scope="col">State</th>
+        <th scope="col">Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        rows.map((row) => (
+          <tr>
+            <th scope="row" class="row-label">
+              {text(row.label)}
+            </th>
+            <td class="row-state">
+              <span class="state-badge" data-state={row.state}>{t(`reality.${row.state}`)}</span>
+            </td>
+            <td class="row-note">{text(row.note)}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+
+  <details class="reality-legend">
+    <summary>
+      <span>{t('evidence.legend')}</span>
+      <span class="legend-count mono">{legend.length}</span>
+    </summary>
+    <ul>
+      {
+        legend.map((state) => (
+          <li>
+            <span class="state-badge" data-state={state}>
+              {t(`reality.${state}`)}
+            </span>
+            <span class="legend-body">{t(`reality.legend.${state}`)}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </details>
+</section>
+
+{
+  evidence.panels.length > 0 && (
+    <section class="evidence-block" aria-label={t('evidence.title')}>
+      <div class="evidence-grid">
+        {evidence.panels.map((panel, i) => (
+          <EvidencePanel panel={panel} lang={lang} idSuffix={`${idPrefix}-${i}`} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .reality-block {
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .reality-head {
+    max-width: 68ch;
+  }
+
+  .reality-title {
+    margin-top: 1rem;
+    color: var(--ink);
+  }
+
+  .reality-lead {
+    margin-top: 0.75rem;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+
+  .reality-pubcode {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1rem;
+    margin: 1.75rem 0 0;
+  }
+
+  .reality-pubcode dt {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .reality-pubcode dd {
+    margin: 0;
+  }
+
+  .reality-codeflag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.6rem;
+    border-radius: 2px;
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+  }
+
+  .reality-codeflag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--faint);
+  }
+
+  .reality-codeflag[data-open='true'] {
+    border-color: rgba(49, 92, 255, 0.35);
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  .reality-codeflag[data-open='true']::before {
+    background: var(--accent);
+  }
+
+  /* Table on wide screens, stacked cards on narrow ones. */
+  .reality-table {
+    width: 100%;
+    margin-top: 1.5rem;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    text-align: left;
+  }
+
+  .reality-caption {
+    caption-side: bottom;
+    padding-top: 0.875rem;
+    font-size: 0.75rem;
+    color: var(--faint);
+    text-align: left;
+  }
+
+  .reality-table thead th {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    padding-bottom: 0.625rem;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .reality-table tbody tr {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .reality-table tbody th,
+  .reality-table tbody td {
+    padding: 0.875rem 0;
+    vertical-align: top;
+    font-weight: 400;
+  }
+
+  .row-label {
+    color: var(--ink);
+    font-weight: 500 !important;
+    letter-spacing: -0.008em;
+  }
+
+  .row-state {
+    white-space: nowrap;
+  }
+
+  .row-note {
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  @media (max-width: 767px) {
+    .reality-table,
+    .reality-table tbody,
+    .reality-table tr,
+    .reality-table tbody th,
+    .reality-table tbody td {
+      display: block;
+      width: 100%;
+    }
+
+    .reality-table thead {
+      display: none;
+    }
+
+    .reality-table tbody tr {
+      padding: 1rem 0;
+    }
+
+    .reality-table tbody th,
+    .reality-table tbody td {
+      padding: 0;
+    }
+
+    .row-label {
+      margin-bottom: 0.5rem;
+    }
+
+    .row-state {
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .reality-table tbody th {
+      width: 30%;
+      padding-right: 1.5rem;
+    }
+
+    .reality-table tbody td.row-state {
+      width: 9.5rem;
+      padding-right: 1rem;
+    }
+
+    .row-note {
+      padding-left: 1.5rem;
+    }
+  }
+
+  /* State badges — monochrome first, accent reserved for the strongest claim. */
+  .state-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.45rem;
+    border-radius: 2px;
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .state-badge[data-state='built'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--canvas);
+  }
+
+  .state-badge[data-state='validated'] {
+    background: var(--accent-soft);
+    border-color: rgba(49, 92, 255, 0.4);
+    color: var(--accent);
+  }
+
+  .state-badge[data-state='partial'],
+  .state-badge[data-state='prototype'] {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--ink);
+  }
+
+  .state-badge[data-state='designed'] {
+    border-style: solid;
+    color: var(--muted);
+  }
+
+  .state-badge[data-state='planned'] {
+    border-style: dashed;
+    color: var(--faint);
+  }
+
+  .state-badge[data-state='not-public'] {
+    border-style: dashed;
+    border-color: rgba(0, 0, 0, 0.28);
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      rgba(0, 0, 0, 0.045) 3px,
+      rgba(0, 0, 0, 0.045) 6px
+    );
+    color: var(--muted);
+  }
+
+  /* Legend */
+  .reality-legend {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    padding-top: 1rem;
+  }
+
+  .reality-legend summary {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    color: var(--muted);
+    list-style: none;
+    min-height: 32px;
+  }
+
+  .reality-legend summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .reality-legend summary::after {
+    content: '+';
+    font-family: var(--font-mono);
+    color: var(--faint);
+  }
+
+  .reality-legend[open] summary::after {
+    content: '−';
+  }
+
+  .legend-count {
+    margin-left: auto;
+    order: 3;
+    color: var(--faint);
+  }
+
+  .reality-legend ul {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .reality-legend li {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 0.75rem;
+    align-items: baseline;
+  }
+
+  .legend-body {
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  @media (max-width: 560px) {
+    .reality-legend li {
+      grid-template-columns: 1fr;
+      gap: 0.375rem;
+    }
+  }
+
+  /* Panels */
+  .evidence-block {
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  }
+
+  .evidence-grid {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 900px) {
+    .evidence-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

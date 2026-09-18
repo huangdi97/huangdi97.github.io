@@ -36,6 +36,24 @@ export const SITE = {
   /** Published by the author in the WenNian repository README. */
   email: '304418554@qq.com',
 
+  /**
+   * Path to a real, owner-supplied resume PDF.
+   *
+   * Null until such a file exists. The resume page shows a download button
+   * only when this is set — a button that 404s is worse than no button, and a
+   * generated-but-unreviewed PDF would not match the printed page.
+   */
+  resumePdf: null,
+
+  /**
+   * Portrait image path, relative to /public.
+   *
+   * Null until a real photograph is supplied. The About page has a slot for
+   * it and keeps its text-only layout while this is null — no placeholder
+   * avatar, no generated face, no stock image.
+   */
+  portrait: null,
+
   statement: {
     en: 'Building intelligent systems for discovery, health, simulation and autonomous work.',
     zh: '构建面向科学发现、数字健康、仿真与自主工作的智能系统。',

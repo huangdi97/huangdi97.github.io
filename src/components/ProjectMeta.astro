@@ -11,9 +11,26 @@ export interface Props {
   stack?: string[];
   /** Compact variant drops the category row — used inside cards. */
   compact?: boolean;
+  /**
+   * Whether a repository can actually be inspected. 'none' is stated as a fact,
+   * never softened into "coming soon".
+   */
+  publicCode?: 'open' | 'none';
+  /** One factual sentence about what exists. Omitted when unavailable. */
+  reality?: string;
 }
 
-const { lang, year, status, role, category, stack = [], compact = false } = Astro.props;
+const {
+  lang,
+  year,
+  status,
+  role,
+  category,
+  stack = [],
+  compact = false,
+  publicCode,
+  reality,
+} = Astro.props;
 const t = useT(lang);
 
 const statusKey = `status.${status.toLowerCase()}`;
@@ -56,6 +73,26 @@ const statusKey = `status.${status.toLowerCase()}`;
             ))}
           </ul>
         </dd>
+      </div>
+    )
+  }
+  {
+    publicCode && (
+      <div class="meta-row">
+        <dt>{t('meta.publicCode')}</dt>
+        <dd>
+          <span class="codeflag" data-open={publicCode === 'open'}>
+            {t(publicCode === 'open' ? 'publiccode.open' : 'publiccode.none')}
+          </span>
+        </dd>
+      </div>
+    )
+  }
+  {
+    reality && (
+      <div class="meta-row">
+        <dt>{t('meta.reality')}</dt>
+        <dd class="meta-reality">{reality}</dd>
       </div>
     )
   }
@@ -123,5 +160,41 @@ const statusKey = `status.${status.toLowerCase()}`;
   }
   .status-dot[data-status='archived'] {
     background: rgba(0, 0, 0, 0.18);
+  }
+
+  .meta-reality {
+    line-height: 1.6;
+  }
+
+  .codeflag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 2px;
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+  }
+
+  .codeflag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--faint);
+  }
+
+  .codeflag[data-open='true'] {
+    border-color: rgba(49, 92, 255, 0.35);
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  .codeflag[data-open='true']::before {
+    background: var(--accent);
   }
 </style>

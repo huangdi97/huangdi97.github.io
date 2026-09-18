@@ -5,15 +5,22 @@ import { SITE } from '../config/site';
  * Resume content.
  *
  * Fact rule: nothing here is invented. Education, employment history, awards
- * and publications are only rendered when a verified record exists. When it
- * does not, the section states that explicitly instead of filling the space.
+ * and publications are rendered **only** when a verified record has been
+ * supplied by the owner. When nothing has been supplied the section is absent
+ * from the page entirely — it is never replaced by text addressed to the
+ * visitor, because a public page should not narrate its own gaps.
+ *
+ * To publish education, fill `EDUCATION` below and nothing else changes: the
+ * section appears automatically in both languages.
  */
+
+export type ResumeItem = { label: string; value?: string; href?: string };
 
 export type ResumeBlock = {
   title: string;
-  kind: 'text' | 'list' | 'projects' | 'contact' | 'empty';
+  kind: 'text' | 'list' | 'projects' | 'contact';
   paragraphs?: string[];
-  items?: { label: string; value?: string; href?: string }[];
+  items?: ResumeItem[];
   note?: string;
 };
 
@@ -21,6 +28,24 @@ export type ResumeModel = {
   name: string;
   headline: string;
   blocks: ResumeBlock[];
+  /** Present only when verified education records exist. */
+  education?: ResumeItem[];
+};
+
+/**
+ * Verified education records.
+ *
+ * EMPTY BY DESIGN. These are populated only from values supplied by the owner.
+ * Required before anything is written here (see VERIFIED_RESUME_DATA_REQUIRED.md):
+ *   - official institution name as it appears on the diploma
+ *   - degree type and major
+ *   - enrolment and graduation dates (or expected date)
+ *   - city / country
+ * An entry must not be added from inference, casual mention or assumption.
+ */
+export const EDUCATION: { en: ResumeItem[]; zh: ResumeItem[] } = {
+  en: [],
+  zh: [],
 };
 
 const en: ResumeModel = {
@@ -105,11 +130,6 @@ const en: ResumeModel = {
           ? [{ label: 'Email', value: SITE.email, href: `mailto:${SITE.email}` }]
           : []),
       ],
-    },
-    {
-      title: 'Education',
-      kind: 'empty',
-      note: 'Not listed here — no verified record has been supplied for publication.',
     },
   ],
 };
@@ -197,14 +217,33 @@ const zh: ResumeModel = {
           : []),
       ],
     },
-    {
-      title: '教育',
-      kind: 'empty',
-      note: '此处未列出 — 暂无可供公开发布的已核实记录。',
-    },
   ],
 };
 
+/**
+ * Appends the Education section when — and only when — verified records exist.
+ * An absent section is the correct public behaviour; a note explaining the
+ * absence would be visible editorialising on a page meant for readers.
+ */
+function withEducation(lang: Lang, blocks: ResumeBlock[]): ResumeBlock[] {
+  const entries = lang === 'zh' ? EDUCATION.zh : EDUCATION.en;
+  if (entries.length === 0) return blocks;
+
+  const title = lang === 'zh' ? '教育' : 'Education';
+  const contactAt = blocks.findIndex((b) => b.kind === 'contact');
+  const insertAt = contactAt === -1 ? blocks.length : contactAt;
+
+  return [
+    ...blocks.slice(0, insertAt),
+    { title, kind: 'list', items: entries },
+    ...blocks.slice(insertAt),
+  ];
+}
+
 export function getResume(lang: Lang): ResumeModel {
-  return lang === 'zh' ? zh : en;
+  const model = lang === 'zh' ? zh : en;
+  return {
+    ...model,
+    blocks: withEducation(lang, model.blocks),
+  };
 }

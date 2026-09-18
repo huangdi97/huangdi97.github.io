@@ -6,8 +6,9 @@ status: 'Research'
 category: '本地优先 · 个人基础设施 · 原生应用'
 summary: '跨原生平台的本地优先个人依赖与数字基础设施图谱。'
 description: >-
-  一份关于个人数字基础设施图谱的规范与设计：一套 canonical 依赖模型，在 Android、iOS 与
-  HarmonyOS 上以原生方式实现，配有一致性测试、本地仓储层与密码学身份——全程不依赖托管账号体系。
+  一份关于个人数字基础设施图谱的规范与设计：一套面向 Android、iOS 与 HarmonyOS 原生客户端的
+  canonical 依赖模型，以及一致性测试套件、本地仓储层与密码学身份——全程不依赖托管账号体系。
+  规范本身即是产物，目前没有任何实现公开发布。
 tags: ['本地优先', 'Canonical 规范', '跨平台', '密码学', '原生 UI']
 featured: true
 order: 5

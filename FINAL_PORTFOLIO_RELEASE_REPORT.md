@@ -9,7 +9,7 @@
 ## 1. 最终实现内容
 
 - 完整的 Astro 5 静态站点：EN 为默认语言，简体中文挂载在 `/zh`，语言切换保持当前页面路径。
-- 5 个核心项目的完整双语 Case Study（内容经 GitHub 公开仓库事实核验）。
+- 5 个核心项目的完整双语 Case Study。**事实核验范围（v1.0 表述已更正）**：仅 WenNian 与 HyCell 有公开仓库可供核对；TaiYi Lingjing、Pet AI Health、PDIG 无公开仓库，其页面只依据站内材料陈述，未声称经过公开核验。
 - Research（5 个方向）、About、可打印 Resume、定制 404、双语言 404。
 - 统一 Design Token 系统（`#F7F7F4` 纸面 / `#111` 墨色 / `#315CFF` 单一强调色）、系统字体栈、150–500ms 克制动效，完整支持 `prefers-reduced-motion`。
 - SEO 全套：canonical、hreflang（en / zh-Hans / x-default）、OG/Twitter 卡片、JSON-LD（Person、WebSite、SoftwareSourceCode）、sitemap、robots、favicon、manifest、11 张静态 OG 图。
@@ -32,13 +32,17 @@
 
 ## 3. Project 列表
 
-| # | 项目 | 类别 | 状态 | Repo 链接 |
+| # | 项目 | 类别 | 状态 | 可核验的公开证据 |
 | --- | --- | --- | --- | --- |
-| 01 | WenNian / 知身·问年 | AI Health · Aging Intelligence | Active | github.com/huangdi97/WenNian ✔ 已核验 |
-| 02 | HyCell | Computational Biology · AI Virtual Cell | Research | github.com/huangdi97/HyCell-JEPA ✔ 已核验 |
-| 03 | TaiYi Lingjing / 太一·灵境 | AI Discovery Platform · Agents | Research | 无公开 repo → 只显示 Case Study |
-| 04 | Pet AI Health | AI Health · Multimodal | Prototype | 无公开 repo → 只显示 Case Study |
-| 05 | PDIG | Local-first · Personal Infrastructure | Design | 无公开 repo → 只显示 Case Study |
+| 01 | WenNian / 知身·问年 | AI Health · Aging Intelligence · Decision Support | Active | 有公开仓库：github.com/huangdi97/WenNian —— 目录结构、README 命令、README 声明可核对 |
+| 02 | HyCell | Computational Biology · AI Virtual Cell | Prototype | 有公开仓库：github.com/huangdi97/HyCell-JEPA —— 验收脚本、README 输出、模块清单可核对 |
+| 03 | TaiYi Lingjing / 太一·灵境 | AI Discovery Platform · Agents | Research | 无公开仓库。仅站内材料，未声称经过公开核验 |
+| 04 | Pet AI Health | AI Health · Multimodal | Research | 无公开仓库。仅站内材料，未声称经过公开核验 |
+| 05 | PDIG | Local-first · Personal Infrastructure | Research | 无公开仓库。仅站内材料，未声称经过公开核验 |
+
+> 更正说明：v1.0 报告曾写作「5 个核心项目内容经 GitHub 公开仓库事实核验」，该表述不准确。
+> 五个项目中只有 WenNian 与 HyCell 存在可核对的公开仓库；其余三项没有公开代码，本表已如实标注。
+> 状态列的值与 `src/content/projects/*/*.md` 的 frontmatter 保持一致。
 
 ## 4. 技术栈
 
@@ -94,8 +98,8 @@ Astro 5（静态输出）· TypeScript strict · Tailwind CSS 3 + CSS Tokens · 
 
 ## 14. 尚未解决的问题
 
-1. **简历数据缺口**：仓库内无可核验的教育/工作经历记录，Resume 的 Education 区按事实纪律留白声明。补充真实材料后改 `src/data/resume.ts` 即可。
-2. **项目截图**：五个项目均无真实 UI 截图，现用统一生成的系统结构图代替；后续有真实产品截图可放 `public/` 并在 frontmatter `cover` 引用。
+1. **简历数据缺口**：仓库内无可核验的教育/工作经历记录。v1.1 起 Education 区在页面**完全不渲染**（此前会向访问者显示「无已核实记录」的说明文字，已移除）。待补充清单见 `VERIFIED_RESUME_DATA_REQUIRED.md`，补齐后改 `src/data/resume.ts` 的 `EDUCATION` 即可自动出现。
+2. **项目截图**：五个项目均无真实 UI 截图，现用统一生成的系统结构图代替；后续有真实产品截图可放 `public/` 并在 frontmatter `cover` 引用。**本站不生成任何伪造 UI 截图**——没有实物的位置，用目录结构、命令输出、验收脚本输出替代。
 3. **TaiYi / Pet AI Health / PDIG 无公开 repo**：页面按规则不显示仓库链接；repo 公开后在对应 frontmatter 加 `repo` 字段即可。
 4. **Actions 弃用告警**：GitHub 提示 checkout@v4 等面向 Node 20 的 action 将被强制跑在 Node 24。属 GitHub 官方过渡告警，不影响构建；后续升级 action 大版本即可。
 5. **本地截图字体伪影**：本机无头 Chromium 无法枚举系统字体，截图呈衬线体；计算样式已确认字体栈正确（真实浏览器解析到 Segoe UI/system-ui），非站点缺陷。

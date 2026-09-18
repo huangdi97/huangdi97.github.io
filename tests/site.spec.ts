@@ -95,6 +95,61 @@ test.describe('projects', () => {
   });
 });
 
+test.describe('evidence layer', () => {
+  test('case study answers status, public code and reality on first screen', async ({ page }) => {
+    await page.goto('/projects/wennian/');
+    const meta = page.locator('.case-meta');
+
+    await expect(meta.getByText('Public code')).toBeVisible();
+    await expect(meta.getByText('Public repository')).toBeVisible();
+    await expect(meta.getByText('Reality')).toBeVisible();
+    await expect(meta.getByText(/Code, tests, UI, API and deployment files are public\./)).toBeVisible();
+  });
+
+  test('implementation status matrix and evidence panels render', async ({ page }) => {
+    await page.goto('/projects/wennian/');
+    const reality = page.locator('#reality');
+    await expect(reality).toBeVisible();
+
+    const badges = reality.locator('.state-badge');
+    expect(await badges.count()).toBeGreaterThan(5);
+    await expect(reality.locator('.state-badge[data-state="built"]').first()).toBeVisible();
+    await expect(reality.locator('.state-badge[data-state="planned"]').first()).toBeVisible();
+
+    // Every evidence panel must state where it came from.
+    const panels = page.locator('figure.ev-panel');
+    const panelCount = await panels.count();
+    expect(panelCount).toBeGreaterThan(0);
+    for (let i = 0; i < panelCount; i += 1) {
+      await expect(panels.nth(i).locator('.ev-source-value')).not.toBeEmpty();
+    }
+  });
+
+  test('a project without public code states that, and cites no repository artifact', async ({
+    page,
+  }) => {
+    await page.goto('/projects/pdig/');
+    await expect(page.locator('.case-meta').getByText('None — nothing published')).toBeVisible();
+    await expect(page.locator('.state-badge[data-state="not-public"]').first()).toBeVisible();
+    await expect(page.locator('figure.ev-panel .ev-source-value').first()).toBeVisible();
+  });
+
+  test('home page cards carry a reality status', async ({ page }) => {
+    await page.goto('/');
+    const pills = page.locator('.reality-pill');
+    expect(await pills.count()).toBeGreaterThanOrEqual(3);
+    await expect(pills.filter({ hasText: 'Open-source MVP' }).first()).toBeVisible();
+  });
+
+  test('open source strip shows checked-in license and update metadata', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('Metadata snapshot')).toBeVisible();
+    await expect(page.locator('.oss-fact-k').first()).toBeVisible();
+    // WenNian has no detected LICENSE file — shown as a fact, not hidden.
+    await expect(page.getByText('No license detected').first()).toBeVisible();
+  });
+});
+
 test.describe('language switching', () => {
   test('keeps the current project page when switching to Chinese', async ({ page }) => {
       await page.goto('/projects/wennian/');
@@ -145,9 +200,9 @@ test.describe('layout integrity', () => {
 });
 
 test.describe('resume', () => {
-  test('exposes a print action and all required sections', async ({ page }) => {
+  test('exposes a print action and all verifiable sections', async ({ page }) => {
     await page.goto('/resume/');
-    await expect(page.getByRole('button', { name: /Print Resume/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Print \/ Save as PDF/ })).toBeVisible();
     for (const section of [
       'Profile',
       'Focus',
@@ -155,10 +210,19 @@ test.describe('resume', () => {
       'Technical Areas',
       'Open Source',
       'Contact',
-      'Education',
     ]) {
       await expect(page.locator('h2', { hasText: section })).toBeVisible();
     }
+
+    // Education is hidden until verified data is supplied — it must never be
+    // rendered as a visitor-facing placeholder.
+    await expect(page.locator('h2', { hasText: 'Education' })).toHaveCount(0);
+    await expect(page.getByText(/no verified record/i)).toHaveCount(0);
+  });
+
+  test('shows no PDF download button while no real PDF exists', async ({ page }) => {
+    await page.goto('/resume/');
+    await expect(page.getByRole('link', { name: /Download PDF/ })).toHaveCount(0);
   });
 });
 

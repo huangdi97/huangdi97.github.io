@@ -1,0 +1,381 @@
+---
+/**
+ * One evidence panel.
+ *
+ * Contract enforced by this component, not by convention:
+ *  - every panel renders its source, labelled, and links it when possible
+ *  - monospace bodies never reflow or truncate silently — they scroll
+ *  - images always carry width/height (no layout shift), alt text and lazy load
+ *  - images open in a native <dialog>, which gives Esc + focus trap for free
+ */
+import { useT, type Lang } from '../i18n/ui';
+import type { EvidencePanel } from '../data/evidence';
+
+export interface Props {
+  panel: EvidencePanel;
+  lang: Lang;
+  /** Unique suffix for this panel's dialog id — several panels share a page. */
+  idSuffix: string;
+}
+
+const { panel, lang, idSuffix } = Astro.props;
+const t = useT(lang);
+const isZh = lang === 'zh';
+
+const text = (v: { en: string; zh: string }) => (isZh ? v.zh : v.en);
+const dialogId = `evidence-lightbox-${idSuffix}`;
+const img = panel.image;
+---
+
+<figure class="ev-panel" data-kind={panel.kind}>
+  <figcaption class="ev-head">
+    <div class="ev-head-main">
+      <span class="ev-kind">{t(`evidence.kind.${panel.kind}`)}</span>
+      <h3 class="ev-title">{text(panel.title)}</h3>
+    </div>
+    {
+      panel.sourceUrl && (
+        <a
+          class="ev-srclink"
+          href={panel.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {t('evidence.view')}
+          <span aria-hidden="true">↗</span>
+        </a>
+      )
+    }
+  </figcaption>
+
+  {
+    img && (
+      <div class="ev-media">
+        <button
+          type="button"
+          class="ev-imgbtn"
+          data-lightbox-open={dialogId}
+          aria-label={`${t('evidence.expand')} — ${text(img.alt)}`}
+        >
+          <img
+            src={img.src}
+            width={img.width}
+            height={img.height}
+            alt={text(img.alt)}
+            loading="lazy"
+            decoding="async"
+          />
+          <span class="ev-imghint mono">{t('evidence.expand')}</span>
+        </button>
+        <dialog class="ev-dialog" id={dialogId} aria-label={text(img.alt)}>
+          <div class="ev-dialog-bar">
+            <span class="mono">{text(img.alt)}</span>
+            <button type="button" class="ev-dialog-close" data-lightbox-close={dialogId}>
+              {t('evidence.close')}
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <img
+            src={img.src}
+            width={img.width}
+            height={img.height}
+            alt={text(img.alt)}
+            loading="lazy"
+            decoding="async"
+          />
+        </dialog>
+      </div>
+    )
+  }
+
+  {
+    panel.body && (
+      <div class="ev-body-wrap">
+        <pre class="ev-body"><code>{panel.body}</code></pre>
+      </div>
+    )
+  }
+
+  {
+    panel.items && (
+      <ul class="ev-items">
+        {panel.items.map((item) => (
+          <li>{text(item)}</li>
+        ))}
+      </ul>
+    )
+  }
+
+  {panel.caption && <p class="ev-caption">{text(panel.caption)}</p>}
+
+  <p class="ev-source">
+    <span class="ev-source-label">{t('evidence.source')}</span>
+    <span class="ev-source-value">{text(panel.source)}</span>
+  </p>
+</figure>
+
+<script>
+  // Progressive enhancement: without JS the images are still visible inline,
+  // the dialog simply never opens. Nothing else on the page depends on this.
+  const bind = () => {
+    for (const opener of document.querySelectorAll<HTMLButtonElement>('[data-lightbox-open]')) {
+      const id = opener.dataset.lightboxOpen;
+      if (!id) continue;
+      const dialog = document.getElementById(id) as HTMLDialogElement | null;
+      if (!dialog) continue;
+
+      opener.addEventListener('click', () => {
+        if (typeof dialog.showModal === 'function') dialog.showModal();
+        else dialog.setAttribute('open', '');
+      });
+
+      dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+
+      const closer = document.querySelector<HTMLButtonElement>(`[data-lightbox-close="${id}"]`);
+      closer?.addEventListener('click', () => dialog.close());
+    }
+  };
+
+  bind();
+  document.addEventListener('astro:after-swap', bind);
+</script>
+
+<style>
+  .ev-panel {
+    margin: 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ev-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 1rem 1.25rem 0.875rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ev-head-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    min-width: 0;
+  }
+
+  .ev-kind {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .ev-title {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .ev-srclink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .ev-srclink:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Monospace blocks scroll rather than reflow — a tree that wraps is unreadable. */
+  .ev-body-wrap {
+    overflow-x: auto;
+    background: rgba(0, 0, 0, 0.018);
+  }
+
+  .ev-body {
+    margin: 0;
+    padding: 1.125rem 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.75;
+    color: var(--ink);
+    white-space: pre;
+    tab-size: 2;
+    min-width: max-content;
+  }
+
+  @media (max-width: 640px) {
+    .ev-body {
+      font-size: 0.6875rem;
+    }
+  }
+
+  .ev-items {
+    list-style: none;
+    margin: 0;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .ev-items li {
+    position: relative;
+    padding-left: 1rem;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .ev-items li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 5px;
+    height: 1px;
+    background: var(--faint);
+  }
+
+  .ev-caption {
+    margin: 0;
+    padding: 0.875rem 1.25rem 0;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .ev-source {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.625rem;
+    margin: 0.875rem 0 0;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--line);
+    background: rgba(0, 0, 0, 0.015);
+    font-size: 0.75rem;
+  }
+
+  .ev-source-label {
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .ev-source-value {
+    color: var(--muted);
+  }
+
+  /* Media / lightbox */
+  .ev-media {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ev-imgbtn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+    position: relative;
+  }
+
+  .ev-imgbtn img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .ev-imghint {
+    position: absolute;
+    right: 0.625rem;
+    bottom: 0.625rem;
+    padding: 0.3rem 0.55rem;
+    background: rgba(17, 17, 17, 0.82);
+    color: #f5f5f5;
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease);
+  }
+
+  .ev-imgbtn:hover .ev-imghint,
+  .ev-imgbtn:focus-visible .ev-imghint {
+    opacity: 1;
+  }
+
+  .ev-dialog {
+    width: min(96vw, 1180px);
+    max-width: none;
+    max-height: 92vh;
+    padding: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    background: var(--card);
+    color: var(--ink);
+    overflow: auto;
+  }
+
+  .ev-dialog::backdrop {
+    background: rgba(17, 17, 17, 0.72);
+  }
+
+  .ev-dialog-bar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--card);
+  }
+
+  .ev-dialog-bar img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .ev-dialog-close {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 36px;
+    padding: 0 0.75rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--ink);
+    font-size: 0.8125rem;
+    cursor: pointer;
+  }
+
+  .ev-dialog-close:hover {
+    border-color: var(--ink);
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  @media print {
+    .ev-dialog,
+    .ev-imghint {
+      display: none !important;
+    }
+  }
+</style>

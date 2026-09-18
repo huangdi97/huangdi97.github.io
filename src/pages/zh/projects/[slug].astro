@@ -4,11 +4,13 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ProjectVisual from '../../../components/ProjectVisual.astro';
 import ProjectMeta from '../../../components/ProjectMeta.astro';
 import ArchitectureDiagram from '../../../components/ArchitectureDiagram.astro';
+import ProjectReality from '../../../components/ProjectReality.astro';
 import Tag from '../../../components/Tag.astro';
 import { SITE } from '../../../config/site';
 import { useT } from '../../../i18n/ui';
 import { projectsHref, projectHref, nextProject, getProjects } from '../../../lib/projects';
 import { getArchitecture } from '../../../data/architecture';
+import { getProjectEvidence } from '../../../data/evidence';
 
 export async function getStaticPaths() {
   const entries = await getCollection('projectsZh');
@@ -36,6 +38,7 @@ const enPath = `/projects/${d.slug}/`;
 const zhPath = path;
 
 const steps = getArchitecture(d.slug, lang);
+const evidence = getProjectEvidence(d.slug);
 
 const ld: Record<string, unknown>[] = [
   {
@@ -100,6 +103,8 @@ const ld: Record<string, unknown>[] = [
           role={d.role}
           category={d.category}
           stack={d.stack}
+          publicCode={evidence?.publicCode}
+          reality={evidence ? evidence.reality[lang] : undefined}
         />
       </div>
 
@@ -112,24 +117,32 @@ const ld: Record<string, unknown>[] = [
         )
       }
 
-      {
-        (d.repo || d.demo) && (
-          <div class="case-actions">
-            {d.repo && (
-              <a href={d.repo} class="btn btn-outline" target="_blank" rel="noopener noreferrer">
-                {t('work.repo')}
-                <span aria-hidden="true">↗</span>
-              </a>
-            )}
-            {d.demo && (
-              <a href={d.demo} class="btn btn-outline" target="_blank" rel="noopener noreferrer">
-                Demo
-                <span aria-hidden="true">↗</span>
-              </a>
-            )}
-          </div>
-        )
-      }
+      <div class="case-actions">
+        {
+          d.repo && (
+            <a href={d.repo} class="btn btn-outline" target="_blank" rel="noopener noreferrer">
+              {t('work.repo')}
+              <span aria-hidden="true">↗</span>
+            </a>
+          )
+        }
+        {
+          d.demo && (
+            <a href={d.demo} class="btn btn-outline" target="_blank" rel="noopener noreferrer">
+              Demo
+              <span aria-hidden="true">↗</span>
+            </a>
+          )
+        }
+        {
+          evidence && (
+            <a href="#reality" class="btn btn-outline">
+              {t('evidence.title')}
+              <span aria-hidden="true">↓</span>
+            </a>
+          )
+        }
+      </div>
     </header>
 
     <div class="case-visual">
@@ -203,6 +216,10 @@ const ld: Record<string, unknown>[] = [
         }
       </aside>
     </div>
+
+    {
+      evidence && <ProjectReality evidence={evidence} lang={lang} idPrefix={d.slug} />
+    }
 
     {
       upNext && (

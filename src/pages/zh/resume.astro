@@ -43,7 +43,18 @@ const profileLd = {
   <article class="shell resume">
     <div class="resume-bar no-print">
       <p class="mono">{t('resume.note')}</p>
-      <button type="button" class="btn btn-primary" data-print>{t('resume.print')}</button>
+      <div class="resume-bar-actions">
+        {
+          /* A download button appears only once a real PDF exists. */
+          SITE.resumePdf && (
+            <a href={SITE.resumePdf} class="btn btn-outline" download>
+              {t('resume.download')}
+              <span aria-hidden="true">&darr;</span>
+            </a>
+          )
+        }
+        <button type="button" class="btn btn-primary" data-print>{t('resume.print')}</button>
+      </div>
     </div>
 
     <header class="resume-head">
@@ -116,7 +127,6 @@ const profileLd = {
             </ul>
           )}
 
-          {block.kind === 'empty' && <p class="resume-text resume-empty">{block.note}</p>}
         </section>
       ))
     }
@@ -142,6 +152,13 @@ const profileLd = {
     gap: 1rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--line);
+  }
+
+  .resume-bar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
   }
 
   .resume-head {
@@ -202,9 +219,6 @@ const profileLd = {
     margin-bottom: 0.875rem;
   }
 
-  .resume-empty {
-    color: var(--faint);
-  }
 
   .resume-list {
     list-style: none;

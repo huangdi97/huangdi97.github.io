@@ -25,7 +25,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run build && npm run preview -- --port 4321 --host 127.0.0.1',
+    // On CI the build step has already produced ./dist, so preview it directly
+    // instead of paying for a second build. Locally, build first for convenience.
+    command: process.env.CI
+      ? 'npm run preview -- --port 4321 --host 127.0.0.1'
+      : 'npm run build && npm run preview -- --port 4321 --host 127.0.0.1',
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

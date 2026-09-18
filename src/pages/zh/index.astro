@@ -9,7 +9,7 @@ import { useT, localizedPath } from '../../i18n/ui';
 import { getFeaturedProjects, projectsHref } from '../../lib/projects';
 import { getResearch } from '../../data/research';
 import { getHow } from '../../data/how';
-import { OSS_HIGHLIGHTS } from '../../data/oss';
+import { OSS_CAPTURED_AT, OSS_HIGHLIGHTS } from '../../data/oss';
 
 const lang = 'zh' as const;
 const t = useT(lang);
@@ -150,12 +150,29 @@ const websiteLd = {
             <a href={repo.url} class="oss-item" target="_blank" rel="noopener noreferrer">
               <span class="oss-name">{repo.name}</span>
               <span class="oss-desc">{repo.descriptionZh}</span>
-              <span class="oss-lang">{repo.language}</span>
+              <span class="oss-facts">
+                <span class="oss-fact">
+                  <span class="oss-fact-k">{t('oss.language')}</span>
+                  <span class="oss-fact-v">{repo.language ?? '—'}</span>
+                </span>
+                <span class="oss-fact">
+                  <span class="oss-fact-k">{t('oss.license')}</span>
+                  <span class="oss-fact-v" data-nolicense={repo.license === null}>
+                    {repo.license ?? t('oss.nolicense')}
+                  </span>
+                </span>
+                <span class="oss-fact">
+                  <span class="oss-fact-k">{t('oss.updated')}</span>
+                  <span class="oss-fact-v">{repo.updatedAt}</span>
+                </span>
+              </span>
             </a>
           </li>
         ))
       }
     </ul>
+
+    <p class="oss-snapshot mono">{t('oss.snapshot')} — {OSS_CAPTURED_AT}</p>
   </section>
 
   <section class="shell section-tight">
@@ -342,7 +359,7 @@ const websiteLd = {
 
   @media (min-width: 900px) {
     .oss-item {
-      grid-template-columns: 14rem minmax(0, 1fr) 6rem;
+      grid-template-columns: 14rem minmax(0, 1fr) 15rem;
       gap: 2rem;
       align-items: baseline;
     }
@@ -358,18 +375,46 @@ const websiteLd = {
     color: var(--muted);
   }
 
-  .oss-lang {
+  .oss-facts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .oss-fact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 0.75rem;
     font-family: var(--font-mono);
     font-size: 0.6875rem;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+
+  .oss-fact-k {
     color: var(--faint);
   }
 
+  .oss-fact-v {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 缺失许可证是事实，就按事实呈现，而不是悄悄省略。 */
+  .oss-fact-v[data-nolicense='true'] {
+    color: var(--faint);
+    border-bottom: 1px dotted var(--line-strong);
+  }
+
   @media (min-width: 900px) {
-    .oss-lang {
+    .oss-facts {
       text-align: right;
     }
+  }
+
+  .oss-snapshot {
+    margin-top: 1.25rem;
   }
 
   .cta {

@@ -7,9 +7,10 @@ category: 'Local-first · Personal Infrastructure · Native Apps'
 summary: 'A local-first personal dependency and digital-infrastructure graph across native platforms.'
 description: >-
   A specification and design for a personal digital-infrastructure graph: one
-  canonical dependency model, implemented natively on Android, iOS and
-  HarmonyOS, with conformance tests, a local repository layer and
-  cryptography for identity — all without a hosted account system.
+  canonical dependency model for native clients on Android, iOS and
+  HarmonyOS, plus a conformance suite, a local repository layer and
+  cryptography for identity — all without a hosted account system. The spec
+  is the artifact; no implementation is published.
 tags: ['Local-first', 'Canonical Spec', 'Cross-platform', 'Cryptography', 'Native UI']
 featured: true
 order: 5

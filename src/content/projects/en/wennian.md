@@ -3,21 +3,21 @@ title: 'WenNian / 知身·问年'
 slug: 'wennian'
 year: 2026
 status: 'Active'
-category: 'AI Health · Aging Intelligence · Digital Twin'
+category: 'AI Health · Aging Intelligence · Decision Support'
 summary: 'AI aging assessment and intervention decision system.'
 description: >-
   A decision engine for aging intervention. It runs multi-clock biological age
   assessment over routine blood markers, turns vague complaints into structured
   dimensions through an active interview, and produces intervention priorities
   that carry confidence intervals and an audit trail.
-tags: ['Aging Clock', 'Multi-Agent', 'Digital Twin', 'Decision Support', 'Python']
+tags: ['Aging Clock', 'Multi-Agent', 'Intervention Priority', 'Decision Support', 'Python']
 featured: true
 order: 1
 repo: 'https://github.com/huangdi97/WenNian'
 role: 'System design, architecture and engineering'
 groups: ['ai-health', 'agents']
 visual: 'aging'
-statusNote: 'Open-source MVP, GPLv3. Assessment output only — not a diagnostic device.'
+statusNote: 'Open-source MVP. Assessment output only — not a diagnostic device. License unresolved: the README states GPLv3, GitHub detects no LICENSE file.'
 stack: ['Python 3.10+', 'FastAPI', 'Gradio', 'pytest', 'YAML config']
 ---
 
@@ -188,8 +188,11 @@ phase:
 ## Current Status
 
 The open-source release is an MVP covering the three capabilities described
-above. It is published under GPLv3 and distributed as a local, self-hosted
-application.
+above. It is distributed as a local, self-hosted application.
+
+On licensing, one unresolved point: the README states GPLv3, but GitHub detects
+no LICENSE file in the repository. Until that is reconciled, treat the license
+as unconfirmed rather than settled.
 
 Explicitly out of scope: this is not a diagnostic device, does not provide
 medical advice, and does not prescribe. Reports state that they describe

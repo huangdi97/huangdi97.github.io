@@ -1,28 +1,43 @@
 /**
  * Public repositories, captured statically at build time.
  *
- * No GitHub API call is made during build. Every entry below was verified
- * against the live GitHub account before being written. If a repository is
- * private, unconfirmed or renamed, it is simply not listed here — the site
- * never invents a link.
+ * No GitHub API call is made during build or at runtime. Every field below was
+ * read from the GitHub REST API and written here by hand; `capturedAt` records
+ * when that snapshot was taken so an outdated entry is traceable, not silent.
+ *
+ * Discipline:
+ *  - no star counts. Stars measure visibility, not capability.
+ *  - `license: null` means GitHub detected no LICENSE file. It is displayed as
+ *    "No license detected", never silently upgraded to "MIT".
+ *  - anything private, unconfirmed or renamed is simply absent from this list.
  */
 
 export type OssRepo = {
   name: string;
   url: string;
   language: string | null;
+  /** SPDX identifier as GitHub reports it, or null when it detects none. */
+  license: string | null;
+  /** ISO date of the last update reported by GitHub. */
+  updatedAt: string;
   descriptionEn: string;
   descriptionZh: string;
   /** Shown on the home page open-source strip. */
   highlight?: boolean;
 };
 
+/** Date this snapshot was taken, in ISO 8601 form. Displayed as provenance. */
+export const OSS_CAPTURED_AT = '2026-09-17';
+
 export const OSS_REPOS: OssRepo[] = [
   {
     name: 'WenNian',
     url: 'https://github.com/huangdi97/WenNian',
     language: 'Python',
-    descriptionEn: 'Aging-intervention decision engine: multi-clock assessment, structured health interview, white-label reporting.',
+    license: null,
+    updatedAt: '2026-07-01',
+    descriptionEn:
+      'Aging-intervention decision engine: multi-clock assessment, structured health interview, white-label reporting.',
     descriptionZh: '衰老干预决策引擎：多时钟衰老评估、结构化健康访谈、白标报告生成。',
     highlight: true,
   },
@@ -30,7 +45,10 @@ export const OSS_REPOS: OssRepo[] = [
     name: 'HyCell-JEPA',
     url: 'https://github.com/huangdi97/HyCell-JEPA',
     language: 'Python',
-    descriptionEn: 'Cellular world-model prototype: compact belief-state transitions, verifiers, planners and real-matrix smoke validation.',
+    license: null,
+    updatedAt: '2026-07-22',
+    descriptionEn:
+      'Cellular world-model prototype: compact belief-state transitions, verifiers, planners and real-matrix smoke validation.',
     descriptionZh: '细胞世界模型原型：紧凑信念状态转移、校验器、规划器与真实矩阵冒烟验证。',
     highlight: true,
   },
@@ -38,6 +56,8 @@ export const OSS_REPOS: OssRepo[] = [
     name: 'BioPulse',
     url: 'https://github.com/huangdi97/BioPulse',
     language: 'Python',
+    license: 'MIT',
+    updatedAt: '2026-07-17',
     descriptionEn: 'Agent-native workspace for life-science workflows.',
     descriptionZh: '面向生命科学工作流的 Agent-native 工作台。',
     highlight: true,
@@ -46,6 +66,8 @@ export const OSS_REPOS: OssRepo[] = [
     name: 'wanxiang-world',
     url: 'https://github.com/huangdi97/wanxiang-world',
     language: 'Python',
+    license: 'Apache-2.0',
+    updatedAt: '2026-08-17',
     descriptionEn: 'Semantic persistent open-ended co-evolutionary world OS.',
     descriptionZh: '语义持久化、开放式协同演化的世界操作系统。',
     highlight: true,
@@ -54,6 +76,8 @@ export const OSS_REPOS: OssRepo[] = [
     name: 'morn',
     url: 'https://github.com/huangdi97/morn',
     language: 'Rust',
+    license: null,
+    updatedAt: '2026-08-16',
     descriptionEn: 'Systems-level operating environment written in Rust.',
     descriptionZh: '使用 Rust 编写的系统级运行环境。',
   },
@@ -61,6 +85,8 @@ export const OSS_REPOS: OssRepo[] = [
     name: 'mdns-scanner',
     url: 'https://github.com/huangdi97/mdns-scanner',
     language: 'Go',
+    license: null,
+    updatedAt: '2026-08-21',
     descriptionEn: 'Local network service discovery scanner.',
     descriptionZh: '本地网络服务发现扫描工具。',
   },
@@ -68,6 +94,8 @@ export const OSS_REPOS: OssRepo[] = [
     name: 'zhishen-pricing',
     url: 'https://github.com/huangdi97/zhishen-pricing',
     language: 'HTML',
+    license: null,
+    updatedAt: '2026-08-26',
     descriptionEn: 'Pricing page for the 知身 (ZhiShen) health assessment product.',
     descriptionZh: '知身健康评估产品的定价页。',
   },
