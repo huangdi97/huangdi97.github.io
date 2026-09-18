@@ -335,6 +335,20 @@ function squashed(raw: string): string {
   return raw.replace(/\s+/g, '');
 }
 
+/**
+ * `/Info` metadata as plain strings.
+ *
+ * `pdfjs` types `info` as a bare `Object`, which differs between the local and
+ * the CI install of the package — reading through a narrow shape keeps the
+ * assertion honest without depending on how the type happens to be declared.
+ */
+async function pdfInfo(file: string): Promise<Record<string, unknown>> {
+  const bytes = readFileSync(join(process.cwd(), 'public', 'resume', file));
+  const doc = await getDocument({ data: new Uint8Array(bytes), useSystemFonts: true }).promise;
+  const meta = await doc.getMetadata();
+  return (meta.info ?? {}) as Record<string, unknown>;
+}
+
 /** The Selected Projects block, bounded by whichever section follows it. */
 function projectsBlock(text: string): string {
   const start = text.indexOf('精选项目');
@@ -355,11 +369,9 @@ test.describe('resume PDFs', () => {
       expect(text, 'phone leaked into PDF').not.toContain(PHONE);
       expect(text, 'private email leaked into PDF').not.toContain(PRIVATE_EMAIL);
 
-      const bytes = readFileSync(join(process.cwd(), 'public', 'resume', variant.file));
-      const doc = await getDocument({ data: new Uint8Array(bytes), useSystemFonts: true }).promise;
-      const meta = await doc.getMetadata();
-      expect(meta.info?.Title).toBe('Hao Lei — Resume');
-      expect(meta.info?.Author).toBe('Hao Lei');
+      const info = await pdfInfo(variant.file);
+      expect(info.Title).toBe('Hao Lei — Resume');
+      expect(info.Author).toBe('Hao Lei');
     });
 
     test(`${variant.id} Selected Projects carry no TaiYi and follow its order`, async () => {
