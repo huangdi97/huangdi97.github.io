@@ -1,0 +1,125 @@
+---
+/**
+ * One equation, one idea, no carousel.
+ *
+ * Rendered as native MathML — no runtime library, no build-time KaTeX, no
+ * network. There is exactly one formula here and it is changed by hand.
+ *
+ * The label matters more than the formula: this is a lens for framing a
+ * biological intervention as a state transition, not a claim that any system
+ * on this site implements this expression.
+ */
+import { useT, type Lang } from '../i18n/ui';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const spoken =
+  lang === 'zh'
+    ? 'z 下标 t+1 等于 F 下标 theta 作用于 z 下标 t 与 a 下标 t'
+    : 'z sub t plus one equals F sub theta of z sub t and a sub t';
+---
+
+<aside class="eq" aria-labelledby="eq-title">
+  <div class="eq-head">
+    <p class="eyebrow eq-eyebrow" id="eq-title">{t('equation.eyebrow')}</p>
+    <span class="concept-note">{t('equation.label')}</span>
+  </div>
+
+  <div class="eq-body">
+    <p class="eq-math-wrap">
+      <math
+        xmlns="http://www.w3.org/1998/Math/MathML"
+        display="inline"
+        class="eq-math"
+        aria-label={spoken}
+      >
+        <mrow>
+          <msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+          <mo>=</mo>
+          <msub><mi>F</mi><mi>θ</mi></msub>
+          <mo>(</mo>
+          <msub><mi>z</mi><mi>t</mi></msub>
+          <mo>,</mo>
+          <msub><mi>a</mi><mi>t</mi></msub>
+          <mo>)</mo>
+        </mrow>
+      </math>
+    </p>
+
+    <p class="eq-text">{t('equation.body')}</p>
+  </div>
+
+  <p class="eq-caption">{t('equation.caption')}</p>
+</aside>
+
+<style>
+  .eq {
+    border-top: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line);
+    padding-block: clamp(1.5rem, 3vw, 2.25rem);
+  }
+
+  .eq-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  /* The shared eyebrow draws a trailing rule; here it competes with the badge. */
+  .eq-eyebrow::after {
+    display: none;
+  }
+
+  .eq-body {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+  }
+
+  @media (min-width: 900px) {
+    .eq-body {
+      grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+      gap: 3rem;
+      align-items: center;
+    }
+  }
+
+  .eq-math-wrap {
+    margin: 0;
+    padding: 1.25rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    text-align: center;
+    overflow-x: auto;
+  }
+
+  .eq-math {
+    font-family: var(--font-mono);
+    font-size: clamp(1.125rem, 2.4vw, 1.5rem);
+    color: var(--ink);
+  }
+
+  .eq-text {
+    margin: 0;
+    font-size: clamp(1rem, 1.4vw, 1.125rem);
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 52ch;
+  }
+
+  .eq-caption {
+    margin: 1.25rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.55;
+    color: var(--faint);
+    max-width: 68ch;
+  }
+</style>

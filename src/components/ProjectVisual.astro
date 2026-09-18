@@ -1,16 +1,25 @@
 ---
 /**
- * Unified project visuals.
+ * Project visuals.
  *
- * No stock imagery and no generated "tech" illustrations — each project gets
- * one abstract system mark drawn from the same vocabulary: hairlines, white
- * nodes, a single accent element, monospaced micro-labels.
+ * One drawing vocabulary — hairlines, mono micro-labels, a single accent,
+ * generous whitespace — applied to six genuinely different compositions. The
+ * stroke and palette are shared; the scientific metaphor is not.
+ *
+ * Every colour reads from a theme custom property, so a project mark looks
+ * correct in paper, white and night without a second copy of the artwork.
+ *
+ * Formulas appearing in a mark are notation for reading the structure, not a
+ * claim about the implementation. Each carries a CONCEPTUAL NOTATION micro
+ * label, and none of them reach the evidence panel.
  */
+
+import type { VisualVariant } from '../data/visualVariants';
 
 let seq = 0;
 
 export interface Props {
-  variant: 'aging' | 'cell' | 'discovery' | 'pet' | 'infra' | 'runtime' | 'pulse';
+  variant: VisualVariant;
   /** Short description for screen readers. */
   label: string;
 }
@@ -18,20 +27,75 @@ export interface Props {
 const { variant, label } = Astro.props;
 const uid = `pv${(seq += 1)}`;
 
-const BAR_HEIGHTS = [120, 90, 150, 70, 180, 110, 140, 95];
-const BAR_X = [97, 155, 213, 271, 329, 387, 445, 503];
-const BAR_W = 40;
-const BASE_Y = 300;
-const ACCENT_BAR = 4;
+/* --- aging-state: observations → multi-dimensional state → intervention --- */
 
-const bars = BAR_HEIGHTS.map((h, i) => ({
-  x: BAR_X[i],
-  y: BASE_Y - h,
-  h,
-  accent: i === ACCENT_BAR,
-}));
+const RADAR_CX = 320;
+const RADAR_CY = 214;
+const RADAR_R = 84;
+const RADAR_AXES = 8;
+const RADAR_VALUES = [0.72, 0.5, 0.86, 0.44, 0.63, 0.55, 0.78, 0.6];
 
-const trend = bars.map((b, i) => `${i === 0 ? 'M' : 'L'}${b.x + BAR_W / 2},${b.y}`).join(' ');
+const radarPoints = RADAR_VALUES.map((v, i) => {
+  const angle = (Math.PI * 2 * i) / RADAR_AXES - Math.PI / 2;
+  return [RADAR_CX + Math.cos(angle) * RADAR_R * v, RADAR_CY + Math.sin(angle) * RADAR_R * v];
+});
+const radarPolygon = radarPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+const radarSpokes = Array.from({ length: RADAR_AXES }, (_, i) => {
+  const angle = (Math.PI * 2 * i) / RADAR_AXES - Math.PI / 2;
+  return {
+    x2: (RADAR_CX + Math.cos(angle) * RADAR_R).toFixed(1),
+    y2: (RADAR_CY + Math.sin(angle) * RADAR_R).toFixed(1),
+  };
+});
+const radarRings = [0.34, 0.67, 1].map((k) => (RADAR_R * k).toFixed(1));
+
+const MARKER_ROWS = [0.62, 0.38, 0.74, 0.5, 0.83, 0.45, 0.68, 0.56, 0.71];
+
+const PRIORITY = [
+  { label: 'DRIVER 01', w: 0.86, spread: 26 },
+  { label: 'DRIVER 02', w: 0.62, spread: 34 },
+  { label: 'DRIVER 03', w: 0.44, spread: 22 },
+  { label: 'DRIVER 04', w: 0.3, spread: 30 },
+];
+
+/* --- cell-transition: x_t → encoder → z_t → transition → verifier → z* --- */
+
+const LATENT = [
+  [0, 0],
+  [26, -14],
+  [54, -6],
+  [82, -26],
+  [110, -34],
+  [138, -46],
+];
+const latentPath = LATENT.map((p, i) => `${i === 0 ? 'M' : 'L'}${418 + p[0]},${286 + p[1]}`).join(' ');
+
+/* --- dependency-graph --- */
+
+const DEP_NODES = [
+  { id: 'account', label: 'ACCOUNT', x: 96, y: 96 },
+  { id: 'credential', label: 'CREDENTIAL', x: 96, y: 210 },
+  { id: 'device', label: 'DEVICE', x: 96, y: 324 },
+  { id: 'provider', label: 'PROVIDER', x: 470, y: 152 },
+  { id: 'domain', label: 'DOMAIN', x: 470, y: 286 },
+];
+const DEP_EDGES: Array<[number, number, string?]> = [
+  [0, 3],
+  [1, 3],
+  [2, 3],
+  [3, 4],
+  [1, 4],
+];
+
+/* --- discovery-loop (concept, not started) --- */
+
+const LOOP_NODES = [
+  { x: 320, y: 74, label: 'HYPOTHESIS' },
+  { x: 452, y: 168, label: 'RETRIEVAL' },
+  { x: 400, y: 306, label: 'SIMULATION' },
+  { x: 240, y: 306, label: 'EXPERIMENT' },
+  { x: 188, y: 168, label: 'EVIDENCE' },
+];
 ---
 
 <svg
@@ -52,153 +116,507 @@ const trend = bars.map((b, i) => `${i === 0 ? 'M' : 'L'}${b.x + BAR_W / 2},${b.y
       markerHeight="7"
       orient="auto-start-reverse"
     >
-      <path d="M0,0 L10,5 L0,10 z" fill="rgba(0,0,0,0.42)" />
+      <path class="arrow-head" d="M0,0 L10,5 L0,10 z" />
     </marker>
   </defs>
 
-  <!-- Faint grid, shared by every mark so the set reads as one system -->
-  <g opacity="0.5">
+  <!-- Faint grid shared by every mark, so the set reads as one system -->
+  <g>
     {
       Array.from({ length: 9 }, (_, i) => (
-        <line x1="0" y1={i * 50} x2="640" y2={i * 50} stroke="rgba(0,0,0,0.045)" stroke-width="1" />
+        <line x1="0" y1={i * 50} x2="640" y2={i * 50} stroke="var(--dg-grid)" stroke-width="1" />
       ))
     }
     {
       Array.from({ length: 13 }, (_, i) => (
-        <line x1={i * 50} y1="0" x2={i * 50} y2="400" stroke="rgba(0,0,0,0.045)" stroke-width="1" />
+        <line x1={i * 50} y1="0" x2={i * 50} y2="400" stroke="var(--dg-grid)" stroke-width="1" />
       ))
     }
   </g>
 
+  {/* ─────────────────────────── aging-state ─────────────────────────── */}
   {
-    variant === 'aging' && (
+    (variant === 'aging-state' || variant === 'aging') && (
       <g>
-        {bars.map((b) => (
-          <rect
-            x={b.x}
-            y={b.y}
-            width={BAR_W}
-            height={b.h}
-            fill={b.accent ? 'var(--accent)' : 'rgba(0,0,0,0.10)'}
-            opacity={b.accent ? '0.9' : '1'}
-          />
+        <text class="dg-label" x="30" y="34">
+          OBSERVATIONS · ROUTINE MARKERS
+        </text>
+        {MARKER_ROWS.map((w, i) => (
+          <g>
+            <line
+              x1="30"
+              y1={52 + i * 20}
+              x2={30 + 110 * w}
+              y2={52 + i * 20}
+              stroke="var(--dg-line)"
+              stroke-width="3"
+            />
+            <line
+              x1={30 + 110 * w}
+              y1={52 + i * 20}
+              x2="140"
+              y2={52 + i * 20}
+              stroke="var(--dg-line-soft)"
+              stroke-width="3"
+            />
+          </g>
         ))}
-        <path d={trend} fill="none" stroke="rgba(0,0,0,0.42)" stroke-width="1.25" />
-        <line x1="80" y1={BASE_Y} x2="560" y2={BASE_Y} stroke="rgba(0,0,0,0.28)" stroke-width="1" />
-        <text class="dg-label" x="97" y="326" text-anchor="start">
-          PHENOAGE
-        </text>
-        <text class="dg-label" x="213" y="326" text-anchor="middle">
-          KDM
-        </text>
-        <text class="dg-label" x="329" y="326" text-anchor="middle">
-          DNN
-        </text>
-        <text class="dg-label" x="503" y="326" text-anchor="end">
-          LIFECLOCK
-        </text>
-        <text class="dg-label" x="97" y="60" text-anchor="start">
-          ORGAN ASYNCHRONY
-        </text>
-        <circle cx={BAR_X[ACCENT_BAR] + BAR_W / 2} cy={BASE_Y - BAR_HEIGHTS[ACCENT_BAR] - 14} r="3" fill="var(--accent)" />
-      </g>
-    )
-  }
-
-  {
-    variant === 'cell' && (
-      <g>
-        <circle cx="180" cy="210" r="48" fill="#FFFFFF" stroke="rgba(0,0,0,0.28)" stroke-width="1.25" />
-        <text class="dg-node" x="180" y="216" text-anchor="middle">
-          b
-        </text>
-        <circle cx="460" cy="210" r="48" fill="#FFFFFF" stroke="rgba(0,0,0,0.28)" stroke-width="1.25" />
-        <text class="dg-node" x="460" y="216" text-anchor="middle">
-          b′
+        <text class="dg-var-sm" x="30" y="264">
+          X ∈ ℝ⁹
         </text>
 
         <line
-          x1="232"
-          y1="210"
-          x2="404"
-          y2="210"
-          stroke="rgba(0,0,0,0.42)"
+          x1="150"
+          y1="140"
+          x2="216"
+          y2="140"
+          stroke="var(--dg-line-strong)"
+          stroke-width="1.25"
+          marker-end={`url(#${uid}-arrow)`}
+        />
+        <text class="dg-label" x="183" y="128" text-anchor="middle">
+          E
+        </text>
+
+        {radarRings.map((r) => (
+          <circle
+            cx={RADAR_CX}
+            cy={RADAR_CY}
+            r={r}
+            fill="none"
+            stroke="var(--dg-line-soft)"
+            stroke-width="1"
+          />
+        ))}
+        {radarSpokes.map((s) => (
+          <line
+            x1={RADAR_CX}
+            y1={RADAR_CY}
+            x2={s.x2}
+            y2={s.y2}
+            stroke="var(--dg-line-soft)"
+            stroke-width="1"
+          />
+        ))}
+        <path d={radarPolygon} fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5" />
+        {radarPoints.map((p) => (
+          <circle cx={p[0].toFixed(1)} cy={p[1].toFixed(1)} r="2.5" fill="var(--accent)" />
+        ))}
+        <text class="dg-label" x={RADAR_CX} y="330" text-anchor="middle">
+          MULTI-DIMENSIONAL STATE
+        </text>
+        <text class="dg-var" x={RADAR_CX} y="352" text-anchor="middle">
+          z = E(X)
+        </text>
+
+        <line
+          x1="424"
+          y1="140"
+          x2="486"
+          y2="140"
+          stroke="var(--dg-line-strong)"
+          stroke-width="1.25"
+          marker-end={`url(#${uid}-arrow)`}
+        />
+        <text class="dg-label" x="455" y="128" text-anchor="middle">
+          RANK
+        </text>
+
+        <text class="dg-label" x="492" y="34">
+          INTERVENTION PRIORITY
+        </text>
+        {PRIORITY.map((p, i) => (
+          <g>
+            <line
+              x1="492"
+              y1={54 + i * 26}
+              x2={492 + 118 * p.w}
+              y2={54 + i * 26}
+              stroke={i === 0 ? 'var(--accent)' : 'var(--dg-line)'}
+              stroke-width="4"
+            />
+            <line
+              x1={492 + 118 * p.w}
+              y1={54 + i * 26}
+              x2={492 + 118 * p.w + p.spread}
+              y2={54 + i * 26}
+              stroke="var(--dg-line-soft)"
+              stroke-width="1"
+              stroke-dasharray="2 2"
+            />
+            <circle
+              cx={492 + 118 * p.w + p.spread}
+              cy={54 + i * 26}
+              r="2"
+              fill="var(--dg-dot)"
+            />
+            <text class="dg-label" x="492" y={54 + i * 26 - 8}>
+              {p.label}
+            </text>
+          </g>
+        ))}
+        <text class="dg-var-sm" x="492" y="196">
+          a* · WITH INTERVAL
+        </text>
+
+        <text class="dg-label" x="30" y="384">
+          CONCEPTUAL NOTATION · ΔAGE = AGE_bio − AGE_chron
+        </text>
+      </g>
+    )
+  }
+
+  {/* ───────────────────────── cell-transition ───────────────────────── */}
+  {
+    (variant === 'cell-transition' || variant === 'cell') && (
+      <g>
+        <text class="dg-label" x="48" y="42">
+          OBSERVED CELL STATE
+        </text>
+        <circle cx="90" cy="150" r="42" fill="var(--dg-fill)" stroke="var(--dg-line)" stroke-width="1.25" />
+        <text class="dg-var" x="90" y="156" text-anchor="middle">
+          xₜ
+        </text>
+
+        <line
+          x1="140"
+          y1="150"
+          x2="196"
+          y2="150"
+          stroke="var(--dg-line-strong)"
+          stroke-width="1.25"
+          marker-end={`url(#${uid}-arrow)`}
+        />
+        <text class="dg-label" x="168" y="136" text-anchor="middle">
+          ENC
+        </text>
+
+        <rect x="204" y="120" width="88" height="60" rx="2" fill="var(--dg-fill)" stroke="var(--accent)" stroke-width="1.5" />
+        <text class="dg-node" x="248" y="146" text-anchor="middle">
+          ENCODER
+        </text>
+        <text class="dg-var" x="248" y="166" text-anchor="middle">
+          zₜ
+        </text>
+
+        <text class="dg-label" x="248" y="76" text-anchor="middle">
+          ACTION
+        </text>
+        <rect x="204" y="84" width="88" height="26" rx="2" fill="var(--dg-fill)" stroke="var(--dg-line-soft)" stroke-width="1" />
+        <text class="dg-var" x="248" y="102" text-anchor="middle">
+          aₜ
+        </text>
+        <line x1="248" y1="110" x2="248" y2="118" stroke="var(--dg-line)" stroke-width="1" />
+
+        <line
+          x1="300"
+          y1="150"
+          x2="352"
+          y2="150"
+          stroke="var(--dg-line-strong)"
           stroke-width="1.25"
           marker-end={`url(#${uid}-arrow)`}
         />
 
+        <rect x="360" y="112" width="150" height="76" rx="2" fill="var(--dg-fill)" stroke="var(--dg-line)" stroke-width="1.25" />
+        <text class="dg-node" x="435" y="138" text-anchor="middle">
+          TRANSITION
+        </text>
+        <text class="dg-var" x="435" y="162" text-anchor="middle">
+          ẑₜ₊₁ = Fθ(zₜ, aₜ)
+        </text>
+
+        <line
+          x1="435"
+          y1="196"
+          x2="435"
+          y2="232"
+          stroke="var(--dg-line-strong)"
+          stroke-width="1.25"
+          marker-end={`url(#${uid}-arrow)`}
+        />
+
+        <rect x="360" y="240" width="150" height="40" rx="2" fill="var(--dg-fill)" stroke="var(--dg-line)" stroke-width="1.25" />
+        <text class="dg-node" x="435" y="256" text-anchor="middle">
+          VERIFIER
+        </text>
+        <text class="dg-label" x="435" y="272" text-anchor="middle">
+          PASS · WARN · FAIL
+        </text>
+
+        <line
+          x1="360"
+          y1="260"
+          x2="300"
+          y2="260"
+          stroke="var(--dg-line-strong)"
+          stroke-width="1.25"
+          marker-end={`url(#${uid}-arrow)`}
+        />
+
+        <circle cx="248" cy="300" r="34" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3" />
+        <text class="dg-var" x="248" y="306" text-anchor="middle">
+          z*
+        </text>
+        <text class="dg-label" x="248" y="352" text-anchor="middle">
+          TARGET STATE
+        </text>
+
+        <path
+          d={latentPath}
+          fill="none"
+          stroke="var(--dg-line)"
+          stroke-width="1"
+          stroke-dasharray="3 3"
+        />
+        {LATENT.map((p) => (
+          <circle cx={418 + p[0]} cy={286 + p[1]} r="2" fill="var(--dg-dot)" />
+        ))}
+        <text class="dg-label" x="418" y="252">
+          LATENT TRAJECTORY
+        </text>
+
+        <text class="dg-label" x="48" y="384">
+          CONCEPTUAL NOTATION · TOY BENCHMARK ONLY
+        </text>
+      </g>
+    )
+  }
+
+  {/* ─────────────────────────── agent-dag ───────────────────────────── */}
+  {
+    (variant === 'agent-dag' || variant === 'runtime') && (
+      <g>
+        <text class="dg-label" x="40" y="38">
+          G = (V, E) · EXECUTION GRAPH
+        </text>
+
         {[
-          { x: 268, label: 'a' },
-          { x: 320, label: 'c' },
-          { x: 372, label: 'h' },
+          { x: 88, y: 108, label: 'AGENT' },
+          { x: 88, y: 208, label: 'MODEL' },
+          { x: 88, y: 308, label: 'MEMORY' },
+          { x: 470, y: 108, label: 'TOOL' },
+          { x: 470, y: 208, label: 'PROMPT' },
+          { x: 470, y: 308, label: 'CONNECTOR' },
         ].map((n) => (
           <g>
             <rect
-              x={n.x - 21}
-              y="132"
-              width="42"
-              height="26"
-              fill="#FFFFFF"
-              stroke="rgba(0,0,0,0.22)"
-              stroke-width="1"
+              x={n.x - 62}
+              y={n.y - 20}
+              width="124"
+              height="40"
+              rx="2"
+              fill="var(--dg-fill)"
+              stroke="var(--dg-line)"
+              stroke-width="1.25"
             />
-            <text class="dg-node" x={n.x} y="149" text-anchor="middle">
+            <text class="dg-node" x={n.x} y={n.y + 5} text-anchor="middle">
               {n.label}
             </text>
-            <line x1={n.x} y1="158" x2={n.x} y2="196" stroke="rgba(0,0,0,0.22)" stroke-width="1" />
-            <circle cx={n.x} cy="210" r="2.5" fill="rgba(0,0,0,0.45)" />
           </g>
         ))}
 
+        {
+          [
+            { label: 'CALLS', y: 100 },
+            { label: 'ROUTES', y: 150 },
+            { label: 'READS', y: 200 },
+            { label: 'ROUTES', y: 250 },
+            { label: 'WRITES', y: 300 },
+          ].map((edge) => (
+            <g>
+              <line
+                x1="150"
+                y1={edge.y}
+                x2="408"
+                y2={edge.y}
+                stroke="var(--dg-line)"
+                stroke-width="1"
+                marker-end={`url(#${uid}-arrow)`}
+              />
+              <text class="dg-label" x="279" y={edge.y - 8} text-anchor="middle">
+                {edge.label}
+              </text>
+            </g>
+          ))
+        }
+
+        <rect x="196" y="352" width="248" height="30" rx="2" fill="var(--dg-fill)" stroke="var(--accent)" stroke-width="1.5" />
+        <text class="dg-node" x="320" y="372" text-anchor="middle">
+          GOVERNED ACTION GATEWAY
+        </text>
         <path
-          d="M460,262 C400,336 240,336 180,262"
+          d="M470,328 C470,352 420,352 444,352"
           fill="none"
-          stroke="rgba(0,0,0,0.28)"
+          stroke="var(--dg-line)"
           stroke-width="1"
-          stroke-dasharray="4 4"
           marker-end={`url(#${uid}-arrow)`}
         />
-        <text class="dg-label" x="320" y="322" text-anchor="middle">
-          VERIFIER · PLANNER
-        </text>
-        <text class="dg-label" x="320" y="112" text-anchor="middle">
-          TRANSITION
+        <text class="dg-label" x="40" y="384">
+          E0 – E3 EFFECT CLASSES · APPEND-ONLY LEDGER
         </text>
       </g>
     )
   }
 
+  {/* ─────────────────────── compliance-triangle ─────────────────────── */}
   {
-    variant === 'discovery' && (
+    (variant === 'compliance-triangle' || variant === 'pulse') && (
+      <g>
+        <text class="dg-label" x="40" y="38">
+          CROSS-AUDIT · THREE SURFACES
+        </text>
+
+        <polygon
+          points="320,80 520,320 120,320"
+          fill="none"
+          stroke="var(--dg-line)"
+          stroke-width="1.25"
+        />
+
+        {[
+          { x: 320, y: 66, label: 'EXPENSE', anchor: 'middle' },
+          { x: 536, y: 330, label: 'VISIT', anchor: 'start' },
+          { x: 104, y: 330, label: 'FLOW', anchor: 'end' },
+        ].map((n) => (
+          <text class="dg-node" x={n.x} y={n.y} text-anchor={n.anchor}>
+            {n.label}
+          </text>
+        ))}
+
+        {[
+          [320, 80],
+          [520, 320],
+          [120, 320],
+        ].map((p) => (
+          <circle cx={p[0]} cy={p[1]} r="5" fill="var(--dg-fill)" stroke="var(--dg-line-strong)" stroke-width="1.25" />
+        ))}
+
+        <line x1="320" y1="86" x2="320" y2="228" stroke="var(--dg-line-soft)" stroke-width="1" stroke-dasharray="3 3" />
+        <line x1="146" y1="292" x2="494" y2="292" stroke="var(--dg-line-soft)" stroke-width="1" stroke-dasharray="3 3" />
+
+        <circle cx="320" cy="232" r="40" fill="var(--dg-fill)" stroke="var(--accent)" stroke-width="1.5" />
+        <text class="dg-node" x="320" y="228" text-anchor="middle">
+          CONSISTENCY
+        </text>
+        <text class="dg-label" x="320" y="244" text-anchor="middle">
+          CHECK
+        </text>
+
+        <text class="dg-label" x="320" y="184" text-anchor="middle">
+          Δ
+        </text>
+
+        <text class="dg-label" x="40" y="384">
+          AUDIT RECORD · NO ACCURACY METRIC PUBLISHED
+        </text>
+      </g>
+    )
+  }
+
+  {/* ───────────────────────── dependency-graph ──────────────────────── */}
+  {
+    (variant === 'dependency-graph' || variant === 'infra') && (
+      <g>
+        <text class="dg-label" x="40" y="38">
+          PERSONAL INFRASTRUCTURE GRAPH
+        </text>
+
+        {DEP_EDGES.map(([a, b], i) => {
+          const from = DEP_NODES[a];
+          const to = DEP_NODES[b];
+          const path =
+            a === 3 && b === 4
+              ? `M${from.x + 62},${from.y} C${from.x + 160},${from.y} ${to.x - 160},${to.y} ${to.x - 62},${to.y}`
+              : `M${from.x + 62},${from.y} L${to.x - 62},${to.y}`;
+          return (
+            <path
+              d={path}
+              fill="none"
+              stroke={i === 0 ? 'var(--accent)' : 'var(--dg-line)'}
+              stroke-width={i === 0 ? '1.5' : '1'}
+              marker-end={`url(#${uid}-arrow)`}
+            />
+          );
+        })}
+
+        {DEP_NODES.map((n) => (
+          <g>
+            <rect
+              x={n.x - 62}
+              y={n.y - 22}
+              width="124"
+              height="44"
+              rx="2"
+              fill="var(--dg-fill)"
+              stroke="var(--dg-line)"
+              stroke-width="1.25"
+            />
+            <text class="dg-node" x={n.x} y={n.y + 5} text-anchor="middle">
+              {n.label}
+            </text>
+          </g>
+        ))}
+
+        {[
+          'DEPENDS_ON',
+          'AUTHENTICATES',
+          'OWNS',
+          'ROUTES_TO',
+        ].map((label, i) => (
+          <text class="dg-label" x="274" y={104 + i * 66} text-anchor="middle">
+            {label}
+          </text>
+        ))}
+
+        <text class="dg-label" x="274" y="368" text-anchor="middle">
+          IMPACT PROPAGATION · LOCAL-FIRST
+        </text>
+        <text class="dg-label" x="40" y="384">
+          SPECIFICATION ONLY · NO PUBLIC ARTIFACT
+        </text>
+      </g>
+    )
+  }
+
+  {/* ────────────────────────── discovery-loop ───────────────────────── */}
+  {
+    (variant === 'discovery-loop' || variant === 'discovery') && (
       <g>
         <polygon
-          points="320,80 434,163 390,297 250,297 206,163"
+          points="320,74 452,168 400,306 240,306 188,168"
           fill="none"
-          stroke="rgba(0,0,0,0.28)"
+          stroke="var(--dg-line-soft)"
           stroke-width="1.25"
-          marker-end={`url(#${uid}-arrow)`}
+          stroke-dasharray="5 4"
         />
-        {[
-          { x: 320, y: 80, label: 'BIO', dx: 0, dy: -18, anchor: 'middle' },
-          { x: 434, y: 163, label: 'EVIDENCE', dx: 16, dy: 4, anchor: 'start' },
-          { x: 390, y: 297, label: 'SIMULATION', dx: 16, dy: 14, anchor: 'start' },
-          { x: 250, y: 297, label: 'EXPERIMENT', dx: -16, dy: 14, anchor: 'end' },
-          { x: 206, y: 163, label: 'DISCOVERY', dx: -16, dy: 4, anchor: 'end' },
-        ].map((n) => (
+
+        {LOOP_NODES.map((n) => (
           <g>
-            <circle cx={n.x} cy={n.y} r="6" fill="#FFFFFF" stroke="rgba(0,0,0,0.35)" stroke-width="1.25" />
-            <text class="dg-node" x={n.x + n.dx} y={n.y + n.dy} text-anchor={n.anchor}>
+            <circle cx={n.x} cy={n.y} r="6" fill="var(--dg-fill)" stroke="var(--dg-line)" stroke-width="1.25" />
+            <text class="dg-node" x={n.x} y={n.y - 16} text-anchor="middle">
               {n.label}
             </text>
           </g>
         ))}
-        <text class="dg-label" x="320" y="206" text-anchor="middle">
-          AUDIT LOOP
+
+        <text class="dg-label" x="320" y="200" text-anchor="middle">
+          PROPOSED LOOP
+        </text>
+
+        <rect x="240" y="218" width="160" height="34" rx="2" fill="none" stroke="var(--line-strong)" stroke-width="1" stroke-dasharray="4 3" />
+        <text class="dg-label" x="320" y="240" text-anchor="middle">
+          CONCEPT · NOT STARTED
+        </text>
+
+        <text class="dg-label" x="320" y="360" text-anchor="middle">
+          NO BENCHMARK · NO TEST · NO RUNTIME
         </text>
       </g>
     )
   }
 
+  {/* ───────────────────────────── pet (kept) ────────────────────────── */}
   {
     variant === 'pet' && (
       <g>
@@ -210,220 +628,31 @@ const trend = bars.map((b, i) => `${i === 0 ? 'M' : 'L'}${b.x + BAR_W / 2},${b.y
           { x: 187, y: 161, label: 'CONSULT', dx: -20, dy: 4, anchor: 'end' },
         ].map((n) => (
           <g>
-            <line
-              x1="320"
-              y1="200"
-              x2={n.x}
-              y2={n.y}
-              stroke="rgba(0,0,0,0.22)"
-              stroke-width="1"
-            />
-            <circle cx={n.x} cy={n.y} r="30" fill="#FFFFFF" stroke="rgba(0,0,0,0.28)" stroke-width="1.25" />
-            <circle cx={n.x} cy={n.y} r="3" fill="rgba(0,0,0,0.35)" />
+            <line x1="320" y1="200" x2={n.x} y2={n.y} stroke="var(--dg-line-soft)" stroke-width="1" />
+            <circle cx={n.x} cy={n.y} r="30" fill="var(--dg-fill)" stroke="var(--dg-line)" stroke-width="1.25" />
+            <circle cx={n.x} cy={n.y} r="3" fill="var(--dg-dot)" />
             <text class="dg-node" x={n.x + n.dx} y={n.y + n.dy} text-anchor={n.anchor}>
               {n.label}
             </text>
           </g>
         ))}
-        <circle cx="320" cy="200" r="52" fill="#FFFFFF" stroke="var(--accent)" stroke-width="1.5" />
+        <circle cx="320" cy="200" r="52" fill="var(--dg-fill)" stroke="var(--accent)" stroke-width="1.5" />
         <text class="dg-node" x="320" y="196" text-anchor="middle">
           ROUTING
         </text>
         <text class="dg-label" x="320" y="216" text-anchor="middle">
           ESCALATION
         </text>
-      </g>
-    )
-  }
-
-  {
-    variant === 'infra' && (
-      <g>
-        {[
-          { x: 140, y: 120, label: 'SPEC', dx: 22, dy: 5, anchor: 'start' },
-          { x: 140, y: 200, label: 'CONFORM', dx: 22, dy: 5, anchor: 'start' },
-          { x: 140, y: 280, label: 'CRYPTO', dx: 22, dy: 5, anchor: 'start' },
-          { x: 500, y: 120, label: 'ANDROID', dx: -22, dy: 5, anchor: 'end' },
-          { x: 500, y: 200, label: 'IOS', dx: -22, dy: 5, anchor: 'end' },
-          { x: 500, y: 280, label: 'HARMONYOS', dx: -22, dy: 5, anchor: 'end' },
-        ].map((n) => (
-          <g>
-            <circle cx={n.x} cy={n.y} r="9" fill="#FFFFFF" stroke="rgba(0,0,0,0.35)" stroke-width="1.25" />
-            <text class="dg-node" x={n.x + n.dx} y={n.y + n.dy} text-anchor={n.anchor}>
-              {n.label}
-            </text>
-          </g>
-        ))}
-
-        {[
-          [0, 3],
-          [0, 4],
-          [1, 3],
-          [1, 4],
-          [1, 5],
-          [2, 4],
-          [2, 5],
-          [0, 1],
-          [1, 2],
-        ].map(([a, b]) => {
-          const left = [
-            [140, 120],
-            [140, 200],
-            [140, 280],
-          ];
-          const right = [
-            [500, 120],
-            [500, 200],
-            [500, 280],
-          ];
-          const from = a < 3 ? left[a] : right[a - 3];
-          const to = b < 3 ? left[b] : right[b - 3];
-          return (
-            <line
-              x1={from[0]}
-              y1={from[1]}
-              x2={to[0]}
-              y2={to[1]}
-              stroke="rgba(0,0,0,0.20)"
-              stroke-width="1"
-            />
-          );
-        })}
-
-        <text class="dg-label" x="320" y="60" text-anchor="middle">
-          ONE CANONICAL MODEL
-        </text>
-        <circle cx="140" cy="120" r="4" fill="var(--accent)" />
-      </g>
-    )
-  }
-  {
-    variant === 'runtime' && (
-      <g>
-        {[
-          { x: 60, label: 'PROPOSAL', accent: false },
-          { x: 200, label: 'POLICY', accent: false },
-          { x: 340, label: 'GATEWAY', accent: true },
-          { x: 480, label: 'COMMIT', accent: false },
-        ].map((n, i) => (
-          <g>
-            <rect
-              x={n.x}
-              y="192"
-              width="90"
-              height="36"
-              fill="#FFFFFF"
-              stroke={n.accent ? 'var(--accent)' : 'rgba(0,0,0,0.28)'}
-              stroke-width={n.accent ? '1.5' : '1.25'}
-            />
-            <text class="dg-node" x={n.x + 45} y="214" text-anchor="middle">
-              {n.label}
-            </text>
-            {i < 3 && (
-              <line
-                x1={n.x + 90}
-                y1="210"
-                x2={n.x + 140}
-                y2="210"
-                stroke="rgba(0,0,0,0.42)"
-                stroke-width="1.25"
-                marker-end={`url(#${uid}-arrow)`}
-              />
-            )}
-          </g>
-        ))}
-        <text class="dg-label" x="385" y="178" text-anchor="middle">
-          E0 – E3 EFFECTS
-        </text>
-        <rect x="200" y="292" width="240" height="30" fill="#FFFFFF" stroke="rgba(0,0,0,0.28)" stroke-width="1.25" />
-        <text class="dg-node" x="320" y="312" text-anchor="middle">
-          APPEND-ONLY LEDGER
-        </text>
-        <path
-          d="M525,228 C525,268 400,268 368,292"
-          fill="none"
-          stroke="rgba(0,0,0,0.28)"
-          stroke-width="1"
-          marker-end={`url(#${uid}-arrow)`}
-        />
-        <text class="dg-label" x="320" y="354" text-anchor="middle">
-          VERIFY · OUTCOME
-        </text>
-      </g>
-    )
-  }
-
-  {
-    variant === 'pulse' && (
-      <g>
-        {[
-          { x: 80, y: 118, label: 'QUESTION' },
-          { x: 80, y: 206, label: 'RECORDS' },
-          { x: 80, y: 294, label: 'SIGNALS' },
-        ].map((n) => (
-          <g>
-            <rect
-              x={n.x}
-              y={n.y - 15}
-              width="110"
-              height="30"
-              fill="#FFFFFF"
-              stroke="rgba(0,0,0,0.22)"
-              stroke-width="1"
-            />
-            <text class="dg-node" x={n.x + 55} y={n.y + 4} text-anchor="middle">
-              {n.label}
-            </text>
-            <line
-              x1={n.x + 110}
-              y1={n.y}
-              x2="238"
-              y2={n.y}
-              stroke="rgba(0,0,0,0.22)"
-              stroke-width="1"
-            />
-          </g>
-        ))}
-
-        <rect x="240" y="180" width="160" height="52" fill="#FFFFFF" stroke="var(--accent)" stroke-width="1.5" />
-        <text class="dg-node" x="320" y="204" text-anchor="middle">
-          AGENT RUNTIME
-        </text>
-        <text class="dg-label" x="320" y="221" text-anchor="middle">
-          LOOP · RETRY · BREAKER
-        </text>
-
-        {[
-          { x: 450, y: 118, label: 'ANALYSIS' },
-          { x: 450, y: 206, label: 'COMPLIANCE' },
-          { x: 450, y: 294, label: 'PLAN' },
-        ].map((n) => (
-          <g>
-            <line x1="402" y1={n.y} x2={n.x} y2={n.y} stroke="rgba(0,0,0,0.22)" stroke-width="1" />
-            <rect
-              x={n.x}
-              y={n.y - 15}
-              width="110"
-              height="30"
-              fill="#FFFFFF"
-              stroke="rgba(0,0,0,0.22)"
-              stroke-width="1"
-            />
-            <text class="dg-node" x={n.x + 55} y={n.y + 4} text-anchor="middle">
-              {n.label}
-            </text>
-          </g>
-        ))}
-
-        <line x1="320" y1="232" x2="320" y2="292" stroke="rgba(0,0,0,0.22)" stroke-width="1" />
-        <rect x="240" y="292" width="160" height="30" fill="#FFFFFF" stroke="rgba(0,0,0,0.28)" stroke-width="1.25" />
-        <text class="dg-node" x="320" y="312" text-anchor="middle">
-          AUDIT RECORD
-        </text>
-        <text class="dg-label" x="320" y="352" text-anchor="middle">
-          FOUR CLIENT SURFACES
+        <text class="dg-label" x="320" y="384" text-anchor="middle">
+          DESIGN ONLY · TRIAGE SUPPORT, NOT A VETERINARIAN
         </text>
       </g>
     )
   }
 </svg>
+
+<style>
+  .arrow-head {
+    fill: var(--dg-line-strong);
+  }
+</style>

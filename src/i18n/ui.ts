@@ -190,8 +190,69 @@ const en = {
   'notfound.body': 'This page drifted outside the system.',
   'notfound.home': 'Back Home',
 
+  'appearance.label': 'Appearance',
+  'appearance.paper': 'Paper',
+  'appearance.white': 'White',
+  'appearance.night': 'Night',
+
+  'artifacts.eyebrow': 'Selected Artifacts',
+  'artifacts.title': 'Selected Artifacts',
+  'artifacts.lead':
+    'Repository structures, acceptance scripts, benchmark output and release reports — quoted from the public repositories. Nothing in this room was drawn to look like a product.',
+  'artifacts.project': 'Project',
+  'artifacts.type': 'Type',
+  'artifacts.source': 'Source',
+  'artifacts.date': 'Snapshot',
+  'artifacts.expand': 'Enlarge artifact',
+  'artifacts.close': 'Close enlarged view',
+  'artifacts.viewSource': 'Open source artifact',
+  'artifacts.footnote':
+    'Every artifact here is quoted from a public repository. Where no screenshot exists, the repository artifact itself is shown instead of an invented one.',
+
+  'mathbio.eyebrow': 'Mathematical Biology',
+  'mathbio.title': 'Understanding living systems with mathematics',
+  'mathbio.lead':
+    'Biology gives observations. Mathematics gives structure. AI approximates the parts we cannot yet write down.',
+  'mathbio.body':
+    'A living system can be observed, but never read out completely. Mathematics supplies the language of state, change, probability and constraint; learned models cover what cannot be written as equations.',
+  'mathbio.questions': 'Most of these problems reduce to three questions.',
+  'mathbio.q1': 'What state are we in?',
+  'mathbio.q2': 'Why did it change?',
+  'mathbio.q3': 'Where would an intervention move it?',
+  'mathbio.figureCaption':
+    'One lens I keep returning to: observation, representation, dynamics, decision — then a new observation.',
+
+  'equation.eyebrow': 'Equation',
+  'equation.label': 'Conceptual model',
+  'equation.body':
+    'A useful way to think about many biological interventions is as state transitions: given the current state and an action, what state comes next?',
+  'equation.caption':
+    'This is a lens for framing problems, not a claim that every system on this site implements this formula.',
+
+  'notes.eyebrow': 'Lab Notes',
+  'notes.title': 'Lab Notes',
+  'notes.lead': 'Recent entries. Short by design — a log, not a blog.',
+  'notes.empty': 'No entries yet.',
+
+  'conceptual.notation': 'Conceptual notation',
+  'conceptual.diagram': 'Conceptual diagram',
+  'conceptual.representation': 'Conceptual representation',
+
   'a11y.diagram': 'System diagram',
   'a11y.external': 'opens in a new tab',
+  'a11y.heroField':
+    'Conceptual field: observation, representation, dynamics and decision, closed by a feedback loop that produces a new observation.',
+  'a11y.conceptLoop':
+    'Conceptual loop: a biological observation is encoded into a state, a dynamics model predicts the next state under an action, a decision selects the action, and the outcome is observed again.',
+  'a11y.cellLandscape':
+    'Conceptual cell state landscape: contour lines with a trajectory from an aged state toward a target state.',
+  'a11y.expressionMatrix':
+    'Conceptual gene-by-cell matrix: a grid of abstract expression intensities, not a real experiment.',
+  'a11y.bioNetwork':
+    'Conceptual network linking genes, pathways, phenotype and intervention with six nodes.',
+  'a11y.phasePortrait':
+    'Conceptual phase portrait: a vector field with two attractor basins and one state trajectory.',
+  'a11y.formula': 'Formula',
 } satisfies Dict;
 
 const zh: Dict = {
@@ -361,8 +422,63 @@ const zh: Dict = {
   'notfound.body': '这个页面已经离开系统边界。',
   'notfound.home': '返回首页',
 
+  'appearance.label': '外观',
+  'appearance.paper': '暖纸',
+  'appearance.white': '纯白',
+  'appearance.night': '夜色',
+
+  'artifacts.eyebrow': '精选实物',
+  'artifacts.title': '实验台',
+  'artifacts.lead':
+    '仓库结构、验收脚本、基准输出与发布报告——均引用自公开仓库。这里没有任何为“看起来像个产品”而绘制的图。',
+  'artifacts.project': '项目',
+  'artifacts.type': '类型',
+  'artifacts.source': '来源',
+  'artifacts.date': '快照',
+  'artifacts.expand': '放大查看',
+  'artifacts.close': '关闭大图',
+  'artifacts.viewSource': '打开来源原件',
+  'artifacts.footnote':
+    '此处每件实物都引用自公开仓库。没有截图的地方，就展示仓库本身的产物，而不是编一张图。',
+
+  'mathbio.eyebrow': '数学 × 生物',
+  'mathbio.title': '用数学理解生命系统',
+  'mathbio.lead': '生物提供观测。数学提供结构。AI 逼近那些我们还写不下来的部分。',
+  'mathbio.body':
+    '生命系统可以被观察，但无法被完整读取。数学提供状态、变化、概率与约束的语言；学习模型补足那些无法写成方程的部分。',
+  'mathbio.questions': '这些问题大多可以归结为三个提问。',
+  'mathbio.q1': '当前处于什么状态？',
+  'mathbio.q2': '它为什么变成这样？',
+  'mathbio.q3': '一次干预会把它带向哪里？',
+  'mathbio.figureCaption':
+    '一个我反复使用的视角：观测、表征、动力学、决策，然后回到新的观测。',
+
+  'equation.eyebrow': '公式',
+  'equation.label': '概念模型',
+  'equation.body':
+    '理解许多生物干预的一种有效方式，是把它看作状态转移：给定当前状态与一个动作，下一个状态是什么？',
+  'equation.caption':
+    '这是用于界定问题的视角，不是在声称本站每个系统都实现了这个公式。',
+
+  'notes.eyebrow': '研究札记',
+  'notes.title': '研究札记',
+  'notes.lead': '近期的记录。刻意写得短——是日志，不是博客。',
+  'notes.empty': '暂无条目。',
+
+  'conceptual.notation': '概念记法',
+  'conceptual.diagram': '概念示意图',
+  'conceptual.representation': '概念化表达',
+
   'a11y.diagram': '系统架构图',
   'a11y.external': '在新标签页打开',
+  'a11y.heroField': '概念系统场：观测、表征、动力学与决策，由一条回到新观测的反馈回路闭合。',
+  'a11y.conceptLoop':
+    '概念闭环：生物观测被编码为状态，动力学模型预测某动作下的下一状态，决策选择动作，结果再次被观测。',
+  'a11y.cellLandscape': '概念性细胞状态景观：等高线上一条从衰老态指向目标态的轨迹。',
+  'a11y.expressionMatrix': '概念性基因 × 细胞矩阵：抽象表达强度的网格，不是真实实验数据。',
+  'a11y.bioNetwork': '概念性网络：基因、通路、表型与干预，共六个节点。',
+  'a11y.phasePortrait': '概念性相图：带两个吸引子盆地与一条状态轨迹的向量场。',
+  'a11y.formula': '公式',
 };
 
 const dicts: Record<Lang, Dict> = { en, zh };
@@ -398,9 +514,11 @@ export function switchLocalePath(currentPath: string, target: Lang): string {
   if (path === '/404') return '/zh/404/';
   if (path === '/zh/404') return '/404.html';
 
-  if (target === 'en') {
-    const stripped = path === '/zh' ? '' : path.replace(/^\/zh(?=\/|$)/, '');
-    return stripped ? `${stripped}/` : '/';
-  }
-  return path === '' || path === '/' ? '/zh/' : `/zh${path}/`;
+  // Strip the locale prefix once, then re-apply the target one. Doing it this
+  // way keeps the helper idempotent: asking for `zh` from a `/zh/...` page
+  // returns the same page instead of `/zh/zh/...`.
+  const stripped = path === '/zh' ? '' : path.replace(/^\/zh(?=\/|$)/, '');
+
+  if (target === 'en') return stripped ? `${stripped}/` : '/';
+  return stripped ? `/zh${stripped}/` : '/zh/';
 }

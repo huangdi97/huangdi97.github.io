@@ -1,0 +1,110 @@
+---
+/**
+ * Gene → pathway → phenotype → intervention — conceptual.
+ *
+ * Six nodes, deliberately. A wall of nodes would look like knowledge-graph
+ * theatre; six is enough to show the direction a causal argument travels in.
+ */
+import { useT, type Lang } from '../i18n/ui';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const NODES = [
+  { id: 'g1', label: 'GENE A', x: 52, y: 62 },
+  { id: 'g2', label: 'GENE B', x: 52, y: 172 },
+  { id: 'path', label: 'PATHWAY', x: 186, y: 117 },
+  { id: 'pheno', label: 'PHENOTYPE', x: 320, y: 62 },
+  { id: 'int', label: 'INTERVENTION', x: 320, y: 176 },
+  { id: 'noise', label: 'OBS. NOISE', x: 186, y: 224 },
+];
+
+const EDGES: Array<[string, string]> = [
+  ['g1', 'path'],
+  ['g2', 'path'],
+  ['path', 'pheno'],
+  ['int', 'path'],
+  ['noise', 'path'],
+];
+
+const byId = Object.fromEntries(NODES.map((n) => [n.id, n]));
+---
+
+<figure class="bio-fig">
+  <svg
+    class="diagram"
+    viewBox="0 0 400 260"
+    role="img"
+    aria-label={t('a11y.bioNetwork')}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <marker
+        id="bn-arrow"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="7"
+        markerHeight="7"
+        orient="auto-start-reverse"
+      >
+        <path class="bn-head" d="M0,0 L10,5 L0,10 z" />
+      </marker>
+    </defs>
+
+    <text class="dg-label" x="20" y="24">GENE · PATHWAY · PHENOTYPE</text>
+
+    {
+      EDGES.map(([a, b]) => {
+        const from = byId[a];
+        const to = byId[b];
+        const accent = a === 'int';
+        return (
+          <line
+            x1={from.x + 46}
+            y1={from.y}
+            x2={to.x - 46}
+            y2={to.y}
+            stroke={accent ? 'var(--accent)' : 'var(--dg-line)'}
+            stroke-width={accent ? '1.5' : '1'}
+            stroke-dasharray={a === 'noise' ? '3 4' : undefined}
+            marker-end="url(#bn-arrow)"
+          />
+        );
+      })
+    }
+
+    {
+      NODES.map((n) => (
+        <g>
+          <rect
+            x={n.x - 46}
+            y={n.y - 15}
+            width="92"
+            height="30"
+            rx="2"
+            fill="var(--dg-fill)"
+            stroke={n.id === 'int' ? 'var(--accent)' : 'var(--dg-line)'}
+            stroke-width={n.id === 'int' ? '1.5' : '1.25'}
+          />
+          <text class="dg-node" x={n.x} y={n.y + 4} text-anchor="middle">
+            {n.label}
+          </text>
+        </g>
+      ))
+    }
+  </svg>
+</figure>
+
+<style>
+  .bio-fig {
+    margin: 0;
+  }
+  .bn-head {
+    fill: var(--dg-line-strong);
+  }
+</style>

@@ -1,0 +1,153 @@
+---
+/**
+ * Lab Notes — a dated log, three entries, hairline separators.
+ *
+ * Not a blog and not a CMS: entries live in `src/data/notes.ts` and are edited
+ * by hand. A note without a destination renders as plain text rather than as
+ * a link to nowhere.
+ */
+import { useT, localizedPath, type Lang } from '../i18n/ui';
+import { getLabNotes, NOTE_KIND_LABELS } from '../data/notes';
+
+export interface Props {
+  lang: Lang;
+  limit?: number;
+}
+
+const { lang, limit = 3 } = Astro.props;
+const t = useT(lang);
+
+const notes = getLabNotes(limit);
+
+function hrefFor(path: string): string {
+  return localizedPath(lang, path);
+}
+---
+
+<section class="shell section-compact" id="notes">
+  <div class="ln-head">
+    <p class="eyebrow">{t('notes.eyebrow')}</p>
+    <h2 class="h2 ln-title">{t('notes.title')}</h2>
+    <p class="ln-lead">{t('notes.lead')}</p>
+  </div>
+
+  {
+    notes.length === 0 ? (
+      <p class="ln-empty muted">{t('notes.empty')}</p>
+    ) : (
+      <ul class="ln-list">
+        {notes.map((note) => {
+          const href = note.href ? hrefFor(note.href) : null;
+          return (
+            <li class="ln-item">
+              <p class="ln-date mono">{note.date}</p>
+              <p class="ln-kind mono">{NOTE_KIND_LABELS[note.kind][lang]}</p>
+              <div class="ln-copy">
+                {href ? (
+                  <a href={href} class="ln-title-link">
+                    <span class="ln-name">{note.title[lang]}</span>
+                    <span class="ln-arrow" aria-hidden="true">
+                      →
+                    </span>
+                  </a>
+                ) : (
+                  <span class="ln-name">{note.title[lang]}</span>
+                )}
+                <p class="ln-summary">{note.summary[lang]}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    )
+  }
+</section>
+
+<style>
+  .ln-head {
+    max-width: 56ch;
+  }
+
+  .ln-title {
+    margin-top: 0.75rem;
+  }
+
+  .ln-lead {
+    margin-top: 0.625rem;
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  .ln-list {
+    list-style: none;
+    margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .ln-item {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.25rem 1.5rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  @media (min-width: 768px) {
+    .ln-item {
+      grid-template-columns: 5rem 6rem minmax(0, 1fr);
+      align-items: baseline;
+      gap: 0.25rem 2rem;
+    }
+  }
+
+  .ln-date,
+  .ln-kind {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ln-copy {
+    min-width: 0;
+  }
+
+  .ln-title-link {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.5rem;
+  }
+
+  .ln-name {
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
+    letter-spacing: -0.014em;
+    line-height: 1.35;
+  }
+
+  .ln-arrow {
+    color: var(--faint);
+    transition: transform var(--dur-base) var(--ease);
+  }
+
+  .ln-title-link:hover .ln-arrow {
+    transform: translateX(4px);
+  }
+
+  .ln-title-link:hover .ln-name {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+
+  .ln-summary {
+    margin: 0.4rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .ln-empty {
+    margin-top: 1.5rem;
+  }
+</style>

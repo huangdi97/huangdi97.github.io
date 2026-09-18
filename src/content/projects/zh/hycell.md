@@ -14,7 +14,7 @@ order: 2
 repo: 'https://github.com/huangdi97/HyCell-JEPA'
 role: '系统设计、架构与工程实现'
 groups: ['ai-science', 'experiments']
-visual: 'cell'
+visual: 'cell-transition'
 statusNote: 'v0.1 工程 MVP。可运行原型，不是经过验证的生物学发现系统。'
 stack: ['Python 3.10+', 'PyTorch', 'NumPy', 'Streamlit', 'pytest']
 ---

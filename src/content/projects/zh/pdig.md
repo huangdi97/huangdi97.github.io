@@ -14,7 +14,7 @@ featured: true
 order: 5
 role: '规范制定与系统设计'
 groups: ['infrastructure', 'experiments']
-visual: 'infra'
+visual: 'dependency-graph'
 statusNote: '规范与设计。不是联系人管理工具——它是个人基础设施之上的依赖图谱。'
 stack: ['Canonical 规范', 'Android', 'iOS', 'HarmonyOS', '一致性测试']
 ---

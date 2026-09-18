@@ -1,0 +1,52 @@
+---
+/**
+ * Theme + language bootstrap.
+ *
+ * Runs inline and synchronously in <head>, before any stylesheet is applied
+ * and before the body exists — so `data-theme` is already correct at first
+ * paint and there is no flash of the wrong surface.
+ *
+ * Two responsibilities, and nothing else:
+ *
+ *  1. Read `haoleilab-theme` and stamp `document.documentElement.dataset.theme`.
+ *     Unknown or missing values fall back to `paper`, never to the OS setting.
+ *  2. Read `haoleilab-language` and, when it disagrees with the path being
+ *     requested, redirect to the same page in the other locale. With no stored
+ *     preference the default is Chinese, per the site's entry policy.
+ *
+ * The redirect uses `location.replace`, so the wrong-locale page never enters
+ * session history and the back button keeps working.
+ */
+import { DEFAULT_THEME, THEME_META, THEME_STORAGE_KEY, LANG_STORAGE_KEY } from '../config/themes';
+
+const chromeMap = Object.fromEntries(
+  Object.entries(THEME_META).map(([id, meta]) => [id, meta.chrome]),
+);
+
+// Injected through set:html so the constants stay in TypeScript and the
+// shipped script stays a single synchronous block with zero dependencies.
+const bootstrap = `(function(){
+var root=document.documentElement;
+function read(k){try{return window.localStorage.getItem(k)}catch(e){return null}}
+var s=read(${JSON.stringify(THEME_STORAGE_KEY)});
+var t=(s==='paper'||s==='white'||s==='night')?s:${JSON.stringify(DEFAULT_THEME)};
+root.dataset.theme=t;
+var m=document.querySelector('meta[name="theme-color"]');
+var chrome=${JSON.stringify(chromeMap)};
+if(m&&chrome[t])m.setAttribute('content',chrome[t]);
+var p=window.location.pathname;
+if(p.indexOf('.')!==-1)return;
+var pref=read(${JSON.stringify(LANG_STORAGE_KEY)});
+var w=(pref==='zh'||pref==='en')?pref:'zh';
+var c=/^\\/zh(\\/|$)/.test(p)?'zh':'en';
+if(w===c)return;
+var b=p.replace(/\\/+$/,'')||'/';
+var g;
+if(w==='en'){var x=b==='/zh'?'':b.replace(/^\\/zh(?=\\/|$)/,'');g=x?x+'/':'/';}
+else{g=b==='/'?'/zh/':'/zh'+b+'/';}
+if(g===p)return;
+window.location.replace(g+window.location.search+window.location.hash);
+})();`;
+---
+
+<script is:inline set:html={bootstrap} />

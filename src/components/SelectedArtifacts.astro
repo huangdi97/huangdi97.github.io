@@ -1,0 +1,161 @@
+---
+/**
+ * Selected Artifacts — the one inverted block on the homepage.
+ *
+ * It earns the dark surface for a reason: this is the evidence room, the place
+ * a visitor goes to check rather than to read. It sits between Selected Work
+ * and the later sections so the page gets a light → dark → light rhythm.
+ *
+ * No formula texture in here. The point of this room is real things.
+ */
+import { useT, type Lang } from '../i18n/ui';
+import { ARTIFACTS } from '../data/artifacts';
+import ArtifactCard from './ArtifactCard.astro';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+---
+
+<section class="artifact-room ar-section" id="artifacts">
+  <div class="shell">
+    <div class="ar-head">
+      <p class="eyebrow ar-eyebrow">{t('artifacts.eyebrow')}</p>
+      <h2 class="h2 ar-heading">{t('artifacts.title')}</h2>
+      <p class="ar-lead">{t('artifacts.lead')}</p>
+    </div>
+
+    <div class="ar-grid">
+      {
+        ARTIFACTS.map((artifact) => (
+          <div class="ar-cell" data-size={artifact.size}>
+            <ArtifactCard artifact={artifact} lang={lang} />
+          </div>
+        ))
+      }
+    </div>
+
+    <p class="ar-footnote">{t('artifacts.footnote')}</p>
+  </div>
+</section>
+
+<script>
+  // Native dialog wiring: open, close, and return focus to the trigger.
+  const triggers = document.querySelectorAll<HTMLButtonElement>('[data-artifact-open]');
+
+  triggers.forEach((trigger) => {
+    const id = trigger.dataset.artifactOpen;
+    if (!id) return;
+    const dialog = document.getElementById(id) as HTMLDialogElement | null;
+    if (!dialog) return;
+
+    trigger.addEventListener('click', () => {
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    });
+
+    dialog.querySelector('[data-artifact-close]')?.addEventListener('click', () => dialog.close());
+
+    // Click on the backdrop (outside the box) closes too.
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+
+    dialog.addEventListener('close', () => trigger.focus());
+  });
+</script>
+
+<style>
+  .ar-section {
+    padding-block: clamp(3rem, 7vw, 6rem);
+  }
+
+  .ar-head {
+    max-width: 60ch;
+  }
+
+  /* The trailing rule on an inverted surface would read as a scratch. */
+  .ar-eyebrow::after {
+    display: none;
+  }
+
+  .ar-heading {
+    margin-top: 0.75rem;
+  }
+
+  .ar-lead {
+    margin-top: 0.875rem;
+    font-size: clamp(1rem, 1.4vw, 1.125rem);
+    line-height: 1.55;
+    color: var(--artifact-muted);
+    max-width: 56ch;
+  }
+
+  .ar-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  @media (min-width: 768px) {
+    .ar-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+    .ar-cell[data-size='wide'] {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ar-grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+    .ar-cell[data-size='large'],
+    .ar-cell[data-size='mid'] {
+      grid-column: span 7;
+    }
+    .ar-cell[data-size='tall'],
+    .ar-cell[data-size='small'] {
+      grid-column: span 5;
+    }
+    .ar-cell[data-size='wide'] {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* The mosaic cell lives here, not inside ArtifactCard: Astro scopes styles
+     per component, so a grid rule written in the parent never reaches an
+     element rendered by the child. The child renders `.ar-tile`, and this
+     wrapper is the only grid item — `.ar-cell` must stay unique to it. */
+  .ar-cell {
+    display: flex;
+    min-width: 0;
+  }
+
+  .ar-cell > :global(.ar-tile) {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ar-cell > :global(.ar-tile) > :global(*) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ar-footnote {
+    margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--artifact-line);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--artifact-faint);
+    max-width: 72ch;
+  }
+</style>

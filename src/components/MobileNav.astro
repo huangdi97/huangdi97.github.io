@@ -1,6 +1,7 @@
 ---
-import { useT, localizedPath, type Lang } from '../i18n/ui';
+import { useT, localizedPath, switchLocalePath, type Lang } from '../i18n/ui';
 import ContactLinks from './ContactLinks.astro';
+import ThemeSwitcher from './ThemeSwitcher.astro';
 
 export interface Props {
   lang: Lang;
@@ -8,6 +9,9 @@ export interface Props {
 
 const { lang } = Astro.props;
 const t = useT(lang);
+
+const zhHref = switchLocalePath(Astro.url.pathname, 'zh');
+const enHref = switchLocalePath(Astro.url.pathname, 'en');
 
 const links = [
   { href: localizedPath(lang, '/projects'), label: t('nav.work') },
@@ -59,7 +63,43 @@ const links = [
       }
     </ul>
 
-    <div class="mt-8">
+    <div class="mt-8 grid gap-8">
+      <div>
+        <p class="mono mb-2">{t('nav.language')}</p>
+        <ul class="border-t border-line" role="none">
+          <li class="border-b border-line">
+            <a
+              href={zhHref}
+              hreflang="zh-Hans"
+              lang="zh-Hans"
+              class="flex min-h-[52px] items-center justify-between text-[1.0625rem]"
+              aria-current={lang === 'zh' ? 'true' : undefined}
+              data-lang-switch
+              data-lang-target="zh"
+            >
+              <span>中文</span>
+              {lang === 'zh' && <span class="mono">·</span>}
+            </a>
+          </li>
+          <li class="border-b border-line">
+            <a
+              href={enHref}
+              hreflang="en"
+              lang="en"
+              class="flex min-h-[52px] items-center justify-between text-[1.0625rem]"
+              aria-current={lang === 'en' ? 'true' : undefined}
+              data-lang-switch
+              data-lang-target="en"
+            >
+              <span>English</span>
+              {lang === 'en' && <span class="mono">·</span>}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <ThemeSwitcher lang={lang} variant="list" />
+
       <ContactLinks lang={lang} variant="list" />
     </div>
   </nav>

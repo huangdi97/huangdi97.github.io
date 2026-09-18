@@ -1,0 +1,288 @@
+/**
+ * Artifact gate.
+ *
+ * The Selected Artifacts room only works if every item in it can be opened and
+ * checked by a stranger. This gate enforces that, and enforces the two things
+ * that would quietly ruin it: a fabricated artifact, and an artifact that leaks
+ * something private while claiming to be real.
+ *
+ * Rules:
+ *   1. every artifact carries a `source`, a `sourceUrl` and a read `date`;
+ *   2. `verified: true` is only allowed when `source` is non-empty;
+ *   3. `type: 'screenshot'` requires an image that actually exists on disk;
+ *   4. no placeholder markers — no TODO, no lorem, no example.com;
+ *   5. no credential, token, private host or private contact in a body;
+ *   6. ids are unique and every `projectSlug` maps to a real project;
+ *   7. the built pages render each artifact together with its source link.
+ *
+ * Usage: node scripts/check-artifacts.mjs
+ */
+
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const src = join(root, 'src');
+const dist = join(root, 'dist');
+
+const ARTIFACTS_FILE = join(src, 'data', 'artifacts.ts');
+
+const problems = [];
+const notes = [];
+let checks = 0;
+
+function fail(message) {
+  problems.push(message);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Parse the artifact table without importing TypeScript                      */
+/* -------------------------------------------------------------------------- */
+
+const source = readFileSync(ARTIFACTS_FILE, 'utf8');
+const arrayStart = source.indexOf('export const ARTIFACTS');
+checks += 1;
+if (arrayStart === -1) fail('src/data/artifacts.ts does not export ARTIFACTS');
+
+// `Artifact[]` sits between the export name and the literal, so anchor on the
+// assignment rather than on the first bracket.
+const assign = source.indexOf('= [', arrayStart);
+const openBracket = assign === -1 ? source.indexOf('[', arrayStart) : assign + 2;
+let depth = 0;
+let end = -1;
+for (let i = openBracket; i < source.length; i += 1) {
+  if (source[i] === '[') depth += 1;
+  else if (source[i] === ']') {
+    depth -= 1;
+    if (depth === 0) {
+      end = i;
+      break;
+    }
+  }
+}
+const arrayBody = source.slice(openBracket + 1, end);
+
+/** Split a JS array body into its top-level object literals. */
+function splitEntries(body) {
+  const entries = [];
+  let depth = 0;
+  let start = -1;
+  let inString = false;
+  let quote = '';
+  let inTemplate = false;
+  for (let i = 0; i < body.length; i += 1) {
+    const ch = body[i];
+    const prev = body[i - 1];
+
+    if (inString) {
+      if (ch === quote && prev !== '\\') inString = false;
+      continue;
+    }
+    if (inTemplate) {
+      if (ch === '`' && prev !== '\\') inTemplate = false;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inString = true;
+      quote = ch;
+      continue;
+    }
+    if (ch === '`') {
+      inTemplate = true;
+      continue;
+    }
+
+    if (ch === '{') {
+      if (depth === 0) start = i;
+      depth += 1;
+    } else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0 && start !== -1) {
+        entries.push(body.slice(start, i + 1));
+        start = -1;
+      }
+    }
+  }
+  return entries;
+}
+
+const entries = splitEntries(arrayBody);
+
+checks += 1;
+if (entries.length === 0) fail('no artifact entries found in src/data/artifacts.ts');
+notes.push(`${entries.length} artifact entr${entries.length === 1 ? 'y' : 'ies'} parsed`);
+
+/* -------------------------------------------------------------------------- */
+/* Field-level checks                                                         */
+/* -------------------------------------------------------------------------- */
+
+const PLACEHOLDER = /\b(TODO|TBD|FIXME|LOREM|IPSUM|PLACEHOLDER|DUMMY|FAKE|EXAMPLE\.COM)\b/i;
+const SENSITIVE = [
+  [/bearer\s+[a-z0-9._-]{8,}/i, 'bearer token'],
+  [/(api[_-]?key|access[_-]?token|secret|password|passwd)\s*[:=]\s*["'`]?[a-z0-9._-]{6,}/i, 'credential'],
+  [/https?:\/\/(?:[a-z0-9-]+\.)?(?:internal|intranet|corp|local)\.[a-z]{2,}/i, 'internal host'],
+  [/\b10\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/, 'private IPv4 address'],
+  [/\b192\.168\.\d{1,3}\.\d{1,3}\b/, 'private IPv4 address'],
+  [/\b172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}\b/, 'private IPv4 address'],
+  [/[a-z0-9._%+-]+@(?!example\.com)[a-z0-9.-]+\.[a-z]{2,}/i, 'email address'],
+];
+
+const ALLOWED_SOURCE_HOSTS = ['github.com'];
+
+const projectSlugs = new Set(
+  readdirSync(join(src, 'content', 'projects', 'en'))
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => f.replace(/\.md$/, '')),
+);
+
+function field(entry, name) {
+  const m = new RegExp(`${name}\\s*:\\s*`).exec(entry);
+  if (!m) return null;
+  const rest = entry.slice(m.index + m[0].length);
+  if (rest.startsWith('`')) {
+    const endTick = rest.indexOf('`', 1);
+    return rest.slice(1, endTick);
+  }
+  if (rest.startsWith('"') || rest.startsWith("'")) {
+    const q = rest[0];
+    let i = 1;
+    let out = '';
+    while (i < rest.length) {
+      if (rest[i] === '\\') {
+        out += rest[i + 1];
+        i += 2;
+        continue;
+      }
+      if (rest[i] === q) break;
+      out += rest[i];
+      i += 1;
+    }
+    return out;
+  }
+  return rest.split(/[,\n}]/)[0].trim();
+}
+
+function hasLocalized(entry, name) {
+  return new RegExp(`${name}\\s*:\\s*\\{[\\s\\S]*?en\\s*:`).test(entry);
+}
+
+const seenIds = new Set();
+
+entries.forEach((entry, index) => {
+  const label = `artifact #${index + 1}`;
+
+  const id = field(entry, 'id');
+  checks += 1;
+  if (!id) fail(`${label}: no id`);
+  else {
+    if (seenIds.has(id)) fail(`${label}: duplicate id "${id}"`);
+    seenIds.add(id);
+  }
+
+  for (const name of ['projectSlug', 'type', 'sourceUrl', 'date', 'kind', 'size']) {
+    checks += 1;
+    if (!field(entry, name)) fail(`${id ?? label}: missing ${name}`);
+  }
+
+  for (const name of ['project', 'title', 'source', 'caption']) {
+    checks += 1;
+    if (!hasLocalized(entry, name)) fail(`${id ?? label}: ${name} needs both en and zh`);
+  }
+
+  const verified = field(entry, 'verified');
+  const sourceText = field(entry, 'source');
+  checks += 1;
+  if (verified === 'true' && !sourceText && !hasLocalized(entry, 'source')) {
+    fail(`${id ?? label}: verified=true requires a non-empty source`);
+  }
+
+  const sourceUrl = field(entry, 'sourceUrl');
+  if (sourceUrl) {
+    checks += 1;
+    let host = '';
+    try {
+      host = new URL(sourceUrl).hostname;
+    } catch {
+      fail(`${id ?? label}: sourceUrl is not a valid URL (${sourceUrl})`);
+    }
+    if (host && !ALLOWED_SOURCE_HOSTS.includes(host)) {
+      fail(`${id ?? label}: sourceUrl host "${host}" is not an allowed public source host`);
+    }
+    checks += 1;
+    if (!sourceUrl.startsWith('https://')) fail(`${id ?? label}: sourceUrl must be https`);
+  }
+
+  const date = field(entry, 'date');
+  checks += 1;
+  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) fail(`${id ?? label}: date must be ISO 8601 (${date})`);
+
+  const type = field(entry, 'type');
+  if (type === 'screenshot') {
+    const image = field(entry, 'image');
+    checks += 1;
+    if (!image) fail(`${id ?? label}: type=screenshot requires an image`);
+    else if (!existsSync(join(root, image.replace(/^\//, '')))) {
+      fail(`${id ?? label}: image ${image} does not exist`);
+    }
+  }
+
+  const slug = field(entry, 'projectSlug');
+  checks += 1;
+  if (slug && !projectSlugs.has(slug)) fail(`${id ?? label}: projectSlug "${slug}" has no project page`);
+
+  for (const [pattern, what] of SENSITIVE) {
+    checks += 1;
+    const hit = pattern.exec(entry);
+    if (hit) fail(`${id ?? label}: possible ${what} in artifact content ("${hit[0].slice(0, 40)}")`);
+  }
+
+  checks += 1;
+  const placeholder = PLACEHOLDER.exec(entry);
+  if (placeholder) fail(`${id ?? label}: placeholder marker "${placeholder[0]}"`);
+});
+
+/* -------------------------------------------------------------------------- */
+/* Built output                                                               */
+/* -------------------------------------------------------------------------- */
+
+// The artifacts room is a home-page section; only the two home pages carry it.
+const pages = [join(dist, 'index.html'), join(dist, 'zh', 'index.html')].filter((p) =>
+  existsSync(p),
+);
+
+checks += 1;
+if (pages.length === 0) {
+  fail('dist has no built home pages — run npm run build first');
+} else {
+  for (const page of pages) {
+    const html = readFileSync(page, 'utf8');
+    for (const id of seenIds) {
+      checks += 1;
+      if (!html.includes(id)) {
+        fail(`${relative(root, page)} does not render artifact "${id}"`);
+      }
+    }
+    for (const entry of entries) {
+      const url = field(entry, 'sourceUrl');
+      if (!url) continue;
+      checks += 1;
+      if (!html.includes(url)) {
+        fail(`${relative(root, page)} does not link the source of "${field(entry, 'id')}" (${url})`);
+      }
+    }
+  }
+  notes.push(`${pages.length} home page(s) checked for artifact render + source links`);
+}
+
+/* -------------------------------------------------------------------------- */
+
+if (problems.length) {
+  console.error('Artifact gate FAILED:\n');
+  for (const problem of problems) console.error(`  ✗ ${problem}`);
+  console.error(`\n${checks} checks run, ${problems.length} failed.`);
+  process.exit(1);
+}
+
+console.log(`Artifact gate passed (${checks} checks).`);
+for (const note of notes) console.log(`  • ${note}`);

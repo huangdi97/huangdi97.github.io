@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { test, expect, type Page } from '@playwright/test';
+import { visit } from './helpers';
 
 /**
  * Identity closure tests.
@@ -39,7 +40,7 @@ const ROUTES = [
 
 test.describe('factual consistency', () => {
   test('English résumé publishes the confirmed education and employment record', async ({ page }) => {
-    await page.goto('/resume/');
+    await visit(page, '/resume/');
     const body = page.locator('body');
 
     for (const fact of [
@@ -65,7 +66,7 @@ test.describe('factual consistency', () => {
   });
 
   test('Chinese résumé publishes the same record in Chinese', async ({ page }) => {
-    await page.goto('/zh/resume/');
+    await visit(page, '/zh/resume/');
     const body = page.locator('body');
 
     for (const fact of [
@@ -86,7 +87,7 @@ test.describe('factual consistency', () => {
   });
 
   test('manuscript is never described as published', async ({ page }) => {
-    await page.goto('/resume/');
+    await visit(page, '/resume/');
     const output = page.locator('[data-resume-section="output"]');
     await expect(output).toContainText('Manuscript submitted');
     await expect(output).not.toContainText(/doi|DOI|published|accepted|peer-reviewed/i);
@@ -96,7 +97,7 @@ test.describe('factual consistency', () => {
 test.describe('privacy', () => {
   for (const route of ROUTES) {
     test(`no private contact detail on ${route}`, async ({ page }) => {
-      await page.goto(route);
+      await visit(page, route);
       const html = await page.content();
       expect(html.includes(PHONE), `phone number found on ${route}`).toBe(false);
       expect(html.includes(PRIVATE_EMAIL), `private email found on ${route}`).toBe(false);
@@ -113,7 +114,7 @@ test.describe('contact identity', () => {
 
   for (const [label, scope] of SURFACES) {
     test(`${label} exposes both addresses in a fixed order`, async ({ page }) => {
-      await page.goto(label === 'footer' ? '/' : `/${label}/`);
+      await visit(page, label === 'footer' ? '/' : `/${label}/`);
       const root = page.locator(scope).first();
 
       const ids = await root.locator('[data-contact-id]').evaluateAll((nodes) =>
@@ -135,7 +136,7 @@ test.describe('contact identity', () => {
 
   test('no page links a mailto target outside the approved pair', async ({ page }) => {
     for (const route of ROUTES) {
-      await page.goto(route);
+      await visit(page, route);
       const targets = await page.locator('a[href^="mailto:"]').evaluateAll((nodes) =>
         nodes.map((n) => n.getAttribute('href') ?? ''),
       );
@@ -150,20 +151,20 @@ test.describe('contact identity', () => {
 
 test.describe('naming', () => {
   test('flagship project carries the ZhiShen · WenNian brand', async ({ page }) => {
-    await page.goto('/projects/wennian/');
+    await visit(page, '/projects/wennian/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('ZhiShen · WenNian');
     await expect(page.locator('.case-subtitle')).toContainText('知身·问年');
   });
 
   test('Chinese case study carries 知身·问年', async ({ page }) => {
-    await page.goto('/zh/projects/wennian/');
+    await visit(page, '/zh/projects/wennian/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('知身·问年');
     await expect(page.locator('.case-subtitle')).toContainText('ZhiShen · WenNian');
   });
 
   test('the retired name is never used as a page heading', async ({ page }) => {
     for (const route of ROUTES) {
-      await page.goto(route);
+      await visit(page, route);
       const headings = await page.locator('h1, h2').allInnerTexts();
       for (const heading of headings) {
         expect(heading.trim(), `bare "WenNian" heading on ${route}`).not.toBe('WenNian');
@@ -172,7 +173,7 @@ test.describe('naming', () => {
   });
 
   test('repository URL and slug stay stable across the rename', async ({ page }) => {
-    await page.goto('/projects/wennian/');
+    await visit(page, '/projects/wennian/');
     const repo = page.getByRole('complementary').getByRole('link', { name: 'Repository' });
     await expect(repo).toHaveAttribute('href', 'https://github.com/huangdi97/WenNian');
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
@@ -198,7 +199,7 @@ test.describe('resume integrity', () => {
 
   for (const locale of ['/resume/', '/zh/resume/']) {
     test(`${locale} renders every section`, async ({ page }) => {
-      await page.goto(locale);
+      await visit(page, locale);
       await expect(page.locator('[data-resume-section]')).toHaveCount(SECTIONS.length);
       for (const id of SECTIONS) {
         const section = page.locator(`[data-resume-section="${id}"]`);
@@ -210,7 +211,7 @@ test.describe('resume integrity', () => {
     });
 
     test(`${locale} separates employment, research and personal projects`, async ({ page }) => {
-      await page.goto(locale);
+      await visit(page, locale);
       const employment = page.locator('[data-resume-section="experience"]');
       const research = page.locator('[data-resume-section="research"]');
       const projects = page.locator('[data-resume-section="projects"]');
@@ -227,7 +228,7 @@ test.describe('resume integrity', () => {
   }
 
   test('download buttons appear only for PDFs that exist', async ({ page }) => {
-    await page.goto('/resume/');
+    await visit(page, '/resume/');
     const links = page.locator('a[data-resume-pdf]');
     const count = await links.count();
     for (let i = 0; i < count; i += 1) {
@@ -244,7 +245,7 @@ test.describe('print', () => {
     test(`${locale} prints without truncation or overflow`, async ({ page }) => {
       await page.setViewportSize({ width: 794, height: 1123 });
       await page.emulateMedia({ media: 'print' });
-      await page.goto(locale);
+      await visit(page, locale);
 
       // Chrome furniture must be gone from the printed document.
       await expect(page.locator('header.site-header')).toBeHidden();
@@ -275,7 +276,7 @@ test.describe('mobile resume', () => {
   test('long institution and company names wrap at 390px', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile-only');
     await page.setViewportSize({ width: 390, height: 900 });
-    await page.goto('/resume/');
+    await visit(page, '/resume/');
 
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
@@ -396,7 +397,7 @@ test.describe('resume PDFs', () => {
 test.describe('structured identity', () => {
   test('Person JSON-LD exposes only the public identity', async ({ page }) => {
     const errors = await collectConsoleErrors(page);
-    await page.goto('/');
+    await visit(page, '/');
     expect(errors).toEqual([]);
 
     const blocks = await page

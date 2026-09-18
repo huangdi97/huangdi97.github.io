@@ -16,7 +16,7 @@ order: 1
 repo: 'https://github.com/huangdi97/WenNian'
 role: '系统设计、架构与工程实现'
 groups: ['ai-health', 'agents']
-visual: 'aging'
+visual: 'aging-state'
 statusNote: '开源 MVP。仅输出评估结果，不是诊断工具。许可证状态未定：README 声明 GPLv3，GitHub 未检测到 LICENSE 文件。'
 stack: ['Python 3.10+', 'FastAPI', 'Gradio', 'pytest', 'YAML 配置']
 ---

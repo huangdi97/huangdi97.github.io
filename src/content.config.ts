@@ -73,8 +73,28 @@ const projectSchema = z.object({
   role: z.string(),
   /** Filter buckets on /projects. */
   groups: z.array(z.string()).default([]),
-  /** Which unified system diagram to render. */
-  visual: z.enum(['aging', 'cell', 'discovery', 'pet', 'infra', 'runtime', 'pulse']),
+  /**
+   * Which system diagram to render.
+   *
+   * The stroke, palette, typography and spacing are shared across all of them;
+   * what differs is the scientific metaphor — each project gets its own
+   * structure rather than a recut version of the same shape.
+   */
+  visual: z.enum([
+    'aging',
+    'cell',
+    'discovery',
+    'pet',
+    'infra',
+    'runtime',
+    'pulse',
+    'aging-state',
+    'cell-transition',
+    'agent-dag',
+    'compliance-triangle',
+    'dependency-graph',
+    'discovery-loop',
+  ]),
   /** Short honest status sentence shown under the meta block. */
   statusNote: z.string().optional(),
   /** Extra facts for the project meta block. */

@@ -14,6 +14,10 @@ import { getBackground } from '../data/background';
 import { getHow } from '../data/how';
 import { OSS_CAPTURED_AT, OSS_HIGHLIGHTS } from '../data/oss';
 import ResearchRow from '../components/ResearchRow.astro';
+import SelectedArtifacts from '../components/SelectedArtifacts.astro';
+import MathematicalBiology from '../components/MathematicalBiology.astro';
+import EquationNote from '../components/EquationNote.astro';
+import LabNotes from '../components/LabNotes.astro';
 import { personSchema } from '../data/profile';
 
 const lang = 'en' as const;
@@ -86,7 +90,9 @@ const websiteLd = {
       </div>
 
       <div class="hero-figure">
-        <HeroSystem />
+        <div class="hero-field field-grid">
+          <HeroSystem label={t('a11y.heroField')} />
+        </div>
       </div>
     </div>
 
@@ -116,6 +122,9 @@ const websiteLd = {
     </div>
   </section>
 
+  <!-- ─────────────────── SELECTED ARTIFACTS (dark room) ─────────── -->
+  <SelectedArtifacts lang={lang} />
+
   <!-- ───────────────────────── BACKGROUND ──────────────────────── -->
   <section class="shell section">
     <SectionHeading
@@ -131,8 +140,15 @@ const websiteLd = {
     <BackgroundTimeline lang={lang} />
   </section>
 
+  <!-- ──────────────── MATHEMATICAL BIOLOGY ─────────────────────── -->
+  <MathematicalBiology lang={lang} />
+
+  <div class="shell">
+    <EquationNote lang={lang} />
+  </div>
+
   <!-- ──────────────────────── RESEARCH ────────────────────────── -->
-  <section class="shell section">
+  <section class="shell section-compact">
     <SectionHeading
       eyebrow={t('research.eyebrow')}
       title={t('research.title')}
@@ -157,13 +173,13 @@ const websiteLd = {
   </section>
 
   <!-- ─────────────────────── HOW I WORK ───────────────────────── -->
-  <section class="shell section">
+  <section class="shell section-compact">
     <SectionHeading eyebrow={t('how.eyebrow')} title={t('how.title')} lead={t('how.lead')} />
     <ProcessRail steps={how} />
   </section>
 
   <!-- ─────────────────────── OPEN SOURCE ──────────────────────── -->
-  <section class="shell section">
+  <section class="shell section-compact">
     <SectionHeading
       eyebrow={t('oss.eyebrow')}
       title={t('oss.title')}
@@ -209,6 +225,9 @@ const websiteLd = {
 
     <p class="oss-snapshot mono">{t('oss.snapshot')} — {OSS_CAPTURED_AT}</p>
   </section>
+
+  <!-- ───────────────────────── LAB NOTES ──────────────────────── -->
+  <LabNotes lang={lang} />
 
   <!-- ───────────────────────── ABOUT CTA ──────────────────────── -->
   <section class="shell section-tight">
@@ -305,6 +324,12 @@ const websiteLd = {
 
   .hero-figure {
     display: none;
+  }
+
+  .hero-field {
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+    border: 1px solid var(--line);
+    border-radius: 3px;
   }
 
   @media (min-width: 900px) {

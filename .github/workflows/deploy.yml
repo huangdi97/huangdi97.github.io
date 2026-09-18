@@ -20,9 +20,9 @@ env:
   NODE_VERSION: '22'
 
 # Quality gate — every step below is blocking.
-# Order: npm ci → lint → typecheck → build → verify → identity → test.
-# Pages is configured, uploaded and deployed only after all seven pass.
-# A failing test means no deployment, without exception.
+# Order: npm ci → lint → typecheck → build → verify → theme → artifacts →
+# science → identity → test. Pages is configured, uploaded and deployed only
+# after all ten pass. A failing test means no deployment, without exception.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -50,6 +50,15 @@ jobs:
 
       - name: Verify build output
         run: npm run verify
+
+      - name: Check theme system
+        run: npm run theme
+
+      - name: Check artifacts
+        run: npm run artifacts
+
+      - name: Check science copy
+        run: npm run science
 
       - name: Check public identity
         run: npm run identity

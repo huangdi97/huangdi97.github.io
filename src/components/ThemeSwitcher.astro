@@ -1,0 +1,290 @@
+---
+/**
+ * Appearance control.
+ *
+ * A compact popover in the header utility cluster, and a plain labelled list
+ * inside the mobile menu. The active theme lives on `data-theme` on <html>;
+ * this component only reads, writes and persists it. No layout, no network,
+ * no reload.
+ *
+ * Accessibility: the trigger carries aria-expanded / aria-controls / -haspopup,
+ * the panel is a `menu` of `menuitemradio` items with aria-checked, Escape
+ * closes and returns focus, arrow keys move between options, and a click
+ * outside dismisses the panel.
+ */
+import { DEFAULT_THEME, THEME_META, THEME_ORDER } from '../config/themes';
+import { useT, type Lang } from '../i18n/ui';
+
+export interface Props {
+  lang: Lang;
+  /** `icon` for the header cluster; `list` for the mobile menu. */
+  variant?: 'icon' | 'list';
+}
+
+const { lang, variant = 'icon' } = Astro.props;
+const t = useT(lang);
+
+let instance = 0;
+
+const menuId = `theme-menu-${(instance += 1)}`;
+
+const meta = THEME_ORDER.map((id) => THEME_META[id]);
+---
+
+{
+  variant === 'icon' ? (
+    <div class="ts" data-theme-switcher>
+      <button
+        type="button"
+        class="ts-trigger"
+        data-theme-toggle
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-controls={menuId}
+        aria-label={t('appearance.label')}
+        title={t('appearance.label')}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.25" />
+          <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor" />
+        </svg>
+      </button>
+
+      <div class="ts-menu" id={menuId} data-theme-menu role="menu" aria-label={t('appearance.label')} hidden>
+        <p class="ts-title mono">{t('appearance.label')}</p>
+        <ul role="none" class="ts-list">
+          {
+            meta.map((m) => (
+              <li role="none">
+                <button
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked="false"
+                  data-theme-option={m.id}
+                  class="ts-option"
+                >
+                  <span class="ts-check" aria-hidden="true">
+                    <svg width="10" height="10" viewBox="0 0 10 10" focusable="false">
+                      <circle cx="5" cy="5" r="5" fill="currentColor" />
+                    </svg>
+                  </span>
+                  <span
+                    class="ts-swatch"
+                    aria-hidden="true"
+                    style={`--sw-a:${m.swatch.a};--sw-b:${m.swatch.b}`}
+                  />
+                  <span class="ts-copy">
+                    <span class="ts-name">{m.label[lang]}</span>
+                    <span class="ts-note">{m.note[lang]}</span>
+                  </span>
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  ) : (
+    <div class="ts-listblock" data-theme-switcher>
+      <p class="ts-blocktitle mono">{t('appearance.label')}</p>
+      <ul class="ts-blocklist" role="none">
+        {
+          meta.map((m) => (
+            <li role="none">
+              <button
+                type="button"
+                role="menuitemradio"
+                aria-checked="false"
+                data-theme-option={m.id}
+                class="ts-blockoption"
+              >
+                <span class="ts-check" aria-hidden="true">
+                  <svg width="10" height="10" viewBox="0 0 10 10" focusable="false">
+                    <circle cx="5" cy="5" r="5" fill="currentColor" />
+                  </svg>
+                </span>
+                <span
+                  class="ts-swatch"
+                  aria-hidden="true"
+                  style={`--sw-a:${m.swatch.a};--sw-b:${m.swatch.b}`}
+                />
+                <span class="ts-name">{m.label[lang]}</span>
+                <span class="ts-note">{m.note[lang]}</span>
+              </button>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  )
+}
+
+<script>import '../scripts/theme-switcher';</script>
+
+<style>
+  .ts {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .ts-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+    color: var(--muted);
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .ts-trigger:hover,
+  .ts-trigger[aria-expanded='true'] {
+    color: var(--ink);
+  }
+
+  .ts-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 120;
+    min-width: 15.5rem;
+    padding: 0.75rem;
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  [data-theme='night'] .ts-menu {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .ts-menu[hidden] {
+    display: none;
+  }
+
+  .ts-title {
+    padding: 0 0.4rem 0.55rem;
+    border-bottom: 1px solid var(--line);
+    margin: 0;
+  }
+
+  .ts-list {
+    list-style: none;
+    margin: 0.4rem 0 0;
+    padding: 0;
+  }
+
+  .ts-option,
+  .ts-blockoption {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.4rem;
+    border-radius: 2px;
+    color: var(--muted);
+    transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+  }
+
+  .ts-option {
+    min-height: 44px;
+  }
+
+  .ts-blockoption {
+    min-height: 52px;
+    border-top: 1px solid var(--line);
+    padding-inline: 0;
+  }
+
+  .ts-option:hover,
+  .ts-blockoption:hover {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  .ts-option[aria-checked='true'],
+  .ts-blockoption[aria-checked='true'] {
+    color: var(--ink);
+  }
+
+  .ts-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease);
+  }
+
+  .ts-option[aria-checked='true'] .ts-check,
+  .ts-blockoption[aria-checked='true'] .ts-check {
+    opacity: 1;
+  }
+
+  .ts-swatch {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 2px;
+    background: var(--sw-a);
+    border: 1px solid var(--sw-b);
+    position: relative;
+  }
+
+  .ts-swatch::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 50%;
+    height: 50%;
+    background: var(--sw-b);
+  }
+
+  .ts-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .ts-name {
+    font-size: 0.875rem;
+    line-height: 1.3;
+  }
+
+  .ts-note {
+    font-size: 0.6875rem;
+    color: var(--faint);
+    line-height: 1.3;
+  }
+
+  /* Mobile list variant */
+  .ts-listblock {
+    display: block;
+  }
+
+  .ts-blocktitle {
+    margin: 0 0 0.25rem;
+  }
+
+  .ts-blocklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ts-blockoption {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.6rem;
+  }
+
+  .ts-blockoption .ts-note {
+    flex-basis: 100%;
+    padding-left: 1.85rem;
+  }
+</style>

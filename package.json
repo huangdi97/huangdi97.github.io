@@ -20,9 +20,12 @@
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "verify": "node scripts/verify-build.mjs",
+    "theme": "node scripts/check-theme-system.mjs",
+    "artifacts": "node scripts/check-artifacts.mjs",
+    "science": "node scripts/check-science-copy.mjs",
     "identity": "node scripts/check-public-identity.mjs",
     "resume:pdf": "npm run build && node scripts/generate-resume-pdfs.mjs",
-    "gate": "npm run lint && npm run typecheck && npm run build && npm run verify && npm run identity && npm run test"
+    "gate": "npm run lint && npm run typecheck && npm run build && npm run verify && npm run theme && npm run artifacts && npm run science && npm run identity && npm run test"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.0.0",

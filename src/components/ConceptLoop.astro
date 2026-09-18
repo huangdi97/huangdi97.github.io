@@ -1,0 +1,198 @@
+---
+/**
+ * Signature concept figure — Observation → Representation → Dynamics →
+ * Decision, closed by a feedback arc that returns a new observation.
+ *
+ * Roughly 1000px wide on desktop. Black and grey, one blue accent, thin
+ * strokes, mono micro-labels, a lot of whitespace. No colour blocks, no 3D,
+ * no gradients, no glow.
+ *
+ * Every stroke and label reads a theme custom property, so this one artwork
+ * serves paper, white and night.
+ */
+import { CONCEPT_LOOP, FEEDBACK_LABEL } from '../data/mathVisuals';
+import { useT, type Lang } from '../i18n/ui';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const COL_W = 232;
+const COL_GAP = 24;
+const LEFT = 12;
+const TOP = 62;
+const BOX_H = 108;
+
+const cols = CONCEPT_LOOP.map((layer, i) => ({
+  ...layer,
+  x: LEFT + i * (COL_W + COL_GAP),
+  cx: LEFT + i * (COL_W + COL_GAP) + COL_W / 2,
+  index: i,
+}));
+
+const SPAN = LEFT + 4 * COL_W + 3 * COL_GAP;
+const VIEW_W = SPAN + LEFT;
+const VIEW_H = 300;
+---
+
+<figure class="concept-loop">
+  <svg
+    class="diagram"
+    viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+    role="img"
+    aria-label={t('a11y.conceptLoop')}
+    preserveAspectRatio="xMidYMid meet"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <!-- Forward edges -->
+    <g fill="none" stroke="var(--dg-line)" stroke-width="1.25">
+      {
+        cols.slice(0, -1).map((c) => (
+          <line
+            x1={c.x + COL_W}
+            y1={TOP + BOX_H / 2}
+            x2={c.x + COL_W + COL_GAP}
+            y2={TOP + BOX_H / 2}
+            marker-end="url(#cl-arrow)"
+          />
+        ))
+      }
+    </g>
+    <defs>
+      <marker
+        id="cl-arrow"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="7"
+        markerHeight="7"
+        orient="auto-start-reverse"
+      >
+        <path class="cl-arrow-head" d="M0,0 L10,5 L0,10 z" />
+      </marker>
+    </defs>
+
+    {
+      cols.map((c) => (
+        <g>
+          <rect
+            x={c.x}
+            y={TOP}
+            width={COL_W}
+            height={BOX_H}
+            rx="2"
+            fill="var(--dg-fill)"
+            stroke={c.id === 'dynamics' ? 'var(--accent)' : 'var(--dg-line-soft)'}
+            stroke-width={c.id === 'dynamics' ? '1.5' : '1'}
+          />
+          <text class="dg-label" x={c.x + 16} y={TOP + 24}>
+            {String(c.index + 1).padStart(2, '0')} · {c.label[lang]}
+          </text>
+          <text class="cl-expr" x={c.x + COL_W / 2} y={TOP + 66} text-anchor="middle">
+            {c.expr}
+          </text>
+          {c.alt && (
+            <text class="cl-alt" x={c.x + COL_W / 2} y={TOP + 88} text-anchor="middle">
+              {c.alt}
+            </text>
+          )}
+          <text class="dg-label" x={c.x + COL_W / 2} y={TOP + (c.alt ? 104 : 90)} text-anchor="middle">
+            {c.note[lang]}
+          </text>
+        </g>
+      ))
+    }
+
+    <!-- Feedback arc -->
+    <path
+      class="cl-feedback"
+      d={`M${cols[3].cx},${TOP + BOX_H} C ${cols[3].cx} ${TOP + BOX_H + 70}, ${cols[0].cx} ${TOP + BOX_H + 70}, ${cols[0].cx} ${TOP + BOX_H + 34}`}
+      fill="none"
+      stroke="var(--dg-line)"
+      stroke-width="1.25"
+      stroke-dasharray="4 5"
+      marker-end="url(#cl-arrow)"
+    />
+    <text class="dg-label" x={(cols[0].cx + cols[3].cx) / 2} y={TOP + BOX_H + 86} text-anchor="middle">
+      {FEEDBACK_LABEL[lang]} · X′
+    </text>
+
+    <!-- Axis caption -->
+    <line
+      x1={LEFT}
+      y1={TOP - 26}
+      x2={SPAN}
+      y2={TOP - 26}
+      stroke="var(--dg-line-soft)"
+      stroke-width="1"
+    />
+    <text class="dg-label" x={LEFT} y={TOP - 34}>
+      STATE SPACE
+    </text>
+    <text class="dg-label" x={SPAN} y={TOP - 34} text-anchor="end">
+      t → t + 1
+    </text>
+  </svg>
+
+  <figcaption class="cl-caption">
+    <span class="concept-note">{t('conceptual.diagram')}</span>
+    <span class="cl-caption-text">{t('mathbio.figureCaption')}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .concept-loop {
+    margin: 0;
+  }
+
+  .cl-expr {
+    font-family: var(--font-mono);
+    font-size: 19px;
+    fill: var(--ink);
+  }
+
+  .cl-alt {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    fill: var(--muted);
+  }
+
+  .cl-arrow-head {
+    fill: var(--dg-line-strong);
+  }
+
+  .cl-feedback {
+    stroke-dashoffset: 0;
+    animation: cl-flow 11s linear infinite;
+  }
+
+  @keyframes cl-flow {
+    to {
+      stroke-dashoffset: -72;
+    }
+  }
+
+  .cl-caption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .cl-caption-text {
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cl-feedback {
+      animation: none !important;
+    }
+  }
+</style>

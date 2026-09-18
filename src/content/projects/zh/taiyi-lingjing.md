@@ -13,7 +13,7 @@ featured: false
 order: 9
 role: '概念设计与研究'
 groups: ['agents', 'ai-science']
-visual: 'discovery'
+visual: 'discovery-loop'
 statusNote: '概念设计与研究方向。工程实现尚未开始——没有仓库、原型或验证结果。'
 stack: ['概念设计', '拟议架构', '证据溯源', 'PBPK / QSP / ODE（拟）', '贝叶斯优化（拟）']
 ---

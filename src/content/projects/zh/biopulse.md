@@ -16,7 +16,7 @@ order: 4
 repo: 'https://github.com/huangdi97/BioPulse'
 role: '系统设计、架构与工程实现'
 groups: ['agents', 'ai-health']
-visual: 'pulse'
+visual: 'compliance-triangle'
 statusNote: '公开仓库，GitHub 检测到 MIT 许可证。README 描述的是能力，本页不发布任何基准或准确性数据。'
 stack: ['Python 3.12', 'FastAPI', 'LangGraph', 'Flutter', 'Prometheus']
 ---

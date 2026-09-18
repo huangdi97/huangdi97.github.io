@@ -2,6 +2,7 @@
 import { useT, localizedPath, type Lang } from '../i18n/ui';
 import { SITE } from '../config/site';
 import LanguageSwitcher from './LanguageSwitcher.astro';
+import ThemeSwitcher from './ThemeSwitcher.astro';
 import ContactLinks from './ContactLinks.astro';
 
 export interface Props {
@@ -18,8 +19,8 @@ const year = new Date().getFullYear();
     <div class="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
       <div class="max-w-md">
         <p class="font-mono text-[13px] uppercase tracking-[0.18em] text-night-ink">HAO LEI</p>
-        <p class="mt-3 text-[0.9375rem] text-[#a1a1a1]">{SITE.tagline}</p>
-        <p class="mt-6 text-[0.8125rem] text-[#8a8a8a]">{t('footer.built')}</p>
+        <p class="mt-3 text-[0.9375rem] text-night-muted">{SITE.tagline}</p>
+        <p class="mt-6 text-[0.8125rem] text-night-muted">{t('footer.built')}</p>
       </div>
 
       <div class="flex flex-col gap-8 sm:flex-row sm:gap-16">
@@ -28,7 +29,7 @@ const year = new Date().getFullYear();
             <li>
               <a
                 href={localizedPath(lang, '/projects')}
-                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
+                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-night-muted transition-colors duration-150 hover:text-night-ink"
               >
                 {t('nav.work')}
               </a>
@@ -36,7 +37,7 @@ const year = new Date().getFullYear();
             <li>
               <a
                 href={localizedPath(lang, '/research')}
-                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
+                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-night-muted transition-colors duration-150 hover:text-night-ink"
               >
                 {t('nav.research')}
               </a>
@@ -44,7 +45,7 @@ const year = new Date().getFullYear();
             <li>
               <a
                 href={localizedPath(lang, '/about')}
-                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
+                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-night-muted transition-colors duration-150 hover:text-night-ink"
               >
                 {t('nav.about')}
               </a>
@@ -52,7 +53,7 @@ const year = new Date().getFullYear();
             <li>
               <a
                 href={localizedPath(lang, '/resume')}
-                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
+                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-night-muted transition-colors duration-150 hover:text-night-ink"
               >
                 {t('nav.resume')}
               </a>
@@ -62,16 +63,19 @@ const year = new Date().getFullYear();
 
         <div class="flex flex-col gap-6">
           <ContactLinks lang={lang} variant="footer" heading={t('contact.title')} />
-          <div class="flex min-h-[44px] items-center">
+          <div class="flex min-h-[44px] items-center gap-4">
             <LanguageSwitcher lang={lang} variant="footer" />
+            <span class="h-4 w-px bg-[var(--artifact-line)]" aria-hidden="true"></span>
+            <span class="mono text-night-muted">{t('appearance.label')}</span>
           </div>
+          <ThemeSwitcher lang={lang} variant="list" />
         </div>
       </div>
     </div>
 
     <hr class="rule my-10" />
 
-    <p class="font-mono text-[11px] uppercase tracking-[0.12em] text-[#8a8a8a]">
+    <p class="font-mono text-[11px] uppercase tracking-[0.12em] text-night-muted">
       © {year} Hao Lei — {t('footer.rights')}
     </p>
   </div>

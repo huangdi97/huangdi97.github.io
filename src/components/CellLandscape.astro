@@ -1,0 +1,100 @@
+---
+/**
+ * Cell state landscape — conceptual.
+ *
+ * Contour lines, an aged-state basin, a trajectory and a target basin. Drawn,
+ * not measured: no cell image, no experimental data, and it says so in the
+ * caption and in its accessible name.
+ */
+import { useT, type Lang } from '../i18n/ui';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const CONTOURS = [0.34, 0.52, 0.7, 0.88, 1.06];
+const CX = 262;
+const CY = 128;
+const TILT = -16;
+
+const traj = 'M74,196 C 118,182 132,150 176,142 C 214,135 226,124 252,127';
+---
+
+<figure class="bio-fig">
+  <svg
+    class="diagram"
+    viewBox="0 0 400 260"
+    role="img"
+    aria-label={t('a11y.cellLandscape')}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <g transform={`rotate(${TILT} ${CX} ${CY})`}>
+      {
+        CONTOURS.map((k, i) => (
+          <ellipse
+            cx={CX}
+            cy={CY}
+            rx={104 * k}
+            ry={66 * k}
+            fill="none"
+            stroke="var(--dg-line-soft)"
+            stroke-width={i === CONTOURS.length - 1 ? '1.25' : '1'}
+          />
+        ))
+      }
+      <ellipse cx={CX} cy={CY} rx="18" ry="12" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.25" />
+    </g>
+
+    <!-- Aged-state region -->
+    <circle cx="74" cy="196" r="14" fill="none" stroke="var(--dg-line)" stroke-width="1.25" />
+    <circle cx="74" cy="196" r="3" fill="var(--dg-dot)" />
+
+    <path
+      d={traj}
+      fill="none"
+      stroke="var(--dg-line-strong)"
+      stroke-width="1.25"
+      stroke-dasharray="5 4"
+      marker-end="url(#cs-arrow)"
+    />
+    <defs>
+      <marker
+        id="cs-arrow"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="7"
+        markerHeight="7"
+        orient="auto-start-reverse"
+      >
+        <path class="cs-head" d="M0,0 L10,5 L0,10 z" />
+      </marker>
+    </defs>
+
+    {
+      [
+        [110, 180],
+        [148, 156],
+        [186, 143],
+        [224, 132],
+      ].map((p) => <circle cx={p[0]} cy={p[1]} r="2.5" fill="var(--dg-dot)" />)
+    }
+
+    <text class="dg-label" x="44" y="228">AGED STATE</text>
+    <text class="dg-label" x="262" y="222" text-anchor="middle">TARGET STATE</text>
+    <text class="dg-label" x="20" y="26">STATE LANDSCAPE · W(z)</text>
+    <line x1="20" y1="34" x2="380" y2="34" stroke="var(--dg-grid)" stroke-width="1" />
+  </svg>
+</figure>
+
+<style>
+  .bio-fig {
+    margin: 0;
+  }
+  .cs-head {
+    fill: var(--dg-line-strong);
+  }
+</style>

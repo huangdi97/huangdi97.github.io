@@ -4,34 +4,153 @@
 
 /* ==========================================================================
    Design tokens — Hao Lei / Personal AI Lab
-   One quiet editorial system: off-white paper, near-black ink, a single
-   restrained electric blue used only for emphasis.
+
+   One quiet editorial system, three themes. Every colour in the site is read
+   from a custom property, so a theme is a token swap rather than a set of
+   per-component conditionals. Nothing anywhere hard-codes a surface colour.
+
+   Themes: paper (default, warm research notebook), white (the original
+   near-white minimal surface), night (research notebook after dark).
    ========================================================================== */
 
 @layer base {
-  :root {
+  :root,
+  [data-theme='paper'] {
+    color-scheme: light;
+
     /* Surfaces */
-    --canvas: #f7f7f4;
-    --card: #ffffff;
-    --night: #111111;
-    --night-soft: #1a1a1a;
+    --canvas: #f0eee8;
+    --surface: #f6f4ee;
+    --card: #fbfaf6;
+    --code-bg: rgba(20, 20, 18, 0.045);
+    --header-bg: rgba(240, 238, 232, 0.86);
 
     /* Ink */
-    --ink: #111111;
-    --muted: #666666;
-    --faint: #8a8a85;
-    --night-ink: #f5f5f5;
-    --night-muted: #a1a1a1;
+    --ink: #151515;
+    --muted: #5a564e;
+    --faint: #6e685f;
 
     /* Lines */
+    --line: rgba(20, 20, 18, 0.1);
+    --line-strong: rgba(20, 20, 18, 0.18);
+    --grid-line: rgba(20, 20, 18, 0.055);
+
+    /* Accent — one only, used sparingly.
+       #2E56F2 is the published #315CFF nudged two steps deeper: at #315CFF the
+       accent-as-text pair measures 4.41:1 on the paper canvas, just under the
+       4.5:1 AA floor. Same blue, now compliant. */
+    --accent: #2e56f2;
+    --accent-soft: rgba(46, 86, 242, 0.09);
+
+    /* Artifact room — the single inverted block on a page */
+    --artifact-bg: #111110;
+    --artifact-ink: #ecece7;
+    --artifact-muted: #a09f98;
+    --artifact-faint: #8a8a83;
+    --artifact-line: rgba(255, 255, 255, 0.13);
+    --artifact-line-strong: rgba(255, 255, 255, 0.24);
+    --artifact-code-bg: rgba(255, 255, 255, 0.05);
+
+    /* Diagrams */
+    --dg-fill: #fbfaf6;
+    --dg-line: rgba(20, 20, 18, 0.34);
+    --dg-line-strong: rgba(20, 20, 18, 0.55);
+    --dg-line-soft: rgba(20, 20, 18, 0.16);
+    --dg-dot: rgba(20, 20, 18, 0.5);
+    --dg-grid: rgba(20, 20, 18, 0.05);
+    --diagram-line: rgba(20, 20, 18, 0.42);
+
+    /* Texture */
+    --grain-opacity: 1;
+    --formula-opacity: 0.06;
+    --grid-opacity: 0.05;
+  }
+
+  [data-theme='white'] {
+    color-scheme: light;
+
+    --canvas: #ffffff;
+    --surface: #f7f7f4;
+    --card: #ffffff;
+    --code-bg: rgba(0, 0, 0, 0.045);
+    --header-bg: rgba(255, 255, 255, 0.86);
+
+    --ink: #111111;
+    --muted: #5f5f5a;
+    --faint: #757570;
+
     --line: rgba(0, 0, 0, 0.1);
     --line-strong: rgba(0, 0, 0, 0.18);
-    --night-line: rgba(255, 255, 255, 0.14);
+    --grid-line: rgba(0, 0, 0, 0.05);
 
-    /* Accent — used sparingly */
-    --accent: #315cff;
-    --accent-soft: rgba(49, 92, 255, 0.08);
+    --accent: #2e56f2;
+    --accent-soft: rgba(46, 86, 242, 0.08);
 
+    --artifact-bg: #151515;
+    --artifact-ink: #f2f2ee;
+    --artifact-muted: #a3a39c;
+    --artifact-faint: #8c8c85;
+    --artifact-line: rgba(255, 255, 255, 0.13);
+    --artifact-line-strong: rgba(255, 255, 255, 0.24);
+    --artifact-code-bg: rgba(255, 255, 255, 0.05);
+
+    --dg-fill: #ffffff;
+    --dg-line: rgba(0, 0, 0, 0.34);
+    --dg-line-strong: rgba(0, 0, 0, 0.52);
+    --dg-line-soft: rgba(0, 0, 0, 0.16);
+    --dg-dot: rgba(0, 0, 0, 0.45);
+    --dg-grid: rgba(0, 0, 0, 0.045);
+    --diagram-line: rgba(0, 0, 0, 0.42);
+
+    --grain-opacity: 0;
+    --formula-opacity: 0.05;
+    --grid-opacity: 0.045;
+  }
+
+  [data-theme='night'] {
+    color-scheme: dark;
+
+    --canvas: #111210;
+    --surface: #161715;
+    --card: #1a1b18;
+    --code-bg: rgba(255, 255, 255, 0.055);
+    --header-bg: rgba(17, 18, 16, 0.86);
+
+    --ink: #ecece7;
+    --muted: #a09f98;
+    --faint: #8a8a83;
+
+    --line: rgba(255, 255, 255, 0.1);
+    --line-strong: rgba(255, 255, 255, 0.18);
+    --grid-line: rgba(255, 255, 255, 0.06);
+
+    --accent: #6e8bff;
+    --accent-soft: rgba(110, 139, 255, 0.16);
+
+    /* The artifact room lifts instead of sinking, so it never merges
+       into the night canvas. */
+    --artifact-bg: #1c1d1a;
+    --artifact-ink: #ecece7;
+    --artifact-muted: #a09f98;
+    --artifact-faint: #8a8a83;
+    --artifact-line: rgba(255, 255, 255, 0.14);
+    --artifact-line-strong: rgba(255, 255, 255, 0.26);
+    --artifact-code-bg: rgba(255, 255, 255, 0.06);
+
+    --dg-fill: #1e1f1b;
+    --dg-line: rgba(236, 236, 231, 0.42);
+    --dg-line-strong: rgba(236, 236, 231, 0.66);
+    --dg-line-soft: rgba(236, 236, 231, 0.2);
+    --dg-dot: rgba(236, 236, 231, 0.55);
+    --dg-grid: rgba(236, 236, 231, 0.05);
+    --diagram-line: rgba(236, 236, 231, 0.5);
+
+    --grain-opacity: 0;
+    --formula-opacity: 0.09;
+    --grid-opacity: 0.05;
+  }
+
+  :root {
     /* Typography */
     --font-sans:
       'Inter', 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
@@ -50,7 +169,8 @@
     --dur-base: 260ms;
     --dur-slow: 420ms;
 
-    color-scheme: light;
+    /* Paper grain — a ~0.4 KB inline SVG, never a network request. */
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.032'/%3E%3C/svg%3E");
   }
 
   * {
@@ -65,6 +185,8 @@
 
   body {
     background-color: var(--canvas);
+    background-image: var(--grain);
+    background-repeat: repeat;
     color: var(--ink);
     font-family: var(--font-sans);
     font-size: 1rem;
@@ -74,6 +196,12 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     overflow-x: hidden;
+  }
+
+  /* Grain is a paper-only texture; the other two themes stay perfectly flat. */
+  [data-theme='white'] body,
+  [data-theme='night'] body {
+    background-image: none;
   }
 
   /* Never allow a stray element to create horizontal scroll. */
@@ -111,6 +239,11 @@
     outline: 2px solid var(--accent);
     outline-offset: 3px;
     border-radius: 2px;
+  }
+
+  /* Theme swap is instant for colour and invisible for layout. */
+  html.theme-switching * {
+    transition: none !important;
   }
 
   /* Respect user motion preferences globally. */
@@ -156,17 +289,24 @@
     padding-block: clamp(3.5rem, 8vw, 7.5rem);
   }
 
+  /* Sections after the fold carry more information density and less air. */
+  .section-compact {
+    padding-block: clamp(2.75rem, 6vw, 5rem);
+  }
+
   .section-tight {
     padding-block: clamp(2.5rem, 5vw, 4.5rem);
   }
 
-  .night {
-    background-color: var(--night);
-    color: var(--night-ink);
+  .night,
+  .artifact-room {
+    background-color: var(--artifact-bg);
+    color: var(--artifact-ink);
   }
 
-  .night .muted {
-    color: var(--night-muted);
+  .night .muted,
+  .artifact-room .muted {
+    color: var(--artifact-muted);
   }
 
   /* Eyebrow / section label */
@@ -190,11 +330,13 @@
     max-width: 6rem;
   }
 
-  .night .eyebrow {
-    color: var(--night-muted);
+  .night .eyebrow,
+  .artifact-room .eyebrow {
+    color: var(--artifact-faint);
   }
-  .night .eyebrow::after {
-    background: var(--night-line);
+  .night .eyebrow::after,
+  .artifact-room .eyebrow::after {
+    background: var(--artifact-line);
   }
 
   /* Display typography — editorial, left-aligned, never centered */
@@ -247,6 +389,10 @@
     color: var(--faint);
   }
 
+  .artifact-room .mono {
+    color: var(--artifact-faint);
+  }
+
   /* Buttons — 44px minimum touch target */
   .btn {
     display: inline-flex;
@@ -273,8 +419,18 @@
     border-color: var(--ink);
   }
   .btn-primary:hover {
-    background: #000;
     transform: translateY(-2px);
+  }
+  [data-theme='paper'] .btn-primary:hover {
+    background: #000000;
+  }
+  [data-theme='white'] .btn-primary:hover {
+    background: #000000;
+  }
+  /* Night lifts the button instead of inverting it: a literal white fill here
+     would be the one place a theme writes its own colour. */
+  [data-theme='night'] .btn-primary:hover {
+    filter: brightness(1.12);
   }
 
   .btn-outline {
@@ -284,17 +440,19 @@
   }
   .btn-outline:hover {
     border-color: var(--ink);
-    background: rgba(0, 0, 0, 0.03);
+    background: var(--accent-soft);
     transform: translateY(-2px);
   }
 
-  .night .btn-outline {
-    color: var(--night-ink);
-    border-color: var(--night-line);
+  .night .btn-outline,
+  .artifact-room .btn-outline {
+    color: var(--artifact-ink);
+    border-color: var(--artifact-line-strong);
   }
-  .night .btn-outline:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.4);
+  .night .btn-outline:hover,
+  .artifact-room .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.5);
   }
 
   /* Animated inline link with underline motion */
@@ -356,13 +514,14 @@
     border: 1px solid var(--line);
     border-radius: 2px;
     padding: 0.3rem 0.55rem;
-    background: rgba(255, 255, 255, 0.6);
+    background: var(--surface);
   }
 
-  .night .tag {
-    color: var(--night-muted);
-    border-color: var(--night-line);
-    background: rgba(255, 255, 255, 0.04);
+  .night .tag,
+  .artifact-room .tag {
+    color: var(--artifact-muted);
+    border-color: var(--artifact-line);
+    background: rgba(255, 255, 255, 0.045);
   }
 
   /* Thin horizontal rule */
@@ -371,8 +530,9 @@
     background: var(--line);
     border: 0;
   }
-  .night .rule {
-    background: var(--night-line);
+  .night .rule,
+  .artifact-room .rule {
+    background: var(--artifact-line);
   }
 
   /* Index number used in editorial lists */
@@ -435,7 +595,7 @@
   .prose-editorial code {
     font-family: var(--font-mono);
     font-size: 0.875em;
-    background: rgba(0, 0, 0, 0.045);
+    background: var(--code-bg);
     padding: 0.1em 0.35em;
     border-radius: 2px;
   }
@@ -470,6 +630,83 @@
     letter-spacing: 0.07em;
     text-transform: uppercase;
     fill: var(--ink);
+  }
+
+  .dg-var {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    fill: var(--ink);
+  }
+
+  .dg-var-sm {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    fill: var(--muted);
+  }
+
+  .night .dg-label,
+  .artifact-room .dg-label {
+    fill: var(--artifact-faint);
+  }
+  .night .dg-node,
+  .artifact-room .dg-node,
+  .night .dg-var,
+  .artifact-room .dg-var {
+    fill: var(--artifact-ink);
+  }
+  .night .dg-var-sm,
+  .artifact-room .dg-var-sm {
+    fill: var(--artifact-muted);
+  }
+
+  /* Appearance control inside the inverted footer block. */
+  .night .ts-blocktitle,
+  .artifact-room .ts-blocktitle {
+    color: var(--artifact-faint);
+  }
+  .night .ts-blockoption,
+  .artifact-room .ts-blockoption {
+    color: var(--artifact-muted);
+    border-color: var(--artifact-line);
+  }
+  .night .ts-blockoption:hover,
+  .artifact-room .ts-blockoption:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--artifact-ink);
+  }
+  .night .ts-blockoption .ts-note,
+  .artifact-room .ts-blockoption .ts-note {
+    color: var(--artifact-faint);
+  }
+
+  /* Engineering grid — used only inside figure containers, never site-wide. */
+  .field-grid {
+    position: relative;
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: center;
+  }
+
+  /* Grid strength is dialled by the theme's own --grid-line alpha, so no
+     overlay is needed and nothing can cover the figure. */
+  .field-grid > * {
+    position: relative;
+  }
+
+  /* Conceptual-notation badge. A formula that is not the project's own
+     implementation must always say so. */
+  .concept-note {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 0.15rem 0.4rem;
+    white-space: nowrap;
   }
 
   /* Scroll-reveal: visible by default, upgraded by JS when supported */
@@ -510,8 +747,9 @@
   .stroke-line {
     border-top: 1px solid var(--line);
   }
-  .night .stroke-line {
-    border-top-color: var(--night-line);
+  .night .stroke-line,
+  .artifact-room .stroke-line {
+    border-top-color: var(--artifact-line);
   }
   .grid-lines {
     background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
@@ -521,16 +759,38 @@
 
 /* ==========================================================================
    Print — the /resume route is designed to print to PDF cleanly.
+   A theme is a screen preference; paper output is always white-on-black.
    ========================================================================== */
 
 @media print {
-  :root {
+  :root,
+  [data-theme='paper'],
+  [data-theme='white'],
+  [data-theme='night'] {
     --canvas: #ffffff;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --ink: #000000;
+    --muted: #333333;
+    --faint: #555555;
+    --line: rgba(0, 0, 0, 0.15);
+    --line-strong: rgba(0, 0, 0, 0.3);
+    --artifact-bg: #ffffff;
+    --artifact-ink: #000000;
+    --artifact-muted: #333333;
+    --artifact-faint: #555555;
+    --dg-fill: #ffffff;
+    --dg-line: rgba(0, 0, 0, 0.4);
+    --dg-line-strong: rgba(0, 0, 0, 0.6);
+    --dg-line-soft: rgba(0, 0, 0, 0.2);
+    --dg-dot: rgba(0, 0, 0, 0.5);
+    --dg-grid: rgba(0, 0, 0, 0.05);
   }
 
   html,
   body {
     background: #fff !important;
+    background-image: none !important;
     color: #000 !important;
   }
 
@@ -548,6 +808,7 @@
   }
 
   .section,
+  .section-compact,
   .section-tight {
     padding-block: 0.75rem;
   }

@@ -2,6 +2,7 @@
 import { useT, localizedPath, type Lang } from '../i18n/ui';
 import { SITE } from '../config/site';
 import LanguageSwitcher from './LanguageSwitcher.astro';
+import ThemeSwitcher from './ThemeSwitcher.astro';
 import MobileNav from './MobileNav.astro';
 
 export interface Props {
@@ -29,7 +30,7 @@ function isActive(href: string): boolean {
 ---
 
 <header
-  class="site-header sticky top-0 z-[100] border-b border-transparent bg-canvas/85 backdrop-blur-[6px] transition-colors duration-200"
+  class="site-header sticky top-0 z-[100] border-b border-transparent bg-header backdrop-blur-[6px] transition-colors duration-200"
   data-site-header
 >
   <div class="shell flex h-[68px] items-center justify-between gap-4">
@@ -84,6 +85,10 @@ function isActive(href: string): boolean {
       </a>
 
       <LanguageSwitcher lang={lang} />
+
+      <span class="hidden h-4 w-px bg-line sm:block" aria-hidden="true"></span>
+
+      <ThemeSwitcher lang={lang} variant="icon" />
 
       <button
         type="button"

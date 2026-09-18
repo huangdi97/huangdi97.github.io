@@ -16,7 +16,7 @@ featured: true
 order: 5
 role: 'Specification and system design'
 groups: ['infrastructure', 'experiments']
-visual: 'infra'
+visual: 'dependency-graph'
 statusNote: 'Specification and design. Not a contact manager — a dependency graph over personal infrastructure.'
 stack: ['Canonical spec', 'Android', 'iOS', 'HarmonyOS', 'Conformance tests']
 ---

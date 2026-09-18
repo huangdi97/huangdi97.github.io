@@ -29,6 +29,7 @@ const en: AboutModel = {
     'I build AI systems at the intersection of science, health and autonomous software. Most of it starts the same way: a question that is currently answered by hand, and a system that should answer it better.',
     'I like building from zero to one — taking a problem that only exists as a description and ending with something someone else can run. That means owning the whole path: product framing, architecture, implementation, evaluation and deployment, usually as one engineer rather than a team of five.',
     'The parts I care about most are the ones that do not demo well: data contracts, verification stages, explicit limits, and reproducibility scripts. A system that states what it cannot do is more useful than one that sounds confident.',
+    'I am especially drawn to living systems that can be written down as problems of state, dynamics and intervention — where mathematics supplies the language, and learning covers the parts we cannot yet write as equations.',
   ],
   focusTitle: 'What I work on',
   focus: [
@@ -98,6 +99,7 @@ const zh: AboutModel = {
     '我在科学、健康与自主软件的交叉地带构建 AI 系统。它们大多以同样的方式开始：一个目前还靠人工回答的问题，以及一个本该回答得更好的系统。',
     '我喜欢从 0 到 1 地构建——把一个仅存在于描述中的问题，做成别人真的能跑起来的东西。这意味着拥有完整链路：产品定义、架构、实现、评估与部署，通常由我一个人完成，而不是一个五人团队。',
     '我最在意的恰恰是那些不好演示的部分：数据契约、校验阶段、明确边界、可复现脚本。一个能说清自己不能做什么的系统，比一个听起来很自信的系统更有用。',
+    '我尤其关注那些可以被描述为状态、动力学与干预问题的生命系统——数学提供语言，而学习补足那些我们还无法写成方程的部分。',
   ],
   focusTitle: '我在做什么',
   focus: [

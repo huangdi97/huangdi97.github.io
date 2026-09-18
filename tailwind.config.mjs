@@ -1,18 +1,29 @@
+/**
+ * Tailwind colour names are aliases for the theme custom properties, so every
+ * utility class follows the active theme without a second copy of the palette.
+ */
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        canvas: '#F7F7F4',
-        ink: '#111111',
-        muted: '#666666',
-        faint: '#8A8A85',
-        card: '#FFFFFF',
-        night: '#111111',
-        'night-ink': '#F5F5F5',
-        accent: '#315CFF',
-        line: 'rgba(0,0,0,0.10)',
+        canvas: 'var(--canvas)',
+        surface: 'var(--surface)',
+        card: 'var(--card)',
+        ink: 'var(--ink)',
+        muted: 'var(--muted)',
+        faint: 'var(--faint)',
+        accent: 'var(--accent)',
+        line: 'var(--line)',
+        header: 'var(--header-bg)',
+        night: 'var(--artifact-bg)',
+        'night-ink': 'var(--artifact-ink)',
+        'night-muted': 'var(--artifact-muted)',
+      },
+      borderColor: {
+        line: 'var(--line)',
+        'line-strong': 'var(--line-strong)',
       },
       fontFamily: {
         sans: [

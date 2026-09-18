@@ -7,6 +7,10 @@ import NowStrip from '../../components/NowStrip.astro';
 import BackgroundTimeline from '../../components/BackgroundTimeline.astro';
 import ProcessRail from '../../components/ProcessRail.astro';
 import ResearchRow from '../../components/ResearchRow.astro';
+import SelectedArtifacts from '../../components/SelectedArtifacts.astro';
+import MathematicalBiology from '../../components/MathematicalBiology.astro';
+import EquationNote from '../../components/EquationNote.astro';
+import LabNotes from '../../components/LabNotes.astro';
 import { SITE } from '../../config/site';
 import { useT, localizedPath } from '../../i18n/ui';
 import { getFeaturedProjects, projectsHref } from '../../lib/projects';
@@ -80,7 +84,9 @@ const websiteLd = {
       </div>
 
       <div class="hero-figure">
-        <HeroSystem />
+        <div class="hero-field field-grid">
+          <HeroSystem label={t('a11y.heroField')} />
+        </div>
       </div>
     </div>
 
@@ -109,6 +115,9 @@ const websiteLd = {
     </div>
   </section>
 
+  <!-- ─────────────────── 实验台 / SELECTED ARTIFACTS ───────────── -->
+  <SelectedArtifacts lang={lang} />
+
   <!-- ───────────────────────── 背景 / BACKGROUND ──────────────── -->
   <section class="shell section">
     <SectionHeading
@@ -124,8 +133,15 @@ const websiteLd = {
     <BackgroundTimeline lang={lang} />
   </section>
 
+  <!-- ──────────────── 数学 × 生物 / MATHEMATICAL BIOLOGY ───────── -->
+  <MathematicalBiology lang={lang} />
+
+  <div class="shell">
+    <EquationNote lang={lang} />
+  </div>
+
   <!-- ─────────────────────── 研究方向 / RESEARCH ──────────────── -->
-  <section class="shell section">
+  <section class="shell section-compact">
     <SectionHeading
       eyebrow={t('research.eyebrow')}
       title={t('research.title')}
@@ -149,12 +165,12 @@ const websiteLd = {
     </div>
   </section>
 
-  <section class="shell section">
+  <section class="shell section-compact">
     <SectionHeading eyebrow={t('how.eyebrow')} title={t('how.title')} lead={t('how.lead')} />
     <ProcessRail steps={how} />
   </section>
 
-  <section class="shell section">
+  <section class="shell section-compact">
     <SectionHeading
       eyebrow={t('oss.eyebrow')}
       title={t('oss.title')}
@@ -200,6 +216,9 @@ const websiteLd = {
 
     <p class="oss-snapshot mono">{t('oss.snapshot')} — {OSS_CAPTURED_AT}</p>
   </section>
+
+  <!-- ─────────────────────── 研究札记 / LAB NOTES ─────────────── -->
+  <LabNotes lang={lang} />
 
   <section class="shell section-tight">
     <div class="cta">
@@ -293,6 +312,12 @@ const websiteLd = {
 
   .hero-figure {
     display: none;
+  }
+
+  .hero-field {
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+    border: 1px solid var(--line);
+    border-radius: 3px;
   }
 
   @media (min-width: 900px) {

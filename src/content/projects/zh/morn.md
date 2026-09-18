@@ -17,7 +17,7 @@ order: 3
 repo: 'https://github.com/huangdi97/morn'
 role: '系统设计、架构与工程实现'
 groups: ['agents', 'infrastructure']
-visual: 'runtime'
+visual: 'agent-dag'
 statusNote: '公开 Rust workspace。README 报告 v1.0.0-rc.1 且本地 GA 完成；本站引用该状态，不重新运行测试套件。'
 stack: ['Rust', 'axum', 'React / Vite', 'Tauri v2', 'SQLite']
 ---

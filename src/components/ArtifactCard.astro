@@ -1,0 +1,386 @@
+---
+/**
+ * One artifact tile.
+ *
+ * Text artifacts (tree, terminal, list) open in a native <dialog>, which gives
+ * focus trapping, Escape-to-close and inert background content for free — no
+ * modal framework and no runtime library.
+ *
+ * Metadata is not decoration: project, type, source and snapshot date are
+ * always rendered, because an artifact without a source is not an artifact.
+ */
+import { useT, type Lang } from '../i18n/ui';
+import { ARTIFACT_TYPE_LABELS, type Artifact } from '../data/artifacts';
+
+export interface Props {
+  artifact: Artifact;
+  lang: Lang;
+}
+
+const { artifact, lang } = Astro.props;
+const t = useT(lang);
+
+const typeLabel = ARTIFACT_TYPE_LABELS[artifact.type][lang];
+const titleId = `ar-${artifact.id}-title`;
+const dialogId = `ar-${artifact.id}-dialog`;
+---
+
+<article class="ar-tile" aria-labelledby={titleId}>
+  <div class="ar-card">
+    <header class="ar-head">
+      <p class="ar-project mono">{artifact.project[lang]}</p>
+      <h3 class="ar-title" id={titleId}>{artifact.title[lang]}</h3>
+      <p class="ar-type mono">{typeLabel}</p>
+    </header>
+
+    <div class="ar-content" data-kind={artifact.kind}>
+      {
+        artifact.kind === 'list' && artifact.items ? (
+          <ul class="ar-list">
+            {artifact.items.map((item) => (
+              <li>{item[lang]}</li>
+            ))}
+          </ul>
+        ) : (
+          <pre class="ar-pre"><code>{artifact.body}</code></pre>
+        )
+      }
+    </div>
+
+    <footer class="ar-foot">
+      <p class="ar-caption">{artifact.caption[lang]}</p>
+
+      <div class="ar-meta">
+        <span class="ar-meta-row">
+          <span class="ar-meta-k">{t('artifacts.source')}</span>
+          <a
+            class="ar-meta-v ar-source"
+            href={artifact.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {artifact.source[lang]}
+            <span class="ar-ext" aria-hidden="true">↗</span>
+            <span class="sr-only"> ({t('a11y.external')})</span>
+          </a>
+        </span>
+        <span class="ar-meta-row">
+          <span class="ar-meta-k">{t('artifacts.date')}</span>
+          <span class="ar-meta-v">{artifact.date}</span>
+        </span>
+      </div>
+
+      <button type="button" class="ar-expand" data-artifact-open={dialogId}>
+        {t('artifacts.expand')}
+        <span aria-hidden="true">⤢</span>
+      </button>
+    </footer>
+  </div>
+
+  <dialog class="ar-dialog" id={dialogId} aria-labelledby={`${titleId}-d`}>
+    <div class="ar-dialog-inner">
+      <div class="ar-dialog-head">
+        <div>
+          <p class="ar-project mono">{artifact.project[lang]}</p>
+          <h3 class="ar-dialog-title" id={`${titleId}-d`}>{artifact.title[lang]}</h3>
+        </div>
+        <button type="button" class="ar-dialog-close" data-artifact-close>
+          {t('artifacts.close')}
+          <span aria-hidden="true">✕</span>
+        </button>
+      </div>
+
+      <div class="ar-dialog-body">
+        {
+          artifact.kind === 'list' && artifact.items ? (
+            <ul class="ar-list ar-list-lg">
+              {artifact.items.map((item) => (
+                <li>{item[lang]}</li>
+              ))}
+            </ul>
+          ) : (
+            <pre class="ar-pre ar-pre-lg"><code>{artifact.body}</code></pre>
+          )
+        }
+      </div>
+
+      <p class="ar-dialog-meta mono">
+        {typeLabel} · {artifact.source[lang]} · {artifact.date}
+      </p>
+    </div>
+  </dialog>
+</article>
+
+<style>
+  /* The mosaic cell (`.ar-cell`, which owns `data-size`) belongs to
+     SelectedArtifacts: Astro scopes styles per component, so a grid rule
+     written in the parent never reaches an element rendered by the child.
+     The child therefore renders `.ar-tile` and stays layout-agnostic. */
+  .ar-tile {
+    min-width: 0;
+  }
+
+  .ar-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid var(--artifact-line);
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.02);
+    padding: clamp(1rem, 2vw, 1.5rem);
+    transition: border-color var(--dur-base) var(--ease);
+  }
+
+  .ar-card:hover {
+    border-color: var(--artifact-line-strong);
+  }
+
+  .ar-head {
+    padding-bottom: 0.875rem;
+    border-bottom: 1px solid var(--artifact-line);
+  }
+
+  .ar-project {
+    margin: 0;
+    color: var(--artifact-faint);
+    letter-spacing: 0.1em;
+  }
+
+  .ar-title {
+    margin: 0.4rem 0 0.35rem;
+    font-size: clamp(1.0625rem, 1.8vw, 1.375rem);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+    color: var(--artifact-ink);
+  }
+
+  .ar-type {
+    margin: 0;
+    color: var(--artifact-muted);
+  }
+
+  .ar-content {
+    flex: 1;
+    margin-top: 1rem;
+    min-width: 0;
+  }
+
+  .ar-pre {
+    margin: 0;
+    padding: 0.875rem 1rem;
+    background: var(--artifact-code-bg);
+    border: 1px solid var(--artifact-line);
+    border-radius: 2px;
+    overflow-x: auto;
+    max-width: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.7;
+    color: var(--artifact-ink);
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  .ar-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .ar-list li {
+    position: relative;
+    padding-left: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--artifact-muted);
+  }
+
+  .ar-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 5px;
+    height: 1px;
+    background: var(--artifact-faint);
+  }
+
+  .ar-foot {
+    margin-top: 1rem;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--artifact-line);
+  }
+
+  .ar-caption {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--artifact-muted);
+  }
+
+  .ar-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.875rem;
+  }
+
+  .ar-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .ar-meta-k {
+    color: var(--artifact-faint);
+    flex-shrink: 0;
+  }
+
+  .ar-meta-v {
+    color: var(--artifact-muted);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.6875rem;
+    min-width: 0;
+  }
+
+  .ar-source {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem;
+    text-decoration: none;
+  }
+
+  .ar-source:hover {
+    color: var(--artifact-ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .ar-ext {
+    font-size: 0.75em;
+  }
+
+  .ar-expand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    margin-top: 0.5rem;
+    margin-left: -0.35rem;
+    padding: 0 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--artifact-muted);
+  }
+
+  .ar-expand:hover {
+    color: var(--artifact-ink);
+  }
+
+  /* Native dialog */
+  .ar-dialog {
+    width: min(92vw, 60rem);
+    max-height: 86vh;
+    padding: 0;
+    border: 1px solid var(--artifact-line-strong);
+    border-radius: 3px;
+    background: var(--artifact-bg);
+    color: var(--artifact-ink);
+    overflow: hidden;
+  }
+
+  .ar-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.62);
+  }
+
+  .ar-dialog-inner {
+    display: flex;
+    flex-direction: column;
+    max-height: 86vh;
+    padding: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  .ar-dialog-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--artifact-line);
+  }
+
+  .ar-dialog-title {
+    margin: 0.35rem 0 0;
+    font-size: clamp(1.125rem, 2vw, 1.5rem);
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+
+  .ar-dialog-close {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    padding: 0 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--artifact-muted);
+  }
+
+  .ar-dialog-close:hover {
+    color: var(--artifact-ink);
+  }
+
+  .ar-dialog-body {
+    flex: 1;
+    overflow: auto;
+    margin-top: 1rem;
+    min-width: 0;
+  }
+
+  .ar-pre-lg {
+    font-size: 0.8125rem;
+    line-height: 1.8;
+  }
+
+  .ar-list-lg li {
+    font-size: 0.8125rem;
+    line-height: 1.7;
+  }
+
+  .ar-dialog-meta {
+    margin: 1rem 0 0;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--artifact-line);
+    color: var(--artifact-faint);
+    font-size: 0.625rem;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

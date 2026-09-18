@@ -18,7 +18,7 @@ order: 1
 repo: 'https://github.com/huangdi97/WenNian'
 role: 'System design, architecture and engineering'
 groups: ['ai-health', 'agents']
-visual: 'aging'
+visual: 'aging-state'
 statusNote: 'Open-source MVP. Assessment output only — not a diagnostic device. License unresolved: the README states GPLv3, GitHub detects no LICENSE file.'
 stack: ['Python 3.10+', 'FastAPI', 'Gradio', 'pytest', 'YAML config']
 ---

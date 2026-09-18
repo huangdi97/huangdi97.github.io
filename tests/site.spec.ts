@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { visit, waitForPath } from './helpers';
 
 const ROUTES = [
   '/',
@@ -38,7 +39,7 @@ test.describe('pages render', () => {
   for (const route of ROUTES) {
     test(`loads ${route}`, async ({ page }) => {
       const errors = await collectConsoleErrors(page);
-      const response = await page.goto(route, { waitUntil: 'networkidle' });
+      const response = await visit(page, route, { waitUntil: 'networkidle' });
       expect(response?.status()).toBe(200);
       await expect(page.locator('body')).toBeVisible();
       expect(errors, `console errors on ${route}`).toEqual([]);
@@ -48,7 +49,7 @@ test.describe('pages render', () => {
 
 test.describe('homepage', () => {
   test('shows hero identity and primary actions', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('HAO LEI');
     await expect(page.getByRole('link', { name: 'Explore Work' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Resume' }).first()).toBeVisible();
@@ -56,12 +57,12 @@ test.describe('homepage', () => {
   });
 
   test('hero keeps the AI × Life Science × Agents line', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     await expect(page.locator('.hero-sub')).toContainText('AI × Life Science × Agents');
   });
 
   test('lists at most five featured projects, in the confirmed order', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     const cards = page.locator('article.showcase');
     await expect(cards).toHaveCount(5);
 
@@ -76,14 +77,14 @@ test.describe('homepage', () => {
   });
 
   test('selected work never features TaiYi', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     const showcase = page.locator('article.showcase');
     await expect(showcase.getByText('TaiYi Lingjing')).toHaveCount(0);
     await expect(showcase.getByRole('link', { name: /TaiYi/ })).toHaveCount(0);
   });
 
   test('each featured project carries a proof line', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     const proofs = page.locator('article.showcase [data-proof]');
     await expect(proofs).toHaveCount(5);
     // A proof token is a checkable fact. Never a metric, never a percentage.
@@ -93,7 +94,7 @@ test.describe('homepage', () => {
   });
 
   test('NOW strip and background section are present', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     const now = page.locator('section[aria-labelledby="now-label"]');
     await expect(now).toBeVisible();
     await expect(now.locator('.now-item')).toHaveCount(3);
@@ -104,7 +105,7 @@ test.describe('homepage', () => {
   });
 
   test('research is split into active and concept tiers', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     await expect(page.getByText('Active / Building')).toBeVisible();
     await expect(page.getByText('Concepts / Exploring')).toBeVisible();
 
@@ -115,7 +116,7 @@ test.describe('homepage', () => {
   });
 
   test('TaiYi case study states that implementation has not started', async ({ page }) => {
-    await page.goto('/projects/taiyi-lingjing/');
+    await visit(page, '/projects/taiyi-lingjing/');
     const body = page.locator('main');
 
     await expect(page.getByRole('heading', { level: 1 })).toContainText('TaiYi Lingjing');
@@ -136,21 +137,21 @@ test.describe('homepage', () => {
     }
 
     // The banned word list must also hold in Chinese.
-    await page.goto('/zh/projects/taiyi-lingjing/');
+    await visit(page, '/zh/projects/taiyi-lingjing/');
     const zhBody = page.locator('main');
     await expect(zhBody).toContainText('尚未开始');
     await expect(zhBody).not.toContainText(/部分实现|已完成实现|系统已经实现/);
   });
 
   test('TaiYi evidence table never uses PARTIAL', async ({ page }) => {
-    await page.goto('/projects/taiyi-lingjing/');
+    await visit(page, '/projects/taiyi-lingjing/');
     await expect(page.locator('#reality')).toBeVisible();
     await expect(page.locator('.state-badge[data-state="partial"]')).toHaveCount(0);
     await expect(page.locator('.state-badge[data-state="planned"]').first()).toBeVisible();
   });
 
   test('about CTA carries name, context line and contact links', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     const cta = page.locator('.cta');
     await expect(cta).toContainText('A little more context');
     await expect(cta).toContainText('Hao Lei');
@@ -166,7 +167,7 @@ test.describe('homepage', () => {
   });
 
   test('hero diagram is exposed as an image with a label', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     const diagram = page.locator('svg.diagram[role="img"]').first();
     await expect(diagram).toHaveAttribute('aria-label', /.+/);
   });
@@ -174,7 +175,7 @@ test.describe('homepage', () => {
 
 test.describe('projects', () => {
   test('filter narrows the grid without navigating', async ({ page }) => {
-    await page.goto('/projects/');
+    await visit(page, '/projects/');
     const cards = page.locator('article[data-groups]');
     await expect(cards).toHaveCount(7);
 
@@ -188,7 +189,7 @@ test.describe('projects', () => {
   });
 
   test('case study renders its full structure', async ({ page }) => {
-    await page.goto('/projects/wennian/');
+    await visit(page, '/projects/wennian/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('ZhiShen · WenNian');
     for (const heading of ['Overview', 'Problem', 'Architecture', 'Current Status', 'Next']) {
       await expect(page.locator('h2', { hasText: heading }).first()).toBeVisible();
@@ -198,7 +199,7 @@ test.describe('projects', () => {
   });
 
   test('projects without a verified repo show no repository link', async ({ page }) => {
-    await page.goto('/projects/pdig/');
+    await visit(page, '/projects/pdig/');
     await expect(page.getByRole('link', { name: /Repository/ })).toHaveCount(0);
     await expect(
       page.getByRole('complementary').getByText('No public repository'),
@@ -208,7 +209,7 @@ test.describe('projects', () => {
 
 test.describe('evidence layer', () => {
   test('case study answers status, public code and reality on first screen', async ({ page }) => {
-    await page.goto('/projects/wennian/');
+    await visit(page, '/projects/wennian/');
     const meta = page.locator('.case-meta');
 
     await expect(meta.getByText('Public code')).toBeVisible();
@@ -218,7 +219,7 @@ test.describe('evidence layer', () => {
   });
 
   test('implementation status matrix and evidence panels render', async ({ page }) => {
-    await page.goto('/projects/wennian/');
+    await visit(page, '/projects/wennian/');
     const reality = page.locator('#reality');
     await expect(reality).toBeVisible();
 
@@ -239,21 +240,21 @@ test.describe('evidence layer', () => {
   test('a project without public code states that, and cites no repository artifact', async ({
     page,
   }) => {
-    await page.goto('/projects/pdig/');
+    await visit(page, '/projects/pdig/');
     await expect(page.locator('.case-meta').getByText('None — nothing published')).toBeVisible();
     await expect(page.locator('.state-badge[data-state="not-public"]').first()).toBeVisible();
     await expect(page.locator('figure.ev-panel .ev-source-value').first()).toBeVisible();
   });
 
   test('home page cards carry a reality status', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     const pills = page.locator('.reality-pill');
     expect(await pills.count()).toBeGreaterThanOrEqual(3);
     await expect(pills.filter({ hasText: 'Open-source MVP' }).first()).toBeVisible();
   });
 
   test('open source strip shows checked-in license and update metadata', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     await expect(page.getByText('Metadata snapshot')).toBeVisible();
     await expect(page.locator('.oss-fact-k').first()).toBeVisible();
     // WenNian has no detected LICENSE file — shown as a fact, not hidden.
@@ -263,17 +264,17 @@ test.describe('evidence layer', () => {
 
 test.describe('language switching', () => {
   test('keeps the current project page when switching to Chinese', async ({ page }) => {
-      await page.goto('/projects/wennian/');
+      await visit(page, '/projects/wennian/');
       await page.getByRole('banner').getByRole('link', { name: /Language/ }).click();
-    await page.waitForURL('**/zh/projects/wennian/**');
+    await waitForPath(page, '/zh/projects/wennian/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('知身·问年');
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-Hans');
   });
 
   test('switches from the Chinese project page back to English', async ({ page }) => {
-      await page.goto('/zh/projects/hycell/');
+      await visit(page, '/zh/projects/hycell/');
       await page.getByRole('banner').getByRole('link', { name: /语言/ }).click();
-    await page.waitForURL('**/projects/hycell/**');
+    await waitForPath(page, '/projects/hycell/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   });
 });
@@ -281,7 +282,7 @@ test.describe('language switching', () => {
 test.describe('mobile', () => {
   test('hamburger opens and closes the navigation', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile-only');
-    await page.goto('/');
+    await visit(page, '/');
     const toggle = page.locator('[data-nav-toggle]');
     await expect(toggle).toBeVisible();
 
@@ -300,7 +301,7 @@ test.describe('layout integrity', () => {
     test(`no horizontal overflow at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       for (const route of ['/', '/projects/', '/projects/wennian/', '/resume/', '/zh/']) {
-        await page.goto(route);
+        await visit(page, route);
         const overflow = await page.evaluate(
           () => document.documentElement.scrollWidth - window.innerWidth,
         );
@@ -312,7 +313,7 @@ test.describe('layout integrity', () => {
 
 test.describe('resume', () => {
   test('exposes a print action and all verifiable sections', async ({ page }) => {
-    await page.goto('/resume/');
+    await visit(page, '/resume/');
     await expect(page.getByRole('button', { name: /Print \/ Save as PDF/ })).toBeVisible();
     for (const section of [
       'Profile',
@@ -335,7 +336,7 @@ test.describe('resume', () => {
   });
 
   test('selected projects exclude TaiYi and include Morn and BioPulse', async ({ page }) => {
-    await page.goto('/resume/');
+    await visit(page, '/resume/');
     const projects = page.locator('[data-resume-section="projects"]');
     await expect(projects).toBeVisible();
     await expect(projects).not.toContainText('TaiYi');
@@ -346,7 +347,7 @@ test.describe('resume', () => {
   });
 
   test('Chinese resume selected projects carry the same correction', async ({ page }) => {
-    await page.goto('/zh/resume/');
+    await visit(page, '/zh/resume/');
     const projects = page.locator('[data-resume-section="projects"]');
     await expect(projects).not.toContainText('太一');
     for (const name of ['知身·问年', 'HyCell', 'Morn', 'BioPulse']) {
@@ -355,7 +356,7 @@ test.describe('resume', () => {
   });
 
   test('only offers downloads for PDFs that resolve', async ({ page }) => {
-    await page.goto('/resume/');
+    await visit(page, '/resume/');
     const downloads = page.locator('a[data-resume-pdf]');
     const count = await downloads.count();
     for (let i = 0; i < count; i += 1) {
@@ -368,7 +369,7 @@ test.describe('resume', () => {
 
 test.describe('404', () => {
   test('renders the designed not-found page', async ({ page }) => {
-    await page.goto('/404.html');
+    await visit(page, '/404.html');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('404');
     await expect(page.getByText('This page drifted outside the system.')).toBeVisible();
     await expect(page.getByRole('link', { name: /Back Home/ })).toBeVisible();
@@ -377,7 +378,7 @@ test.describe('404', () => {
 
 test.describe('links', () => {
   test('external links open safely in a new tab', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     const external = page.locator('a[href^="https://github.com"]').first();
     await expect(external).toHaveAttribute('target', '_blank');
     await expect(external).toHaveAttribute('rel', /noopener/);
@@ -386,7 +387,7 @@ test.describe('links', () => {
 
 test.describe('seo', () => {
   test('home declares canonical and hreflang alternates', async ({ page }) => {
-    await page.goto('/');
+    await visit(page, '/');
     const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
     expect(canonical).toBe('https://haoleilab.com/');
     await expect(page.locator('link[hreflang="en"]')).toHaveCount(1);

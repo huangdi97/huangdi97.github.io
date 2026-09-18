@@ -14,7 +14,7 @@ featured: false
 order: 9
 role: 'Concept and research design'
 groups: ['agents', 'ai-science']
-visual: 'discovery'
+visual: 'discovery-loop'
 statusNote: 'Concept and research direction. Engineering implementation has not started — there is no repository, prototype or validation result.'
 stack: ['Concept design', 'Proposed architecture', 'Evidence provenance', 'PBPK / QSP / ODE (intended)', 'Bayesian optimisation (intended)']
 ---

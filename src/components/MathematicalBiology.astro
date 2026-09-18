@@ -1,0 +1,183 @@
+---
+/**
+ * Mathematical Biology — the thinking section.
+ *
+ * Background (elsewhere on the page) is the path; this is the method. Biology
+ * supplies observations, mathematics supplies structure, learned models cover
+ * what cannot be written down — and most of it reduces to three questions.
+ *
+ * Everything drawn here is labelled as conceptual. Nothing in this section
+ * claims a validated model, a digital twin or a clinical result.
+ */
+import { useT, type Lang } from '../i18n/ui';
+import { BIO_FIGURE_CAPTIONS } from '../data/mathVisuals';
+import ConceptLoop from './ConceptLoop.astro';
+import CellLandscape from './CellLandscape.astro';
+import ExpressionMatrix from './ExpressionMatrix.astro';
+import BioNetwork from './BioNetwork.astro';
+import PhasePortrait from './PhasePortrait.astro';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const questions = [t('mathbio.q1'), t('mathbio.q2'), t('mathbio.q3')];
+
+const figures = [
+  { Cmp: CellLandscape, caption: BIO_FIGURE_CAPTIONS.landscape },
+  { Cmp: ExpressionMatrix, caption: BIO_FIGURE_CAPTIONS.matrix },
+  { Cmp: BioNetwork, caption: BIO_FIGURE_CAPTIONS.network },
+  { Cmp: PhasePortrait, caption: BIO_FIGURE_CAPTIONS.phase },
+];
+---
+
+<section class="shell section-compact" id="mathbio">
+  <div class="mb-head">
+    <p class="eyebrow">{t('mathbio.eyebrow')}</p>
+    <h2 class="h2 mb-title">{t('mathbio.title')}</h2>
+    <p class="lead mb-lead">{t('mathbio.lead')}</p>
+  </div>
+
+  <ConceptLoop lang={lang} />
+
+  <div class="mb-body">
+    <p class="body-muted mb-para">{t('mathbio.body')}</p>
+
+    <div class="mb-questions">
+      <p class="mb-questions-lead mono">{t('mathbio.questions')}</p>
+      <ol class="mb-list">
+        {
+          questions.map((q, i) => (
+            <li class="mb-q">
+              <span class="mb-q-num index-num">{String(i + 1).padStart(2, '0')}</span>
+              <span class="mb-q-text">{q}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+
+  <div class="mb-figures field-grid">
+    {
+      figures.map(({ Cmp, caption }) => (
+        <figure class="mb-figure">
+          <div class="mb-figure-art">
+            <Cmp lang={lang} />
+          </div>
+          <figcaption class="mb-figure-caption">
+            <span class="concept-note">{t('conceptual.diagram')}</span>
+            <span>{caption[lang]}</span>
+          </figcaption>
+        </figure>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .mb-head {
+    max-width: 60ch;
+  }
+
+  .mb-title {
+    margin-top: 0.75rem;
+  }
+
+  .mb-lead {
+    margin-top: 0.875rem;
+    max-width: 52ch;
+  }
+
+  .mb-body {
+    display: grid;
+    gap: 1.75rem;
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  @media (min-width: 900px) {
+    .mb-body {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: 3.5rem;
+      align-items: start;
+    }
+  }
+
+  .mb-para {
+    margin: 0;
+  }
+
+  .mb-questions-lead {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .mb-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mb-q {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .mb-q-text {
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
+    letter-spacing: -0.012em;
+    line-height: 1.4;
+  }
+
+  .mb-figures {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+
+  @media (min-width: 640px) {
+    .mb-figures {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.75rem 2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mb-figures {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.5rem;
+    }
+  }
+
+  .mb-figure {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .mb-figure-art {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 0.5rem;
+  }
+
+  .mb-figure-caption {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+</style>

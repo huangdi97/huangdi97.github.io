@@ -4,6 +4,7 @@ import { useT, type Lang } from '../i18n/ui';
 import Seo from '../components/Seo.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ThemeInit from '../components/ThemeInit.astro';
 
 export interface Props {
   title: string;
@@ -43,11 +44,15 @@ const htmlLang = lang === 'zh' ? 'zh-Hans' : 'en';
 ---
 
 <!doctype html>
-<html lang={htmlLang}>
+<html lang={htmlLang} data-theme="paper">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#F7F7F4" />
+    <meta name="theme-color" content="#F0EEE8" />
+
+    <!-- Runs before any stylesheet: sets data-theme and, when the stored
+         language preference disagrees with this path, swaps locale. -->
+    <ThemeInit />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -83,6 +88,23 @@ const htmlLang = lang === 'zh' ? 'zh-Hans' : 'en';
     </main>
 
     <Footer lang={lang} />
+
+    <script>
+      // Language preference. The switch stays a plain link so it works with
+      // JavaScript off; this only records the choice, so a later visit to the
+      // root lands in the same locale instead of the default one.
+      document.querySelectorAll<HTMLAnchorElement>('[data-lang-switch]').forEach((link) => {
+        link.addEventListener('click', () => {
+          const target = link.dataset.langTarget;
+          if (target !== 'zh' && target !== 'en') return;
+          try {
+            localStorage.setItem('haoleilab-language', target);
+          } catch {
+            /* Storage blocked: the click still navigates. */
+          }
+        });
+      });
+    </script>
 
     <script>
       // Scroll reveal — opt-in, and inert under prefers-reduced-motion.
