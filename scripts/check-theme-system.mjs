@@ -59,6 +59,7 @@ const REQUIRED_TOKENS = [
   'grain-opacity',
   'formula-opacity',
   'grid-opacity',
+  'ambient-base',
 ];
 
 const problems = [];

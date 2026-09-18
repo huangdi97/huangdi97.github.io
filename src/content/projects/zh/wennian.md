@@ -19,6 +19,13 @@ groups: ['ai-health', 'agents']
 visual: 'aging-state'
 statusNote: '开源 MVP。仅输出评估结果，不是诊断工具。许可证状态未定：README 声明 GPLv3，GitHub 未检测到 LICENSE 文件。'
 stack: ['Python 3.10+', 'FastAPI', 'Gradio', 'pytest', 'YAML 配置']
+coverType: 'AI 衰老评估与干预决策系统'
+coverDescription: >-
+  通过主动追问、多维衰老评估、主驱动因素识别与干预排序，把分散的健康数据转化为可解释的个人决策支持。
+coverCapabilities: ['主动追问', '衰老评估', '驱动分析', '干预优先级', '可解释报告']
+coverStatus: '开源 MVP'
+coverStatusSecondary: '持续迭代'
+coverVisualHint: 'assessment-flow'
 ---
 
 ## 概览

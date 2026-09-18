@@ -11,6 +11,7 @@ import SelectedArtifacts from '../../components/SelectedArtifacts.astro';
 import MathematicalBiology from '../../components/MathematicalBiology.astro';
 import EquationNote from '../../components/EquationNote.astro';
 import LabNotes from '../../components/LabNotes.astro';
+import ScientificAmbient from '../../components/ScientificAmbient.astro';
 import { SITE } from '../../config/site';
 import { useT, localizedPath } from '../../i18n/ui';
 import { getFeaturedProjects, projectsHref } from '../../lib/projects';
@@ -63,7 +64,9 @@ const websiteLd = {
   type="profile"
   jsonLd={[personLd, websiteLd]}
 >
-  <section class="shell hero">
+  <section class="shell hero ambient-host">
+    <ScientificAmbient zone="hero" />
+
     <div class="hero-grid">
       <div class="hero-copy">
         <p class="eyebrow">{t('hero.eyebrow')}</p>
@@ -101,7 +104,9 @@ const websiteLd = {
   <!-- ──────────────────── 当前关注 / NOW ──────────────────────── -->
   <NowStrip lang={lang} />
 
-  <section class="shell section" id="work">
+  <section class="shell section ambient-host" id="work">
+    <ScientificAmbient zone="work" />
+
     <SectionHeading
       eyebrow={t('work.eyebrow')}
       title={t('work.title')}
@@ -119,7 +124,9 @@ const websiteLd = {
   <SelectedArtifacts lang={lang} />
 
   <!-- ───────────────────────── 背景 / BACKGROUND ──────────────── -->
-  <section class="shell section">
+  <section class="shell section ambient-host">
+    <ScientificAmbient zone="background" />
+
     <SectionHeading
       eyebrow={t('background.eyebrow')}
       title={background.title}
@@ -141,7 +148,9 @@ const websiteLd = {
   </div>
 
   <!-- ─────────────────────── 研究方向 / RESEARCH ──────────────── -->
-  <section class="shell section-compact">
+  <section class="shell section-compact ambient-host">
+    <ScientificAmbient zone="research" />
+
     <SectionHeading
       eyebrow={t('research.eyebrow')}
       title={t('research.title')}

@@ -1,7 +1,7 @@
 ---
 import { useT, type Lang } from '../i18n/ui';
 import Tag from './Tag.astro';
-import ProjectVisual from './ProjectVisual.astro';
+import ProjectCover from './ProjectCover.astro';
 import { projectHref, type ProjectEntry } from '../lib/projects';
 import { getProjectEvidence } from '../data/evidence';
 
@@ -28,21 +28,11 @@ const realityLabel = evidence
 ---
 
 <article class="pcard" data-groups={d.groups.join(' ')} data-slug={d.slug}>
-  <div class="pcard-visual">
-    <ProjectVisual variant={d.visual} label={`${d.title} — ${d.category}`} />
+  <div class="pcard-cover">
+    <ProjectCover project={project} lang={lang} layout="card" index={index} />
   </div>
 
   <div class="pcard-body">
-    <div class="pcard-meta">
-      <span class="index-num">{String(index + 1).padStart(2, '0')}</span>
-      <span class="mono">{d.category}</span>
-    </div>
-
-    <h3 class="h3 pcard-title">
-      <a href={href}>{d.title}</a>
-    </h3>
-
-    <p class="pcard-thesis">{d.summary}</p>
     <p class="body-muted pcard-desc">{d.description}</p>
 
     {
@@ -110,8 +100,8 @@ const realityLabel = evidence
     display: none;
   }
 
-  .pcard-visual {
-    padding: 0.75rem;
+  .pcard-cover {
+    padding: clamp(1.125rem, 2.5vw, 1.75rem);
     border-bottom: 1px solid var(--line);
   }
 
@@ -122,30 +112,8 @@ const realityLabel = evidence
     padding: 1.5rem;
   }
 
-  .pcard-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .pcard-title a:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 5px;
-  }
-
-  .pcard-thesis {
-    margin-top: 0.75rem;
-    font-size: 1.0625rem;
-    line-height: 1.45;
-    letter-spacing: -0.015em;
-    color: var(--ink);
-  }
-
   .pcard-desc {
-    margin-top: 0.625rem;
+    margin: 0;
     font-size: 0.9375rem;
   }
 

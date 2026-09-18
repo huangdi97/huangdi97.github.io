@@ -64,6 +64,11 @@
     --grain-opacity: 1;
     --formula-opacity: 0.06;
     --grid-opacity: 0.05;
+
+    /* Scientific ambient layer — how inked the background atmosphere is.
+       Multiplied by a per-section --ambient-zone (0.5–1.3), which puts the
+       final value inside 0.025–0.055 for paper. */
+    --ambient-base: 0.04;
   }
 
   [data-theme='white'] {
@@ -105,6 +110,10 @@
     --grain-opacity: 0;
     --formula-opacity: 0.05;
     --grid-opacity: 0.045;
+
+    /* Flat white shows ink faster, so the ambient layer sits lower:
+       0.0196–0.0364 across zones. */
+    --ambient-base: 0.028;
   }
 
   [data-theme='night'] {
@@ -148,6 +157,10 @@
     --grain-opacity: 0;
     --formula-opacity: 0.09;
     --grid-opacity: 0.05;
+
+    /* On a dark canvas the marks need more presence to be felt at all:
+       0.042–0.078 across zones. */
+    --ambient-base: 0.06;
   }
 
   :root {
@@ -162,6 +175,10 @@
     --shell: 1200px;
     --gutter: 1.5rem;
     --header-h: 68px;
+
+    /* Scientific ambient layer — per-section strength, set inline by
+       ScientificAmbient.astro and multiplied by the theme's --ambient-base. */
+    --ambient-zone: 1;
 
     /* Motion */
     --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
@@ -695,6 +712,14 @@
     position: relative;
   }
 
+  /* Host for a section-scoped ScientificAmbient layer. `isolation: isolate`
+     keeps the layer's `z-index: -1` above this section's own background but
+     below every word in it. */
+  .ambient-host {
+    position: relative;
+    isolation: isolate;
+  }
+
   /* Conceptual-notation badge. A formula that is not the project's own
      implementation must always say so. */
   .concept-note {
@@ -798,7 +823,8 @@
   header.site-header,
   footer.site-footer,
   .mobile-nav,
-  .reveal-trigger {
+  .reveal-trigger,
+  .ambient {
     display: none !important;
   }
 

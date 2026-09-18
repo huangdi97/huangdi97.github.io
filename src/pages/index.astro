@@ -18,6 +18,7 @@ import SelectedArtifacts from '../components/SelectedArtifacts.astro';
 import MathematicalBiology from '../components/MathematicalBiology.astro';
 import EquationNote from '../components/EquationNote.astro';
 import LabNotes from '../components/LabNotes.astro';
+import ScientificAmbient from '../components/ScientificAmbient.astro';
 import { personSchema } from '../data/profile';
 
 const lang = 'en' as const;
@@ -64,7 +65,9 @@ const websiteLd = {
   jsonLd={[personLd, websiteLd]}
 >
   <!-- ─────────────────────────── HERO ─────────────────────────── -->
-  <section class="shell hero">
+  <section class="shell hero ambient-host">
+    <ScientificAmbient zone="hero" />
+
     <div class="hero-grid">
       <div class="hero-copy">
         <p class="eyebrow">{t('hero.eyebrow')}</p>
@@ -108,7 +111,11 @@ const websiteLd = {
   <NowStrip lang={lang} />
 
   <!-- ─────────────────────── SELECTED WORK ────────────────────── -->
-  <section class="shell section" id="work">
+  <!-- Selected Work carries the faintest ambient: the projects explain
+       themselves, the background does not compete with them. -->
+  <section class="shell section ambient-host" id="work">
+    <ScientificAmbient zone="work" />
+
     <SectionHeading
       eyebrow={t('work.eyebrow')}
       title={t('work.title')}
@@ -126,7 +133,9 @@ const websiteLd = {
   <SelectedArtifacts lang={lang} />
 
   <!-- ───────────────────────── BACKGROUND ──────────────────────── -->
-  <section class="shell section">
+  <section class="shell section ambient-host">
+    <ScientificAmbient zone="background" />
+
     <SectionHeading
       eyebrow={t('background.eyebrow')}
       title={background.title}
@@ -148,7 +157,9 @@ const websiteLd = {
   </div>
 
   <!-- ──────────────────────── RESEARCH ────────────────────────── -->
-  <section class="shell section-compact">
+  <section class="shell section-compact ambient-host">
+    <ScientificAmbient zone="research" />
+
     <SectionHeading
       eyebrow={t('research.eyebrow')}
       title={t('research.title')}

@@ -19,6 +19,13 @@ groups: ['agents', 'ai-health']
 visual: 'compliance-triangle'
 statusNote: '公开仓库，GitHub 检测到 MIT 许可证。README 描述的是能力，本页不发布任何基准或准确性数据。'
 stack: ['Python 3.12', 'FastAPI', 'LangGraph', 'Flutter', 'Prometheus']
+coverType: 'Agent-native 生命科学工作台'
+coverDescription: >-
+  面向强合规生命科学业务，把多源数据校验、规则、RAG 与智能体决策组织进统一工作流。
+coverCapabilities: ['MCP', '合规', 'RAG', '交叉校验', '智能体']
+coverStatus: 'Agent-native 工作台'
+coverStatusSecondary: 'MIT 许可证'
+coverVisualHint: 'compliance-triangle'
 ---
 
 ## 概览

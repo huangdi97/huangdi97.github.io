@@ -19,6 +19,13 @@ groups: ['infrastructure', 'experiments']
 visual: 'dependency-graph'
 statusNote: 'Specification and design. Not a contact manager — a dependency graph over personal infrastructure.'
 stack: ['Canonical spec', 'Android', 'iOS', 'HarmonyOS', 'Conformance tests']
+coverType: 'Local-first Personal Dependency Graph'
+coverDescription: >-
+  One graph for accounts, devices, credentials, providers and domains — a computable model of personal digital infrastructure.
+coverCapabilities: ['Accounts', 'Devices', 'Credentials', 'Providers', 'Dependencies']
+coverStatus: 'Specification and design'
+coverStatusSecondary: 'Canonical specification'
+coverVisualHint: 'dependency-graph'
 ---
 
 ## Overview

@@ -1,0 +1,328 @@
+---
+/**
+ * Scientific Ambient Layer — the third of three visual types (v1.4.1).
+ *
+ *   PROJECT COVER             → ProjectCover.astro            (what a project is)
+ *   CONCEPTUAL SCIENCE VISUAL → ProjectScientificVisual.astro  (a scientific idea)
+ *   AMBIENT SCIENCE LAYER     → this file                      (page atmosphere)
+ *
+ * The ambient layer carries the mathematics, biology and AI that used to be
+ * painted into every project drawing. It is atmosphere, not information:
+ *
+ *   · aria-hidden and pointer-events:none — never in the tab tree, never read;
+ *   · inline SVG only — no canvas, no WebGL, no image, no network request;
+ *   · every colour reads `var(--ink)`, so it recolours with the theme;
+ *   · opacity is `calc(var(--ambient-base) * var(--ambient-zone))`, tuned per
+ *     theme (paper 0.025–0.055, white 0.018–0.045, night 0.04–0.08);
+ *   · compositions are section-aware: strongest in Hero and Mathematical
+ *     Biology, faintest under Selected Work, nearly gone by the footer;
+ *   · elements are cropped and off-centre — research-notebook marginalia,
+ *     never a repeating wallpaper;
+ *   · roughly half the elements are dropped below 640px so a small screen
+ *     stays clean.
+ *
+ * Nothing here may explain a project. Hide this layer and every project cover
+ * still does.
+ */
+
+export type AmbientZone = 'page' | 'hero' | 'work' | 'background' | 'mathbio' | 'research';
+
+export interface Props {
+  zone: AmbientZone;
+}
+
+const { zone } = Astro.props;
+
+/**
+ * Per-section strength. Multiplied by the theme's `--ambient-base`, so a zone
+ * is "how present" and a theme is "how inked" — one dial each.
+ */
+const ZONE_STRENGTH: Record<AmbientZone, number> = {
+  page: 0.85,
+  hero: 1.2,
+  work: 0.7,
+  background: 1.05,
+  mathbio: 1.3,
+  research: 0.95,
+};
+
+/** Text pieces. Notation only — never a claim, never a caption. */
+const EQUATIONS: Record<AmbientZone, Array<{ x: number; y: number; t: string; m: 'keep' | 'drop'; s?: number }>> = {
+  page: [
+    { x: 40, y: 150, t: 'P(H | D) ∝ P(D | H) P(H)', m: 'drop' },
+    { x: 980, y: 420, t: 'X ∈ ℝⁿˣᵖ', m: 'keep' },
+  ],
+  hero: [
+    { x: 700, y: 120, t: 'P(H | D) ∝ P(D | H) P(H)', m: 'keep' },
+    { x: 700, y: 196, t: 'dx/dt = f(x, u, θ)', m: 'keep' },
+    { x: 700, y: 272, t: 'zₜ₊₁ = Fθ(zₜ, aₜ)', m: 'drop' },
+    { x: 96, y: 700, t: '∇L(θ)', m: 'drop' },
+  ],
+  work: [{ x: 1010, y: 120, t: 'Σ', m: 'drop', s: 46 }],
+  background: [{ x: 60, y: 760, t: 'gene → pathway → phenotype', m: 'drop', s: 22 }],
+  mathbio: [
+    { x: 900, y: 90, t: '∇L(θ)', m: 'keep' },
+    { x: 900, y: 166, t: 'dx/dt = f(x, u, θ)', m: 'keep' },
+    { x: 60, y: 120, t: 'P(H | D) ∝ P(D | H) P(H)', m: 'drop' },
+  ],
+  research: [{ x: 880, y: 140, t: 'Σ', m: 'drop', s: 44 }],
+};
+
+const INK = 'currentColor';
+---
+
+<div
+  class="ambient"
+  data-scientific-ambient
+  data-ambient-zone={zone}
+  aria-hidden="true"
+  style={`--ambient-zone:${ZONE_STRENGTH[zone]}`}
+>
+  <svg viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <g class="amb-stroke" fill="none" stroke={INK} stroke-width="2">
+      {EQUATIONS[zone].map((eq) => (
+        <text
+          class="amb-text"
+          x={eq.x}
+          y={eq.y}
+          data-ambient-mobile={eq.m}
+          font-size={eq.s ?? 30}
+          fill={INK}
+          stroke="none"
+        >
+          {eq.t}
+        </text>
+      ))}
+
+      {/* ── mathematics: matrix brackets, axes, curve, glyphs ─────────── */}
+      {
+        (zone === 'page' || zone === 'hero' || zone === 'mathbio') && (
+          <g data-ambient-mobile="drop">
+            <path d="M1040,560 L1040,470 L1052,470" />
+            <path d="M1040,700 L1040,790 L1052,790" />
+            <path d="M1190,560 L1190,470 L1178,470" />
+            <path d="M1190,700 L1190,790 L1178,790" />
+            {[600, 640, 680, 720].map((y) => (
+              <line x1="1064" y1={y} x2="1166" y2={y} stroke-dasharray="3 9" />
+            ))}
+          </g>
+        )
+      }
+
+      {
+        (zone === 'hero' || zone === 'page') && (
+          <g data-ambient-mobile="keep">
+            <line x1="60" y1="820" x2="150" y2="820" />
+            <line x1="60" y1="820" x2="60" y2="720" />
+            {[0, 1, 2, 3, 4].map((i) => (
+              <line x1={60 + i * 22} y1="820" x2={60 + i * 22} y2="826" />
+            ))}
+            {[0, 1, 2, 3].map((i) => (
+              <line x1="54" y1={820 - i * 26} x2="60" y2={820 - i * 26} />
+            ))}
+          </g>
+        )
+      }
+
+      {
+        (zone === 'hero' || zone === 'mathbio') && (
+          <path
+            class="amb-drift"
+            d="M-30,420 C120,420 180,300 320,300 C460,300 520,430 660,430"
+            data-ambient-mobile={zone === 'hero' ? 'keep' : 'drop'}
+          />
+        )
+      }
+
+      {/* ── biology: state dots, expression fragment, landscape, trajectory ─ */}
+      {
+        (zone === 'background' || zone === 'mathbio') && (
+          <g data-ambient-mobile="keep">
+            {[
+              [210, 300],
+              [252, 336],
+              [196, 372],
+              [268, 300],
+              [232, 404],
+              [176, 330],
+              [286, 366],
+              [214, 448],
+            ].map(([x, y], i) => (
+              <circle cx={x} cy={y} r={i % 3 === 0 ? 7 : 4} fill={INK} stroke="none" />
+            ))}
+            <circle cx="240" cy="360" r="96" stroke-dasharray="6 10" />
+          </g>
+        )
+      }
+
+      {
+        zone === 'background' && (
+          <g data-ambient-mobile="keep">
+            <line x1="900" y1="300" x2="990" y2="300" />
+            <line x1="990" y1="300" x2="1080" y2="300" />
+            <circle cx="900" cy="300" r="9" fill={INK} stroke="none" />
+            <circle cx="990" cy="300" r="9" fill={INK} stroke="none" />
+            <circle cx="1080" cy="300" r="13" />
+          </g>
+        )
+      }
+
+      {
+        (zone === 'background' || zone === 'mathbio') && (
+          <g data-ambient-mobile="drop">
+            <path d="M700,620 C780,560 820,700 900,640 C960,594 1010,660 1080,620" stroke-dasharray="7 8" />
+            {[
+              [700, 620],
+              [900, 640],
+              [1080, 620],
+            ].map(([x, y]) => (
+              <circle cx={x} cy={y} r="6" fill={INK} stroke="none" />
+            ))}
+          </g>
+        )
+      }
+
+      {
+        (zone === 'mathbio' || zone === 'background') && (
+          <g data-ambient-mobile="drop">
+            <ellipse cx="520" cy="700" rx="150" ry="86" stroke-dasharray="5 9" />
+            <ellipse cx="520" cy="700" rx="96" ry="54" stroke-dasharray="5 9" />
+            <ellipse cx="520" cy="700" rx="44" ry="24" />
+          </g>
+        )
+      }
+
+      {/* ── AI: sparse graph, attention-like links, embedding coordinates ── */}
+      {
+        (zone === 'hero' || zone === 'page' || zone === 'research') && (
+          <g data-ambient-mobile={zone === 'research' ? 'keep' : 'drop'}>
+            {[
+              [820, 520],
+              [900, 452],
+              [900, 596],
+              [990, 520],
+              [1060, 452],
+              [1060, 596],
+            ].map(([x, y]) => (
+              <circle cx={x} cy={y} r="8" fill={INK} stroke="none" />
+            ))}
+            {[
+              [0, 1],
+              [0, 2],
+              [1, 3],
+              [2, 3],
+              [3, 4],
+              [3, 5],
+            ].map(([a, b]) => {
+              const nodes = [
+                [820, 520],
+                [900, 452],
+                [900, 596],
+                [990, 520],
+                [1060, 452],
+                [1060, 596],
+              ];
+              return <line x1={nodes[a][0]} y1={nodes[a][1]} x2={nodes[b][0]} y2={nodes[b][1]} stroke-dasharray="4 7" />;
+            })}
+          </g>
+        )
+      }
+
+      {
+        zone === 'research' && (
+          <g data-ambient-mobile="drop">
+            <line x1="120" y1="200" x2="300" y2="200" />
+            <line x1="300" y1="200" x2="480" y2="200" />
+            <line x1="480" y1="200" x2="660" y2="200" />
+            {[
+              [120, 200],
+              [300, 200],
+              [480, 200],
+              [660, 200],
+            ].map(([x, y]) => (
+              <circle cx={x} cy={y} r="10" fill={INK} stroke="none" />
+            ))}
+          </g>
+        )
+      }
+
+      {
+        zone === 'work' && (
+          <g data-ambient-mobile="drop">
+            <ellipse cx="1000" cy="420" rx="180" ry="104" stroke-dasharray="6 12" />
+            <ellipse cx="1000" cy="420" rx="110" ry="62" stroke-dasharray="6 12" />
+          </g>
+        )
+      }
+
+      {
+        zone === 'work' && (
+          <g data-ambient-mobile="keep">
+            <circle cx="120" cy="520" r="10" fill={INK} stroke="none" />
+            <circle cx="220" cy="440" r="10" fill={INK} stroke="none" />
+            <circle cx="220" cy="600" r="10" fill={INK} stroke="none" />
+            <line x1="120" y1="520" x2="220" y2="440" />
+            <line x1="120" y1="520" x2="220" y2="600" />
+          </g>
+        )
+      }
+    </g>
+  </svg>
+</div>
+
+<style>
+  .ambient {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+    color: var(--ink);
+    opacity: calc(var(--ambient-base) * var(--ambient-zone));
+  }
+
+  /* The page zone spans the viewport behind every section. */
+  .ambient[data-ambient-zone='page'] {
+    position: fixed;
+    height: 100vh;
+  }
+
+  .ambient svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .amb-text {
+    font-family: var(--font-mono);
+    letter-spacing: 0.01em;
+  }
+
+  /* A notebook breathes; it does not animate. Six pixels, a minute long. */
+  .amb-drift {
+    animation: ambient-drift 64s var(--ease) infinite alternate;
+  }
+
+  @keyframes ambient-drift {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-6px, 8px, 0);
+    }
+  }
+
+  /* A small screen keeps roughly half the marks; the rest are noise there. */
+  @media (max-width: 640px) {
+    .ambient [data-ambient-mobile='drop'] {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .amb-drift {
+      animation: none;
+    }
+  }
+</style>

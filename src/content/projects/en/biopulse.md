@@ -21,6 +21,13 @@ groups: ['agents', 'ai-health']
 visual: 'compliance-triangle'
 statusNote: 'Public repository with MIT license detected by GitHub. README claims describe capability; no benchmark or accuracy figure is published.'
 stack: ['Python 3.12', 'FastAPI', 'LangGraph', 'Flutter', 'Prometheus']
+coverType: 'Agent-native Life Science Workbench'
+coverDescription: >-
+  Organises multi-source validation, rules, RAG and agent decisions into one workflow for compliance-heavy life-science operations.
+coverCapabilities: ['MCP', 'Compliance', 'RAG', 'Cross Validation', 'Agents']
+coverStatus: 'Agent-native workbench'
+coverStatusSecondary: 'MIT license'
+coverVisualHint: 'compliance-triangle'
 ---
 
 ## Overview

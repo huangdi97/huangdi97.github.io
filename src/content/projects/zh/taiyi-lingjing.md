@@ -16,6 +16,13 @@ groups: ['agents', 'ai-science']
 visual: 'discovery-loop'
 statusNote: '概念设计与研究方向。工程实现尚未开始——没有仓库、原型或验证结果。'
 stack: ['概念设计', '拟议架构', '证据溯源', 'PBPK / QSP / ODE（拟）', '贝叶斯优化（拟）']
+coverType: 'AI-native 科学发现概念'
+coverDescription: >-
+  探索如何把生物状态、证据、仿真与实验设计组织成可审计的发现闭环。
+coverCapabilities: ['生物状态', '证据', '仿真', '实验设计', '审计']
+coverStatus: '概念设计 / 尚未开始'
+coverStatusSecondary: '尚未开始'
+coverVisualHint: 'discovery-loop'
 ---
 
 ## 概览

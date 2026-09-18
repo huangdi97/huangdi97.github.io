@@ -16,6 +16,7 @@ import CellLandscape from './CellLandscape.astro';
 import ExpressionMatrix from './ExpressionMatrix.astro';
 import BioNetwork from './BioNetwork.astro';
 import PhasePortrait from './PhasePortrait.astro';
+import ScientificAmbient from './ScientificAmbient.astro';
 
 export interface Props {
   lang: Lang;
@@ -34,7 +35,11 @@ const figures = [
 ];
 ---
 
-<section class="shell section-compact" id="mathbio">
+<section class="shell section-compact ambient-host" id="mathbio">
+  <!-- This section explains mathematics and biology, so here the ambient
+       layer is allowed to be at its strongest. -->
+  <ScientificAmbient zone="mathbio" />
+
   <div class="mb-head">
     <p class="eyebrow">{t('mathbio.eyebrow')}</p>
     <h2 class="h2 mb-title">{t('mathbio.title')}</h2>

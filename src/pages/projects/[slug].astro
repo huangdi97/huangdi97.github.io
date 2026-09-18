@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import ProjectVisual from '../../components/ProjectVisual.astro';
+import ProjectScientificVisual from '../../components/ProjectScientificVisual.astro';
 import ProjectMeta from '../../components/ProjectMeta.astro';
 import ArchitectureDiagram from '../../components/ArchitectureDiagram.astro';
 import ProjectReality from '../../components/ProjectReality.astro';
@@ -146,7 +146,7 @@ const ld: Record<string, unknown>[] = [
     </header>
 
     <div class="case-visual">
-      <ProjectVisual variant={d.visual} label={`${d.title} — ${d.category}`} />
+      <ProjectScientificVisual variant={d.visual} label={`${d.title} — ${d.category}`} />
     </div>
 
     <div class="case-grid">

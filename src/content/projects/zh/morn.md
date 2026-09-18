@@ -20,6 +20,13 @@ groups: ['agents', 'infrastructure']
 visual: 'agent-dag'
 statusNote: '公开 Rust workspace。README 报告 v1.0.0-rc.1 且本地 GA 完成；本站引用该状态，不重新运行测试套件。'
 stack: ['Rust', 'axum', 'React / Vite', 'Tauri v2', 'SQLite']
+coverType: '本地优先的多智能体桌面系统'
+coverDescription: >-
+  把 Model、Tool、Prompt、Memory 与 Agent Runtime 组合成用户可以自行编排的本地智能工作流。
+coverCapabilities: ['智能体运行时', 'DAG', '工具', '记忆', '能力提供方', '桌面端']
+coverStatus: '分布式运行底座'
+coverStatusSecondary: '桌面应用'
+coverVisualHint: 'agent-dag'
 ---
 
 ## 概览

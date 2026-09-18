@@ -1,7 +1,14 @@
 ---
+/**
+ * Homepage feature block.
+ *
+ * The cover says what the project *is* — name, type, one sentence, core
+ * capabilities, real status. The body underneath carries the longer thesis and
+ * the proof tokens, so the two never repeat the same sentence.
+ */
 import { useT, type Lang } from '../i18n/ui';
 import Tag from './Tag.astro';
-import ProjectVisual from './ProjectVisual.astro';
+import ProjectCover from './ProjectCover.astro';
 import ProofLine from './ProofLine.astro';
 import { projectHref, type ProjectEntry } from '../lib/projects';
 import { getProjectEvidence } from '../data/evidence';
@@ -18,7 +25,6 @@ const d = project.data;
 
 const href = projectHref(lang, d.slug);
 const statusKey = `status.${d.status.toLowerCase()}`;
-const reversed = index % 2 === 1;
 
 /**
  * Card-level honesty pass: each project carries what it actually is, so five
@@ -32,23 +38,14 @@ const realityLabel = evidence
   : null;
 ---
 
-<article class:list={['showcase reveal', reversed && 'showcase-reverse']}>
-  <div class="showcase-visual">
+<article class="showcase reveal">
+  <div class="showcase-cover">
     <div class="visual-panel">
-      <ProjectVisual variant={d.visual} label={`${d.title} — ${d.category}`} />
+      <ProjectCover project={project} lang={lang} layout="showcase" index={index} />
     </div>
   </div>
 
   <div class="showcase-body">
-    <div class="showcase-meta">
-      <span class="index-num">{String(index + 1).padStart(2, '0')}</span>
-      <span class="mono">{d.category}</span>
-    </div>
-
-    <h3 class="h2 showcase-title">
-      <a href={href}>{d.title}</a>
-    </h3>
-
     <p class="showcase-thesis">{d.summary}</p>
     <p class="body-muted showcase-desc">{d.description}</p>
 
@@ -100,26 +97,14 @@ const realityLabel = evidence
 <style>
   .showcase {
     display: grid;
-    gap: 2rem;
-    align-items: center;
-  }
-
-  @media (min-width: 900px) {
-    .showcase {
-      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-      gap: 4rem;
-    }
-
-    .showcase-reverse .showcase-visual {
-      order: 2;
-    }
+    gap: 1.75rem;
   }
 
   .visual-panel {
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 3px;
-    padding: 1rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
     transition:
       border-color var(--dur-base) var(--ease),
       transform var(--dur-base) var(--ease);
@@ -130,31 +115,16 @@ const realityLabel = evidence
     transform: translateY(-3px);
   }
 
-  .showcase-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .showcase-title a {
-    display: inline-block;
-  }
-
-  .showcase-title a:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 6px;
+  .showcase-body {
+    max-width: 68ch;
   }
 
   .showcase-thesis {
-    margin-top: 1rem;
     font-size: clamp(1.0625rem, 1.5vw, 1.25rem);
     line-height: 1.45;
     letter-spacing: -0.018em;
     color: var(--ink);
-    max-width: 42ch;
+    max-width: 46ch;
   }
 
   .showcase-desc {
@@ -162,7 +132,6 @@ const realityLabel = evidence
     font-size: 0.9375rem;
   }
 
-  /* Reality strip — restrained: one pill, one provenance word. */
   .showcase-reality {
     display: flex;
     flex-wrap: wrap;

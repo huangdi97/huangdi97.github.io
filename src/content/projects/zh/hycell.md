@@ -17,6 +17,13 @@ groups: ['ai-science', 'experiments']
 visual: 'cell-transition'
 statusNote: 'v0.1 工程 MVP。可运行原型，不是经过验证的生物学发现系统。'
 stack: ['Python 3.10+', 'PyTorch', 'NumPy', 'Streamlit', 'pytest']
+coverType: 'AI 虚拟细胞 / 细胞世界模型'
+coverDescription: >-
+  面向细胞状态表示、状态转移预测与干预规划的研究原型。
+coverCapabilities: ['状态表示', '转移模型', '生物校验器', '目标状态规划', '基准测试']
+coverStatus: '研究原型'
+coverStatusSecondary: '真实数据链路'
+coverVisualHint: 'cell-state'
 ---
 
 ## 概览

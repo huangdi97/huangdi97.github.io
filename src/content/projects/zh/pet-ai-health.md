@@ -16,6 +16,13 @@ groups: ['ai-health', 'agents']
 visual: 'pet'
 statusNote: '产品架构与设计。不是兽医诊断工具，向兽医升级是设计内的流程转移。'
 stack: ['多模态接入', '风险评估', '流程路由', '服务方适配器']
+coverType: 'AI-native 宠物健康平台'
+coverDescription: >-
+  从饲主观察出发，经信息采集、风险评估、问诊到照护协同的产品架构。
+coverCapabilities: ['观察', '多模态采集', '风险评估', '问诊', '照护协同']
+coverStatus: '设计研究'
+coverStatusSecondary: '产品架构'
+coverVisualHint: 'care-flow'
 ---
 
 ## 概览

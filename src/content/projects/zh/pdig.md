@@ -17,6 +17,13 @@ groups: ['infrastructure', 'experiments']
 visual: 'dependency-graph'
 statusNote: '规范与设计。不是联系人管理工具——它是个人基础设施之上的依赖图谱。'
 stack: ['Canonical 规范', 'Android', 'iOS', 'HarmonyOS', '一致性测试']
+coverType: '本地优先的个人依赖图谱'
+coverDescription: >-
+  用统一图谱表示账户、设备、凭据、服务商与域名之间的依赖关系，为个人数字基础设施提供可计算模型。
+coverCapabilities: ['账户', '设备', '凭据', '服务商', '依赖关系']
+coverStatus: '规范与设计'
+coverStatusSecondary: 'Canonical 规范'
+coverVisualHint: 'dependency-graph'
 ---
 
 ## 概览

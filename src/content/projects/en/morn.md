@@ -21,6 +21,13 @@ groups: ['agents', 'infrastructure']
 visual: 'agent-dag'
 statusNote: 'Public Rust workspace. The README reports v1.0.0-rc.1 with local GA complete; this site quotes that status and does not re-run the suite.'
 stack: ['Rust', 'axum', 'React / Vite', 'Tauri v2', 'SQLite']
+coverType: 'Local-first Multi-Agent Desktop System'
+coverDescription: >-
+  Composes Model, Tool, Prompt, Memory and an Agent Runtime into local intelligent workflows you orchestrate yourself.
+coverCapabilities: ['Agent Runtime', 'DAG', 'Tools', 'Memory', 'Providers', 'Desktop']
+coverStatus: 'Distributed runtime'
+coverStatusSecondary: 'Desktop application'
+coverVisualHint: 'agent-dag'
 ---
 
 ## Overview

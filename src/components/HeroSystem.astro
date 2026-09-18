@@ -1,11 +1,11 @@
 ---
 /**
- * Hero field — a computational-biology / AI system loop.
+ * Hero field — the AI system loop, not a mathematics poster.
  *
- * Observation → Representation → Dynamics → Decision, closed by a feedback
- * arc that returns a new observation. The formulas behind it are texture, not
- * claims: they sit at 3–9% opacity, they drift by a few pixels at most, and
- * they are completely still under prefers-reduced-motion.
+ * Observation → Representation → Dynamics → Decision, closed by a feedback arc
+ * that returns a new observation. Anything formula-shaped now lives in the
+ * scientific ambient layer behind the hero; this drawing is responsible for the
+ * shape of the loop and nothing else.
  *
  * SVG only. No canvas, no WebGL, no runtime library, no cost to first paint.
  */
@@ -17,10 +17,10 @@ export interface Props {
 const { label } = Astro.props;
 
 const steps = [
-  { id: 'obs', label: 'OBSERVATION', expr: 'X', note: 'measurements' },
-  { id: 'rep', label: 'REPRESENTATION', expr: 'z = E(X)', note: 'encoding' },
-  { id: 'dyn', label: 'DYNAMICS', expr: 'zₜ₊₁ = Fθ(zₜ, aₜ, cₜ)', note: 'transition' },
-  { id: 'dec', label: 'DECISION', expr: 'a*', note: 'intervention' },
+  { id: 'obs', label: 'OBSERVATION', note: 'measurements' },
+  { id: 'rep', label: 'REPRESENTATION', note: 'encoding' },
+  { id: 'dyn', label: 'DYNAMICS', note: 'transition' },
+  { id: 'dec', label: 'DECISION', note: 'intervention' },
 ];
 
 const BOX_X = 18;
@@ -38,15 +38,6 @@ const BOX_GAP = 92;
     aria-label={label}
     xmlns="http://www.w3.org/2000/svg"
   >
-    <!-- Formula field: texture, never content. -->
-    <g class="hero-formulas" aria-hidden="true">
-      <text class="formula" x="258" y="128" data-drift="1">P(H | D) ∝ P(D | H) P(H)</text>
-      <text class="formula" x="258" y="176" data-drift="2">dx/dt = f(x, u, θ)</text>
-      <text class="formula" x="258" y="224" data-drift="1">X ∈ ℝⁿˣᵖ</text>
-      <text class="formula" x="258" y="272" data-drift="3">Δx = xₜ₊₁ − xₜ</text>
-      <text class="formula" x="258" y="320" data-drift="2">Ĝ = argmin L(ŷ, y)</text>
-    </g>
-
     <!-- Descending spine -->
     <g fill="none" stroke="var(--dg-line)" stroke-width="1">
       {
@@ -81,7 +72,7 @@ const BOX_GAP = 92;
               {step.label}
             </text>
             <text class="dg-var" x={BOX_X + 14} y={y + 40}>
-              {step.expr}
+              {step.note}
             </text>
             <text class="dg-label" x={BOX_X + BOX_W - 14} y={y + 19} text-anchor="end">
               {String(i + 1).padStart(2, '0')}
@@ -125,37 +116,6 @@ const BOX_GAP = 92;
     position: relative;
   }
 
-  .formula {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    fill: var(--ink);
-    opacity: var(--formula-opacity);
-    letter-spacing: 0.01em;
-  }
-
-  .hero-formulas text {
-    animation: drift 14s var(--ease) infinite alternate;
-  }
-
-  .hero-formulas text[data-drift='1'] {
-    animation-duration: 17s;
-  }
-  .hero-formulas text[data-drift='2'] {
-    animation-duration: 21s;
-  }
-  .hero-formulas text[data-drift='3'] {
-    animation-duration: 13s;
-  }
-
-  @keyframes drift {
-    from {
-      transform: translate3d(0, 0, 0);
-    }
-    to {
-      transform: translate3d(-5px, 6px, 0);
-    }
-  }
-
   .hero-step {
     animation: step-in 5.5s var(--ease) infinite;
     animation-delay: var(--step-delay, 0s);
@@ -190,14 +150,10 @@ const BOX_GAP = 92;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hero-formulas text,
     .hero-step,
     .hero-feedback {
       animation: none !important;
       opacity: 1;
-    }
-    .formula {
-      opacity: var(--formula-opacity);
     }
   }
 </style>

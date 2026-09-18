@@ -19,6 +19,13 @@ groups: ['ai-science', 'experiments']
 visual: 'cell-transition'
 statusNote: 'v0.1 engineering MVP. Runnable prototype, not a validated biological discovery system.'
 stack: ['Python 3.10+', 'PyTorch', 'NumPy', 'Streamlit', 'pytest']
+coverType: 'AI Virtual Cell / Cellular World Model'
+coverDescription: >-
+  A research prototype for cell-state representation, transition prediction and intervention planning.
+coverCapabilities: ['State Representation', 'Transition Model', 'Biological Verifier', 'Target-State Planner', 'Benchmark']
+coverStatus: 'Research prototype'
+coverStatusSecondary: 'Real-data pipeline'
+coverVisualHint: 'cell-state'
 ---
 
 ## Overview

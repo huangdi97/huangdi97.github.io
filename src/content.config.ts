@@ -99,6 +99,42 @@ const projectSchema = z.object({
   statusNote: z.string().optional(),
   /** Extra facts for the project meta block. */
   stack: z.array(z.string()).default([]),
+
+  /* ---------------------------------------------------------------------
+   * Project Cover (v1.4.1)
+   *
+   * A cover describes the *project*, not the science. Mathematics, biology
+   * and AI belong to the ambient layer; here they may only appear as a small
+   * auxiliary mark, never as the subject.
+   * --------------------------------------------------------------------- */
+
+  /** Short type line under the name — "AI aging assessment system". */
+  coverType: z.string(),
+  /** One sentence: what it is and what it solves. Shorter than `description`. */
+  coverDescription: z.string(),
+  /** Core capabilities or modules. Three to six, never a feature dump. */
+  coverCapabilities: z.array(z.string()).min(3).max(6),
+  /**
+   * Reality line. Must equal the evidence headline for this locale — it is
+   * re-checked by `scripts/check-visual-system.mjs`, so the cover can never
+   * drift away from the truth layer.
+   */
+  coverStatus: z.string(),
+  /**
+   * Second reality token, e.g. "Active development". Must be one of the
+   * project's published proof tokens.
+   */
+  coverStatusSecondary: z.string(),
+  /** Which small auxiliary mark to draw beside the copy. */
+  coverVisualHint: z.enum([
+    'assessment-flow',
+    'cell-state',
+    'agent-dag',
+    'compliance-triangle',
+    'dependency-graph',
+    'discovery-loop',
+    'care-flow',
+  ]),
 });
 
 const projects = defineCollection({

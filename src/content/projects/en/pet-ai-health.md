@@ -18,6 +18,13 @@ groups: ['ai-health', 'agents']
 visual: 'pet'
 statusNote: 'Product architecture and design. Not a veterinary diagnostic tool; escalation to a veterinarian is designed in.'
 stack: ['Multimodal intake', 'Risk assessment', 'Workflow routing', 'Provider adapters']
+coverType: 'AI-native Pet Health Platform'
+coverDescription: >-
+  A product architecture running from owner observation through intake, risk assessment, consultation and care coordination.
+coverCapabilities: ['Observation', 'Multimodal Intake', 'Risk Assessment', 'Consultation', 'Care Coordination']
+coverStatus: 'Design study'
+coverStatusSecondary: 'Product architecture'
+coverVisualHint: 'care-flow'
 ---
 
 ## Overview

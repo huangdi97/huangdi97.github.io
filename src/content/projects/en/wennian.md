@@ -21,6 +21,13 @@ groups: ['ai-health', 'agents']
 visual: 'aging-state'
 statusNote: 'Open-source MVP. Assessment output only — not a diagnostic device. License unresolved: the README states GPLv3, GitHub detects no LICENSE file.'
 stack: ['Python 3.10+', 'FastAPI', 'Gradio', 'pytest', 'YAML config']
+coverType: 'AI Aging Assessment & Intervention Decision System'
+coverDescription: >-
+  Asks, assesses, finds the dominant driver, and ranks what to change first — turning scattered health data into explainable personal decisions.
+coverCapabilities: ['Active Interview', 'Aging Assessment', 'Driver Analysis', 'Intervention Priority', 'Explainable Report']
+coverStatus: 'Open-source MVP'
+coverStatusSecondary: 'Active development'
+coverVisualHint: 'assessment-flow'
 ---
 
 ## Overview

@@ -17,6 +17,13 @@ groups: ['agents', 'ai-science']
 visual: 'discovery-loop'
 statusNote: 'Concept and research direction. Engineering implementation has not started — there is no repository, prototype or validation result.'
 stack: ['Concept design', 'Proposed architecture', 'Evidence provenance', 'PBPK / QSP / ODE (intended)', 'Bayesian optimisation (intended)']
+coverType: 'AI-native Scientific Discovery Concept'
+coverDescription: >-
+  Explores how biological state, evidence, simulation and experiment design could be organised into one auditable discovery loop.
+coverCapabilities: ['Bio State', 'Evidence', 'Simulation', 'Experiment Design', 'Audit']
+coverStatus: 'Concept / Not Started'
+coverStatusSecondary: 'Not started'
+coverVisualHint: 'discovery-loop'
 ---
 
 ## Overview

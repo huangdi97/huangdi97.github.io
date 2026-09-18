@@ -10,6 +10,26 @@
  * single accent, generous whitespace); what differs is the scientific
  * metaphor each composition is built around.
  */
+/**
+ * Cover marks (v1.4.1).
+ *
+ * A cover mark is *auxiliary*: it sits beside the words that describe the
+ * project and never carries the explanation itself. These are deliberately
+ * small, hairline and formula-free — a reader who hides every cover mark must
+ * still know what each project is.
+ *
+ * Kept in TypeScript for the same reason as the union above: the Astro
+ * compiler hoists and truncates multi-line unions declared in frontmatter.
+ */
+export type CoverVisualHint =
+  | 'assessment-flow'
+  | 'cell-state'
+  | 'agent-dag'
+  | 'compliance-triangle'
+  | 'dependency-graph'
+  | 'discovery-loop'
+  | 'care-flow';
+
 export type VisualVariant =
   | 'aging'
   | 'cell'
