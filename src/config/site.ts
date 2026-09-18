@@ -43,7 +43,7 @@ export const SITE = {
    * only when this is set — a button that 404s is worse than no button, and a
    * generated-but-unreviewed PDF would not match the printed page.
    */
-  resumePdf: null,
+  resumePdf: null as string | null,
 
   /**
    * Portrait image path, relative to /public.
@@ -52,7 +52,7 @@ export const SITE = {
    * it and keeps its text-only layout while this is null — no placeholder
    * avatar, no generated face, no stock image.
    */
-  portrait: null,
+  portrait: null as string | null,
 
   statement: {
     en: 'Building intelligent systems for discovery, health, simulation and autonomous work.',
