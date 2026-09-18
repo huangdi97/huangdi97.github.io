@@ -9,12 +9,20 @@ import type { Lang } from '../i18n/ui';
  * navigation. Because every surface reads the same array, it is impossible for
  * one page to show the Gmail address while another still shows only QQ Mail.
  *
+ * Every variant reads the active theme's tokens. None of them assumes the
+ * surface is inverted — the v1.6 footer no longer is.
+ *
  * Order is fixed: Gmail → QQ Mail → GitHub → Resume.
  */
 export interface Props {
   lang: Lang;
-  /** `footer` = stacked links on the dark footer, `buttons` = CTA row, `list` = label + value rows. */
-  variant?: 'footer' | 'buttons' | 'list';
+  /**
+   * `inline` = labelled links only, for the homepage contact band (the value
+   * is still the accessible name, just not printed); `row` = label + value, for
+   * the footer, which is the one contact surface the inner pages have;
+   * `buttons` = CTA row; `list` = label + value rows.
+   */
+  variant?: 'inline' | 'row' | 'buttons' | 'list';
   /** Small mono heading rendered above the links. */
   heading?: string;
 }
@@ -24,10 +32,41 @@ const links = getContactLinks(lang);
 ---
 
 {
-  variant === 'footer' && (
-    <div class="contact-footer">
+  variant === 'inline' && (
+    <div class="contact-inline">
       {heading && <p class="contact-heading">{heading}</p>}
-      <ul class="contact-footer-list">
+      <ul class="contact-inline-list">
+        {links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              data-contact-id={link.id}
+              target={link.external ? '_blank' : undefined}
+              rel={link.external ? 'noopener noreferrer' : undefined}
+              title={link.value}
+            >
+              <span class="contact-label">{link.label}</span>
+              {/* The address stays in the accessible name and in the tooltip,
+                  but the homepage does not print it twice. */}
+              <span class="vh">{link.value}</span>
+              {link.external && (
+                <span aria-hidden="true" class="contact-ext">
+                  ↗
+                </span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+{
+  variant === 'row' && (
+    <div class="contact-row">
+      {heading && <p class="contact-heading">{heading}</p>}
+      <ul class="contact-row-list">
         {links.map((link) => (
           <li>
             <a
@@ -98,11 +137,11 @@ const links = getContactLinks(lang);
     font-size: 0.6875rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--artifact-muted);
+    color: var(--muted);
     margin-bottom: 0.5rem;
   }
 
-  .contact-footer-list,
+  .contact-row-list,
   .contact-list {
     list-style: none;
     margin: 0;
@@ -111,21 +150,58 @@ const links = getContactLinks(lang);
     flex-direction: column;
   }
 
+  /* The homepage band: labelled links, one wrap row, no printed addresses —
+     the footer directly below is the surface that prints them. This is the
+     "or the other way around" arrangement the brief allows, and it stops the
+     same four values appearing twice inside one screen. */
+  .contact-inline-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.75rem;
+  }
+
+  .contact-inline a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+  }
+
+  .contact-inline a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  /* The footer row: one line on a wide screen, four on a phone. Reads the
+     active theme — the footer no longer inverts, so neither does this. */
+  .contact-row-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem 2rem;
+  }
+
   .contact-list {
     gap: 0.625rem;
   }
 
-  .contact-footer a {
-    display: flex;
+  .contact-row a {
+    display: inline-flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.35rem 0.75rem;
+    gap: 0.35rem 0.6rem;
     min-height: 44px;
-    padding-block: 0.55rem;
-    color: var(--artifact-ink);
+    align-items: center;
+    color: var(--ink);
   }
 
-  .contact-footer a:hover {
+  .contact-row a:hover {
     text-decoration: underline;
     text-underline-offset: 3px;
   }
@@ -135,17 +211,21 @@ const links = getContactLinks(lang);
     font-size: 0.6875rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--artifact-muted);
-    min-width: 4.25rem;
+    color: var(--faint);
   }
 
   .contact-value {
     font-size: 0.875rem;
-    color: var(--artifact-muted);
+    color: var(--muted);
+  }
+
+  .contact-row a:hover .contact-value {
+    color: var(--ink);
   }
 
   .contact-ext {
     font-size: 0.75rem;
+    color: var(--faint);
   }
 
   .contact-buttons {

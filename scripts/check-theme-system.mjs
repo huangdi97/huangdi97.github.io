@@ -59,7 +59,12 @@ const REQUIRED_TOKENS = [
   'grain-opacity',
   'formula-opacity',
   'grid-opacity',
-  'ambient-base',
+  /* Global scientific canvas (v1.6). Four weights: large line art, notebook
+     marginalia, rules and ticks, and the single accent. */
+  'science-macro',
+  'science-micro',
+  'science-grid',
+  'science-accent',
 ];
 
 const problems = [];

@@ -12,13 +12,13 @@
  * closes and returns focus, arrow keys move between options, and a click
  * outside dismisses the panel.
  */
-import { DEFAULT_THEME, THEME_META, THEME_ORDER } from '../config/themes';
+import { THEME_META, THEME_ORDER } from '../config/themes';
 import { useT, type Lang } from '../i18n/ui';
 
 export interface Props {
   lang: Lang;
-  /** `icon` for the header cluster; `list` for the mobile menu. */
-  variant?: 'icon' | 'list';
+  /** `icon` for the header cluster; `list` for the mobile menu; `inline` for the footer. */
+  variant?: 'icon' | 'list' | 'inline';
 }
 
 const { lang, variant = 'icon' } = Astro.props;
@@ -32,8 +32,7 @@ const meta = THEME_ORDER.map((id) => THEME_META[id]);
 ---
 
 {
-  variant === 'icon' ? (
-    <div class="ts" data-theme-switcher>
+  variant === 'icon' ? (    <div class="ts" data-theme-switcher>
       <button
         type="button"
         class="ts-trigger"
@@ -83,6 +82,33 @@ const meta = THEME_ORDER.map((id) => THEME_META[id]);
           }
         </ul>
       </div>
+    </div>
+  ) : variant === 'inline' ? (
+    <div class="ts-inline" data-theme-switcher>
+      <p class="ts-inline-title mono">{t('appearance.label')}</p>
+      <ul class="ts-inlinelist" role="none">
+        {
+          meta.map((m) => (
+            <li role="none">
+              <button
+                type="button"
+                role="menuitemradio"
+                aria-checked="false"
+                data-theme-option={m.id}
+                class="ts-inlineoption"
+                title={m.note[lang]}
+              >
+                <span
+                  class="ts-swatch"
+                  aria-hidden="true"
+                  style={`--sw-a:${m.swatch.a};--sw-b:${m.swatch.b}`}
+                />
+                <span class="ts-name">{m.label[lang]}</span>
+              </button>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   ) : (
     <div class="ts-listblock" data-theme-switcher>
@@ -267,7 +293,6 @@ const meta = THEME_ORDER.map((id) => THEME_META[id]);
   .ts-listblock {
     display: block;
   }
-
   .ts-blocktitle {
     margin: 0 0 0.25rem;
   }
@@ -286,5 +311,63 @@ const meta = THEME_ORDER.map((id) => THEME_META[id]);
   .ts-blockoption .ts-note {
     flex-basis: 100%;
     padding-left: 1.85rem;
+  }
+
+  /* Inline variant — the footer. One compact row, no popover and no panel,
+     because a footer preference row should not open a menu. Reads the active
+     theme, so it is legible on paper, white and night alike. */
+  .ts-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.875rem;
+  }
+
+  .ts-inline-title {
+    color: var(--faint);
+  }
+
+  .ts-inlinelist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+  }
+
+  .ts-inlineoption {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    padding: 0 0.5rem;
+    border-radius: 2px;
+    color: var(--muted);
+    transition:
+      background-color var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease);
+  }
+
+  .ts-inlineoption:hover {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  .ts-inlineoption[aria-checked='true'] {
+    color: var(--ink);
+  }
+
+  .ts-inlineoption .ts-swatch {
+    width: 12px;
+    height: 12px;
+  }
+
+  .ts-inlineoption .ts-name {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
 </style>

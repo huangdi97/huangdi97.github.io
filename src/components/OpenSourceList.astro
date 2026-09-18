@@ -1,0 +1,144 @@
+---
+/**
+ * Open Source list — the full repository table (v1.6).
+ *
+ * Extracted from the homepage when the homepage stopped carrying it. The
+ * homepage now says one line ("open source work on GitHub →", via the contact
+ * row); the table with role, language, license and last-update metadata lives
+ * here, on /projects, next to the case studies it backs.
+ *
+ * The metadata is a snapshot, and it says so: `OSS_CAPTURED_AT` is rendered
+ * under the table rather than hidden, and a repository with no detected
+ * LICENSE file shows "No license detected" instead of quietly omitting the
+ * row. A missing license is a fact about the project, not a formatting
+ * problem.
+ */
+import { useT, type Lang } from '../i18n/ui';
+import { OSS_CAPTURED_AT, OSS_HIGHLIGHTS } from '../data/oss';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+---
+
+<ul class="oss-list">
+  {
+    OSS_HIGHLIGHTS.map((repo) => (
+      <li>
+        <a href={repo.url} class="oss-item" target="_blank" rel="noopener noreferrer">
+          <span class="oss-name">{repo.name}</span>
+          <span class="oss-desc">{lang === 'zh' ? repo.descriptionZh : repo.descriptionEn}</span>
+          <span class="oss-facts">
+            <span class="oss-fact">
+              <span class="oss-fact-k">{t('oss.role')}</span>
+              <span class="oss-fact-v" data-role={repo.role}>
+                {t(`oss.role.${repo.role}`)}
+              </span>
+            </span>
+            <span class="oss-fact">
+              <span class="oss-fact-k">{t('oss.language')}</span>
+              <span class="oss-fact-v">{repo.language ?? '—'}</span>
+            </span>
+            <span class="oss-fact">
+              <span class="oss-fact-k">{t('oss.license')}</span>
+              <span class="oss-fact-v" data-nolicense={repo.license === null}>
+                {repo.license ?? t('oss.nolicense')}
+              </span>
+            </span>
+            <span class="oss-fact">
+              <span class="oss-fact-k">{t('oss.updated')}</span>
+              <span class="oss-fact-v">{repo.updatedAt}</span>
+            </span>
+          </span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<p class="oss-snapshot mono">{t('oss.snapshot')} — {OSS_CAPTURED_AT}</p>
+
+<style>
+  .oss-list {
+    list-style: none;
+    margin: clamp(2rem, 4vw, 3rem) 0 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .oss-item {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  @media (min-width: 900px) {
+    .oss-item {
+      grid-template-columns: 14rem minmax(0, 1fr) 15rem;
+      gap: 2rem;
+      align-items: baseline;
+    }
+  }
+
+  .oss-name {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+  }
+
+  .oss-desc {
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  .oss-facts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .oss-fact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .oss-fact-k {
+    color: var(--faint);
+  }
+
+  .oss-fact-v {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A missing license is a fact; present it as one rather than hiding it. */
+  .oss-fact-v[data-nolicense='true'] {
+    color: var(--faint);
+    border-bottom: 1px dotted var(--line-strong);
+  }
+
+  @media (min-width: 900px) {
+    .oss-facts {
+      text-align: right;
+    }
+  }
+
+  /* Role is hand-annotated; flagship work reads first. */
+  .oss-fact-v[data-role='flagship'] {
+    color: var(--ink);
+  }
+
+  .oss-snapshot {
+    margin-top: 1.25rem;
+  }
+</style>

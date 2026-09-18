@@ -21,8 +21,9 @@ env:
 
 # Quality gate — every step below is blocking.
 # Order: npm ci → lint → typecheck → build → verify → theme → artifacts →
-# science → identity → test. Pages is configured, uploaded and deployed only
-# after all ten pass. A failing test means no deployment, without exception.
+# science → visual → identity → test. Pages is configured, uploaded and
+# deployed only after all eleven pass. A failing test means no deployment,
+# without exception.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -59,6 +60,12 @@ jobs:
 
       - name: Check science copy
         run: npm run science
+
+      # v1.6: the visual gate now owns the background contract — the global
+      # canvas must stay inert, themed, inside its opacity band, and must
+      # carry mathematics, biology AND AI. It was missing from this pipeline.
+      - name: Check visual system
+        run: npm run visual
 
       - name: Check public identity
         run: npm run identity

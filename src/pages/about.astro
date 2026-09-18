@@ -1,6 +1,14 @@
 ---
+/**
+ * About (English) — v1.6.
+ *
+ * This page is where the homepage's biography went. The condensed five-node
+ * path (life science → wet lab → computational biology → AI systems → agents)
+ * is rendered here, above the phase-by-phase detail. See the Chinese mirror.
+ */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Timeline from '../components/Timeline.astro';
+import BackgroundTimeline from '../components/BackgroundTimeline.astro';
 import ContactLinks from '../components/ContactLinks.astro';
 import { SITE } from '../config/site';
 import { useT } from '../i18n/ui';
@@ -82,6 +90,11 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
     <section class="about-section">
       <h2 class="h2">{about.backgroundTitle}</h2>
       <p class="lead about-section-lead">{about.backgroundIntro}</p>
+
+      <div class="about-path">
+        <BackgroundTimeline lang={lang} />
+      </div>
+
       <ol class="background-chain">
         {
           about.background.map((step) => (
@@ -226,6 +239,11 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
   }
 
   .about-timeline {
+    margin-top: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  /* The condensed path rail, moved here from the homepage in v1.6. */
+  .about-path {
     margin-top: clamp(1.75rem, 3vw, 2.5rem);
   }
 

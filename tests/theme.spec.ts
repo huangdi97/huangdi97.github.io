@@ -162,7 +162,88 @@ test.describe('mobile appearance control', () => {
       expect(box?.height ?? 0, `${theme} touch target`).toBeGreaterThanOrEqual(44);
     }
 
-    await panel.locator('[data-theme-option="white"]').click();
+    await panel.locator(`[data-theme-option="white"]`).click();
+    expect(await activeTheme(page)).toBe('white');
+  });
+});
+
+/**
+ * The footer follows the theme (v1.6).
+ *
+ * Until v1.5 the footer was `<footer class="site-footer night">`, which forced
+ * the inverted artifact palette onto the bottom of every page. On paper and
+ * white the document fell into a black block the moment you stopped scrolling.
+ * These tests exist so that cannot come back.
+ */
+test.describe('footer follows the theme', () => {
+  /** Relative luminance of an `rgb()` / `rgba()` string. */
+  function luminance(colour: string): number {
+    const parts = colour.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0];
+    const [r, g, b] = parts;
+    const channel = (value: number) => {
+      const c = value / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+  }
+
+  for (const theme of THEMES) {
+    test(`${theme} paints a footer continuous with the page`, async ({ page }) => {
+      await page.addInitScript((value) => {
+        try {
+          localStorage.setItem('haoleilab-theme', value);
+        } catch {
+          /* storage unavailable */
+        }
+      }, theme);
+
+      await visit(page, '/zh/');
+      expect(await activeTheme(page)).toBe(theme);
+
+      const footer = await page.evaluate(() => {
+        const el = document.querySelector('footer.site-footer') as HTMLElement;
+        const own = getComputedStyle(el).backgroundColor;
+        const body = getComputedStyle(document.body).backgroundColor;
+        return {
+          own,
+          body,
+          // Transparent means "the page canvas shows through" — which is the
+          // v1.6 design, and the opposite of a forced dark block.
+          effective: own === 'rgba(0, 0, 0, 0)' ? body : own,
+          hasNightClass: el.classList.contains('night'),
+        };
+      });
+
+      // 1. The forced inversion is gone.
+      expect(footer.hasNightClass, 'footer must not carry the night class').toBe(false);
+
+      // 2. The footer never cuts the page in half.
+      if (theme === 'night') {
+        // Night is dark everywhere because the whole theme is dark — that is
+        // the visitor's choice, not the footer's.
+        expect(luminance(footer.effective)).toBeLessThan(0.06);
+      } else {
+        expect(
+          luminance(footer.effective),
+          `${theme} footer luminance (was #111 before v1.6)`,
+        ).toBeGreaterThan(0.6);
+      }
+
+      // 3. It is genuinely the same surface as the page it closes.
+      expect(footer.effective).toBe(footer.body);
+    });
+  }
+
+  test('the footer keeps language, appearance and contact usable', async ({ page }) => {
+    await visit(page, '/zh/');
+    const footer = page.locator('footer.site-footer');
+
+    await expect(footer.locator('[data-lang-switch]').first()).toBeVisible();
+    await expect(footer.locator('[data-theme-option]')).toHaveCount(3);
+    await expect(footer.locator('[data-contact-id]')).toHaveCount(4);
+
+    // The appearance row is a plain inline control — no popover in the footer.
+    await footer.locator('[data-theme-option="white"]').click();
     expect(await activeTheme(page)).toBe('white');
   });
 });

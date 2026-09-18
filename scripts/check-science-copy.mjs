@@ -170,7 +170,13 @@ for (const file of taiyi) {
 /* -------------------------------------------------------------------------- */
 
 const FORMULA_MARKERS = [/ΔAGE/i, /Fθ/, /ẑ/, /Δx\s*=/, /dx\/dt/];
-const CONCEPT_LABEL = /CONCEPTUAL|概念模型|概念标注|概念图/;
+/**
+ * Case-insensitive on purpose: every label on the site is uppercased by CSS
+ * (`text-transform: uppercase`), so the source text is "Conceptual diagram".
+ * Requiring an uppercase literal here was checking the stylesheet's job, and
+ * it made pages fail for a label they were in fact rendering.
+ */
+const CONCEPT_LABEL = /conceptual|概念模型|概念标注|概念图/i;
 
 for (const file of walk(dist, ['.html'])) {
   const text = readFileSync(file, 'utf8');

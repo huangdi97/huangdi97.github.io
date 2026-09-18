@@ -1,7 +1,25 @@
 ---
+/**
+ * Projects index (Chinese) — v1.6.
+ *
+ * This page took on the evidence half of the homepage in v1.6. The rule the
+ * owner set is: the homepage answers "what have you built?", and this page
+ * answers "show me the evidence". So three blocks moved here from /:
+ *
+ *   NowStrip          current project status, in one rail
+ *   SelectedArtifacts the inverted evidence room — it keeps its dark surface,
+ *                     because here the inversion is semantic (an evidence
+ *                     room), not a decorative footer accident
+ *   Open Source       the full repository table with role, license and dates
+ *
+ * The grid itself is unchanged: all seven projects, filterable.
+ */
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import SectionHeading from '../../../components/SectionHeading.astro';
 import ProjectCard from '../../../components/ProjectCard.astro';
+import NowStrip from '../../../components/NowStrip.astro';
+import SelectedArtifacts from '../../../components/SelectedArtifacts.astro';
+import OpenSourceList from '../../../components/OpenSourceList.astro';
 import { SITE } from '../../../config/site';
 import { useT } from '../../../i18n/ui';
 import { getProjects, FILTER_LABELS, PROJECT_FILTERS } from '../../../lib/projects';
@@ -44,6 +62,9 @@ const collectionLd = {
   ogImage="/og/projects.png"
   jsonLd={collectionLd}
 >
+  <!-- 当前关注：项目页是它唯一合适的家。首页已不再展示。 -->
+  <NowStrip lang={lang} />
+
   <section class="shell section">
     <SectionHeading
       as="h1"
@@ -73,6 +94,21 @@ const collectionLd = {
     </div>
 
     <p class="filter-empty" data-filter-empty hidden>{t('filter.empty')}</p>
+  </section>
+
+  <!-- 证据室：从首页迁来。深色区块在这里是有语义的。 -->
+  <SelectedArtifacts lang={lang} />
+
+  <section class="shell section">
+    <SectionHeading
+      eyebrow={t('oss.eyebrow')}
+      title={t('oss.title')}
+      lead={t('oss.lead')}
+      href={SITE.github}
+      linkLabel={t('oss.all')}
+    />
+
+    <OpenSourceList lang={lang} />
   </section>
 </BaseLayout>
 

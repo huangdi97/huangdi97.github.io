@@ -1,0 +1,224 @@
+---
+/**
+ * Micro Notebook Layer — Layer B of the Global Scientific Canvas (v1.6).
+ *
+ * This is the v1.4.1 ambient repertoire, kept: small notation, ticks,
+ * coordinates, matrix fragments, arrows, axis labels and two-node links. In
+ * v1.6 it is explicitly the *second* layer — detail around the macro plaques,
+ * never the whole story. It is inked at `--science-micro` (0.02–0.07), roughly
+ * a third of the macro layer, so it reads as pencil in the margin rather than
+ * as a competing composition.
+ *
+ * Same discipline as the macro layer: inline SVG, aria-hidden, pointer
+ * events off, every colour a theme token, and most marks dropped on a phone.
+ */
+
+/** Deterministic pseudo-random — identical marks on every build. */
+const rnd = (i: number) => {
+  const v = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+  return v - Math.floor(v);
+};
+
+/** A 3×3 matrix fragment, the smallest legible expression block. */
+const miniMatrix = (x0: number, y0: number, cols: number, rows: number, cell: number) =>
+  Array.from({ length: cols * rows }, (_, k) => {
+    const v = rnd(k * 2.31 + 17);
+    const o = v > 0.86 ? 0.9 : v > 0.7 ? 0.55 : v > 0.55 ? 0.28 : 0.1;
+    return { x: x0 + (k % cols) * cell, y: y0 + Math.floor(k / cols) * cell, o };
+  });
+
+const MINI_A = miniMatrix(16, 16, 3, 3, 11);
+const MINI_B = miniMatrix(16, 14, 1, 4, 11);
+
+const TICKS = [0, 1, 2, 3, 4];
+---
+
+<div class="micro">
+  <!-- ── notation fragments ─────────────────────────────────────────────── -->
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="keep"
+    style="--sci-top:6%;--sci-left:42%;--sci-w:180px"
+  >
+    <svg viewBox="0 0 180 48" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <text x="4" y="32" font-size="26" fill="currentColor">∇L(θ)</text>
+    </svg>
+  </div>
+
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="drop"
+    style="--sci-top:19%;--sci-right:11%;--sci-w:150px"
+  >
+    <svg viewBox="0 0 150 44" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <text x="4" y="30" font-size="22" fill="currentColor">θ ∈ ℝⁿ</text>
+    </svg>
+  </div>
+
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="drop"
+    style="--sci-top:41%;--sci-left:22%;--sci-w:120px"
+  >
+    <svg viewBox="0 0 120 70" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <text x="6" y="52" font-size="52" fill="currentColor">Σ</text>
+    </svg>
+  </div>
+
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="keep"
+    style="--sci-top:51%;--sci-right:7%;--sci-w:170px"
+  >
+    <svg viewBox="0 0 170 44" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <text x="4" y="30" font-size="22" fill="currentColor">X ∈ ℝⁿˣᵖ</text>
+    </svg>
+  </div>
+
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="drop"
+    style="--sci-top:66%;--sci-left:11%;--sci-w:180px"
+  >
+    <svg viewBox="0 0 180 44" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <text x="4" y="30" font-size="20" fill="currentColor">P(H | D)</text>
+    </svg>
+  </div>
+
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="keep"
+    style="--sci-top:94%;--sci-left:17%;--sci-w:230px"
+  >
+    <svg viewBox="0 0 230 44" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <text x="4" y="30" font-size="21" fill="currentColor">zₜ → zₜ₊₁</text>
+    </svg>
+  </div>
+
+  <!-- ── coordinates and ticks ──────────────────────────────────────────── -->
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="drop"
+    style="--sci-top:9%;--sci-right:29%;--sci-w:130px"
+  >
+    <svg viewBox="0 0 130 90" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="currentColor" stroke-width="1.6">
+        <line x1="12" y1="78" x2="118" y2="78" />
+        <line x1="12" y1="78" x2="12" y2="12" />
+        {TICKS.map((i) => <line x1={12 + i * 24} y1="78" x2={12 + i * 24} y2="84" />)}
+        {TICKS.map((i) => <line x1="6" y1={78 - i * 15} x2="12" y2={78 - i * 15} />)}
+      </g>
+      <text x="96" y="94" font-size="14" fill="currentColor">t</text>
+    </svg>
+  </div>
+
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="keep"
+    style="--sci-top:23%;--sci-left:54%;--sci-w:150px"
+  >
+    <svg viewBox="0 0 150 54" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="6" y1="34" x2="144" y2="34" />
+        {TICKS.map((i) => <line x1={6 + i * 34} y1="34" x2={6 + i * 34} y2="42" />)}
+      </g>
+      <text x="6" y="20" font-size="14" fill="currentColor">t → t + 1</text>
+    </svg>
+  </div>
+
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="drop"
+    style="--sci-top:84%;--sci-right:21%;--sci-w:150px"
+  >
+    <svg viewBox="0 0 150 54" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="6" y1="36" x2="120" y2="36" />
+        {TICKS.map((i) => <line x1={6 + i * 26} y1="36" x2={6 + i * 26} y2="44" />)}
+      </g>
+      <text x="6" y="22" font-size="14" fill="currentColor">x(t)</text>
+    </svg>
+  </div>
+
+  <!-- ── matrix fragments ───────────────────────────────────────────────── -->
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="keep"
+    style="--sci-top:15%;--sci-left:7%;--sci-w:90px"
+  >
+    <svg viewBox="0 0 90 66" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <g fill="currentColor" stroke="none">
+        {MINI_A.map((c) => <rect x={c.x} y={c.y} width="9" height="9" fill-opacity={c.o} />)}
+      </g>
+      <g fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M12,12 L6,12 L6,52 L12,52" />
+        <path d="M62,12 L68,12 L68,52 L62,52" />
+      </g>
+    </svg>
+  </div>
+
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="keep"
+    style="--sci-top:70%;--sci-right:37%;--sci-w:70px"
+  >
+    <svg viewBox="0 0 70 70" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <g fill="currentColor" stroke="none">
+        {MINI_B.map((c) => <rect x={c.x} y={c.y} width="9" height="9" fill-opacity={c.o} />)}
+      </g>
+      <g fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M12,10 L6,10 L6,62 L12,62" />
+        <path d="M34,10 L40,10 L40,62 L34,62" />
+      </g>
+    </svg>
+  </div>
+
+  <!-- ── graph links and brackets ───────────────────────────────────────── -->
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="drop"
+    style="--sci-top:36%;--sci-right:43%;--sci-w:170px"
+  >
+    <svg viewBox="0 0 170 60" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="34" y1="30" x2="80" y2="30" stroke-dasharray="4 5" />
+        <line x1="80" y1="30" x2="126" y2="30" />
+      </g>
+      <g fill="currentColor" stroke="none">
+        <circle cx="30" cy="30" r="6" />
+        <circle cx="84" cy="30" r="5" />
+        <circle cx="130" cy="30" r="7" />
+      </g>
+    </svg>
+  </div>
+
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="drop"
+    style="--sci-top:57%;--sci-left:30%;--sci-w:140px"
+  >
+    <svg viewBox="0 0 140 56" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="24" y1="34" x2="116" y2="18" stroke-dasharray="4 6" />
+      </g>
+      <g fill="currentColor" stroke="none">
+        <circle cx="22" cy="34" r="6" />
+        <circle cx="118" cy="18" r="6" />
+      </g>
+    </svg>
+  </div>
+
+  <div
+    class="sci-plaque sci-micro"
+    data-sci-mobile="drop"
+    style="--sci-top:80%;--sci-left:47%;--sci-w:110px"
+  >
+    <svg viewBox="0 0 110 72" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <g fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M22,10 L10,10 L10,62 L22,62" />
+        <path d="M88,10 L100,10 L100,62 L88,62" />
+      </g>
+      <text x="42" y="44" font-size="16" fill="currentColor">∂/∂t</text>
+    </svg>
+  </div>
+</div>

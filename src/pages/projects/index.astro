@@ -1,7 +1,18 @@
 ---
+/**
+ * Projects index (English) — v1.6.
+ *
+ * This page took on the evidence half of the homepage in v1.6: the NOW rail,
+ * the inverted artifact room and the full open-source table. The rule is that
+ * the homepage answers "what have you built?" and this page answers "show me
+ * the evidence". See the Chinese mirror for the full note.
+ */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import ProjectCard from '../../components/ProjectCard.astro';
+import NowStrip from '../../components/NowStrip.astro';
+import SelectedArtifacts from '../../components/SelectedArtifacts.astro';
+import OpenSourceList from '../../components/OpenSourceList.astro';
 import { SITE } from '../../config/site';
 import { useT } from '../../i18n/ui';
 import { getProjects, FILTER_LABELS, PROJECT_FILTERS } from '../../lib/projects';
@@ -44,6 +55,9 @@ const collectionLd = {
   ogImage="/og/projects.png"
   jsonLd={collectionLd}
 >
+  <!-- NOW: the projects page is its only sensible home. Removed from / in v1.6. -->
+  <NowStrip lang={lang} />
+
   <section class="shell section">
     <SectionHeading
       as="h1"
@@ -78,6 +92,21 @@ const collectionLd = {
     </div>
 
     <p class="filter-empty" data-filter-empty hidden>{t('filter.empty')}</p>
+  </section>
+
+  <!-- Evidence room: moved here from the homepage. The inversion is semantic. -->
+  <SelectedArtifacts lang={lang} />
+
+  <section class="shell section">
+    <SectionHeading
+      eyebrow={t('oss.eyebrow')}
+      title={t('oss.title')}
+      lead={t('oss.lead')}
+      href={SITE.github}
+      linkLabel={t('oss.all')}
+    />
+
+    <OpenSourceList lang={lang} />
   </section>
 </BaseLayout>
 

@@ -1,0 +1,222 @@
+---
+/**
+ * Research & Notes preview — three rows, homepage only (v1.6).
+ *
+ * v1.5 answered "what are you thinking about" three separate times on the
+ * homepage: a tiered Research list (five directions), a full Lab Notes log,
+ * and an Open Source table. All three were the same answer, so the homepage
+ * now gives one, and the full records live on /research.
+ *
+ * The three rows are deliberately mixed, because that is what the record
+ * actually contains:
+ *
+ *   1. a research direction   — read from `data/research.ts` (concept tier)
+ *   2. and 3. two lab notes   — read from `data/notes.ts`
+ *
+ * Nothing is invented for this component. If the underlying record changes,
+ * this preview changes with it. A concept-tier direction is labelled
+ * "Concept / Not Started" here, exactly as it is everywhere else — it is never
+ * dressed up as an active build.
+ */
+import { useT, localizedPath, type Lang } from '../i18n/ui';
+import { getResearch } from '../data/research';
+import { getLabNotes, NOTE_KIND_LABELS } from '../data/notes';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const direction = getResearch(lang).find((area) => area.tier === 'concept');
+const notes = getLabNotes(2);
+
+type Entry = {
+  id: string;
+  label: string;
+  state: string;
+  title: string;
+  body: string;
+  href: string | null;
+};
+
+const entries: Entry[] = [];
+
+if (direction) {
+  entries.push({
+    id: direction.id,
+    label: t('rnotes.kind.direction'),
+    state: t('rnotes.state.concept'),
+    title: direction.title,
+    body: direction.question,
+    href: `${localizedPath(lang, '/research')}#${direction.slug}`,
+  });
+}
+
+for (const note of notes) {
+  entries.push({
+    id: note.id,
+    label: NOTE_KIND_LABELS[note.kind][lang],
+    state: note.date,
+    title: note.title[lang],
+    body: note.summary[lang],
+    href: note.href ? localizedPath(lang, note.href) : null,
+  });
+}
+---
+
+<section class="shell section" id="notes">
+  <div class="rn-head">
+    <div class="rn-head-copy">
+      <p class="eyebrow">{t('rnotes.eyebrow')}</p>
+      <h2 class="h2 rn-title">{t('rnotes.title')}</h2>
+      <p class="rn-lead">{t('rnotes.lead')}</p>
+    </div>
+
+    <a href={localizedPath(lang, '/research')} class="link-arrow rn-all">
+      {t('rnotes.all')}
+      <span class="arrow" aria-hidden="true">→</span>
+    </a>
+  </div>
+
+  <ol class="rn-list">
+    {
+      entries.map((entry, i) => (
+        <li class="rn-item">
+          <p class="rn-num index-num">{String(i + 1).padStart(2, '0')}</p>
+
+          <div class="rn-meta">
+            <p class="rn-label mono">{entry.label}</p>
+            <p class="rn-state mono">{entry.state}</p>
+          </div>
+
+          <div class="rn-copy">
+            {entry.href ? (
+              <a href={entry.href} class="rn-title-link">
+                <span class="rn-name">{entry.title}</span>
+                <span class="rn-arrow" aria-hidden="true">
+                  →
+                </span>
+              </a>
+            ) : (
+              <span class="rn-name">{entry.title}</span>
+            )}
+            <p class="rn-body">{entry.body}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<style>
+  .rn-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+  }
+
+  .rn-head-copy {
+    max-width: 56ch;
+  }
+
+  .rn-title {
+    margin-top: 0.75rem;
+  }
+
+  .rn-lead {
+    margin-top: 0.625rem;
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  .rn-list {
+    list-style: none;
+    margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .rn-item {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0.25rem 1rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  @media (min-width: 900px) {
+    .rn-item {
+      grid-template-columns: 3rem 12rem minmax(0, 1fr);
+      gap: 2rem;
+      align-items: baseline;
+    }
+  }
+
+  .rn-meta {
+    min-width: 0;
+  }
+
+  .rn-label {
+    color: var(--faint);
+  }
+
+  .rn-state {
+    margin-top: 0.3rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rn-copy {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  @media (min-width: 900px) {
+    .rn-copy {
+      grid-column: 3;
+    }
+  }
+
+  .rn-title-link {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.5rem;
+  }
+
+  .rn-name {
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
+    letter-spacing: -0.014em;
+    line-height: 1.35;
+  }
+
+  .rn-title-link:hover .rn-name {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+
+  .rn-arrow {
+    color: var(--faint);
+    transition: transform var(--dur-base) var(--ease);
+  }
+
+  .rn-title-link:hover .rn-arrow {
+    transform: translateX(4px);
+  }
+
+  .rn-body {
+    margin: 0.4rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+</style>

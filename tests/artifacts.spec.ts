@@ -1,6 +1,11 @@
 /**
  * Selected Artifacts tests.
  *
+ * v1.6 moved this room from the homepage to /projects. The homepage answers
+ * "what have you built"; the room answers "show me the evidence", and that
+ * question belongs next to the case studies. Every test below therefore runs
+ * against /zh/projects/.
+ *
  * The room only works if the mosaic actually lays out, every tile shows where
  * it came from, and the enlarge action is a real dialog. The grid assertion
  * also guards a class of regression: the cell widths are declared in
@@ -19,7 +24,7 @@ const ISO_DATE = /\d{4}-\d{2}-\d{2}/;
 
 test.describe('artifact room', () => {
   test('renders five real artifacts with sources and snapshot dates', async ({ page }) => {
-    await visit(page, '/zh/');
+    await visit(page, '/zh/projects/');
 
     const cells = page.locator('#artifacts .ar-cell');
     await expect(cells).toHaveCount(5);
@@ -44,7 +49,7 @@ test.describe('artifact room', () => {
     // Below 768px the grid is intentionally a single column, so no span applies.
     test.skip(testInfo.project.name === 'mobile', 'single-column layout below 768px');
 
-    await visit(page, '/zh/');
+    await visit(page, '/zh/projects/');
     await page.locator('#artifacts').scrollIntoViewIfNeeded();
 
     const spans = await page.locator('#artifacts .ar-cell').evaluateAll((nodes) =>
@@ -63,7 +68,7 @@ test.describe('artifact room', () => {
 
   test('collapses to one column on mobile without horizontal overflow', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'desktop', 'desktop asserts the mosaic spans');
-    await visit(page, '/zh/');
+    await visit(page, '/zh/projects/');
     await page.locator('#artifacts').scrollIntoViewIfNeeded();
 
     const spans = await page.locator('#artifacts .ar-cell').evaluateAll((nodes) =>
@@ -80,12 +85,12 @@ test.describe('artifact room', () => {
   });
 
   test('no artifact fabricates a screenshot', async ({ page }) => {
-    await visit(page, '/zh/');
+    await visit(page, '/zh/projects/');
     await expect(page.locator('#artifacts img')).toHaveCount(0);
   });
 
   test('the room is the single inverted block on the page', async ({ page }) => {
-    await visit(page, '/zh/');
+    await visit(page, '/zh/projects/');
 
     const room = await page.locator('#artifacts').evaluate((node) => getComputedStyle(node).backgroundColor);
     const canvas = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -96,7 +101,7 @@ test.describe('artifact room', () => {
   });
 
   test('enlarge opens a native dialog, Escape closes it, focus returns', async ({ page }) => {
-    await visit(page, '/zh/');
+    await visit(page, '/zh/projects/');
 
     const cell = page.locator('#artifacts .ar-cell').first();
     const trigger = cell.locator('[data-artifact-open]');
@@ -119,7 +124,7 @@ test.describe('artifact room', () => {
   });
 
   test('every artifact is reachable by keyboard and labelled', async ({ page }) => {
-    await visit(page, '/zh/');
+    await visit(page, '/zh/projects/');
 
     const cells = page.locator('#artifacts .ar-cell');
     await expect(cells).toHaveCount(5);

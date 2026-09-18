@@ -246,14 +246,16 @@ entries.forEach((entry, index) => {
 /* Built output                                                               */
 /* -------------------------------------------------------------------------- */
 
-// The artifacts room is a home-page section; only the two home pages carry it.
-const pages = [join(dist, 'index.html'), join(dist, 'zh', 'index.html')].filter((p) =>
-  existsSync(p),
+// v1.6: the artifact room is no longer a homepage section. The homepage answers
+// "what have you built"; the evidence room answers "show me the evidence", and
+// that question belongs to /projects. Both locales carry it there.
+const pages = [join(dist, 'projects', 'index.html'), join(dist, 'zh', 'projects', 'index.html')].filter(
+  (p) => existsSync(p),
 );
 
 checks += 1;
 if (pages.length === 0) {
-  fail('dist has no built home pages — run npm run build first');
+  fail('dist has no built projects pages — run npm run build first');
 } else {
   for (const page of pages) {
     const html = readFileSync(page, 'utf8');
@@ -272,7 +274,17 @@ if (pages.length === 0) {
       }
     }
   }
-  notes.push(`${pages.length} home page(s) checked for artifact render + source links`);
+  notes.push(`${pages.length} projects page(s) checked for artifact render + source links`);
+}
+
+/* And the homepage must NOT carry it any more — that is the whole point of the
+   v1.6 reduction, and it is exactly the kind of thing that creeps back. */
+for (const home of [join(dist, 'index.html'), join(dist, 'zh', 'index.html')]) {
+  if (!existsSync(home)) continue;
+  checks += 1;
+  if (readFileSync(home, 'utf8').includes('id="artifacts"')) {
+    fail(`${relative(root, home)} renders the artifact room again — it belongs on /projects`);
+  }
 }
 
 /* -------------------------------------------------------------------------- */

@@ -222,6 +222,36 @@ const en = {
   'mathbio.figureCaption':
     'One lens I keep returning to: observation, representation, dynamics, decision — then a new observation.',
 
+  /* v1.6 homepage — the merged "Mathematics × Biology × AI" section. This is
+     the section that answers "how do you read a problem?", so the copy is
+     three short paragraphs and one figure, not a tour of every diagram. */
+  'mbai.eyebrow': 'Mathematics × Biology × AI',
+  'mbai.title': 'Living systems have state, change, noise and intervention.',
+  'mbai.body.1':
+    'Biology supplies the observations. Mathematics supplies the structure that describes them: state, probability, dynamics and constraint.',
+  'mbai.body.2':
+    'AI learns the parts that cannot yet be written down as an equation.',
+  'mbai.body.3': 'Most of the problems I work on reduce to the same three questions.',
+  'mbai.equation.label': 'State transition',
+  'mbai.equation.caption':
+    'The current state, an action, the next state. A lens for framing an intervention, not a claim that any system here implements this expression.',
+
+  /* v1.6 homepage — Research & Notes, a three-row compact view. */
+  'rnotes.eyebrow': 'Research & Notes',
+  'rnotes.title': 'Research & Notes',
+  'rnotes.lead': 'What I am thinking about now — a direction, a note, a release.',
+  'rnotes.all': 'All research directions',
+  'rnotes.kind.direction': 'Research Direction',
+  'rnotes.state.concept': 'Concept / Not Started',
+  'rnotes.entryHint': 'Read the case study',
+  'rnotes.snapshot': 'Compiled from the research and notes records',
+
+  /* v1.6 homepage — the closing contact band. */
+  'home.contact.eyebrow': 'About / Contact',
+  'home.contact.line':
+    'AI systems and agents, with a life-science and computational biology background.',
+  'home.contact.more': 'More about how I work',
+
   'equation.eyebrow': 'Equation',
   'equation.label': 'Conceptual model',
   'equation.body':
@@ -452,6 +482,32 @@ const zh: Dict = {
   'mathbio.q3': '一次干预会把它带向哪里？',
   'mathbio.figureCaption':
     '一个我反复使用的视角：观测、表征、动力学、决策，然后回到新的观测。',
+
+  /* v1.6 首页 —— 合并后的「数学 × 生物 × AI」板块。这个板块回答的是
+     「你如何理解一个问题」，所以是三段短文加一张主图，而不是图集巡览。 */
+  'mbai.eyebrow': '数学 × 生物 × AI',
+  'mbai.title': '生命系统具有状态、变化、噪声与干预。',
+  'mbai.body.1': '生物提供观测；数学提供描述它们的结构：状态、概率、动力学和约束。',
+  'mbai.body.2': 'AI 帮助学习那些无法被完整写成方程的部分。',
+  'mbai.body.3': '我经常把问题重新表达为同样的三个提问。',
+  'mbai.equation.label': '状态转移',
+  'mbai.equation.caption':
+    '当前状态、一个动作、下一个状态。这是用于界定干预的视角，不是在声称本站任何系统都实现了这个表达式。',
+
+  /* v1.6 首页 —— 研究与札记，三行精简视图。 */
+  'rnotes.eyebrow': '研究与札记',
+  'rnotes.title': '研究与札记',
+  'rnotes.lead': '当前在思考什么——一个方向、一条札记、一次发布。',
+  'rnotes.all': '全部研究方向',
+  'rnotes.kind.direction': '研究方向',
+  'rnotes.state.concept': '概念 / 尚未开始',
+  'rnotes.entryHint': '查看案例',
+  'rnotes.snapshot': '整理自研究方向与札记记录',
+
+  /* v1.6 首页 —— 收尾的联系板块。 */
+  'home.contact.eyebrow': '关于 / 联系',
+  'home.contact.line': 'AI 系统与智能体，来自生命科学与计算生物学背景。',
+  'home.contact.more': '进一步了解我的工作方式',
 
   'equation.eyebrow': '公式',
   'equation.label': '概念模型',

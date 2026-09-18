@@ -26,6 +26,10 @@
     "visual": "node scripts/check-visual-system.mjs",
     "identity": "node scripts/check-public-identity.mjs",
     "resume:pdf": "npm run build && node scripts/generate-resume-pdfs.mjs",
+    "qa:height": "node scripts/qa-height.mjs",
+    "qa:crops": "node scripts/qa-crops.mjs",
+    "qa:shot": "node scripts/qa-shot.mjs",
+    "qa:canvas": "node scripts/qa-canvas-report.mjs",
     "gate": "npm run lint && npm run typecheck && npm run build && npm run verify && npm run theme && npm run artifacts && npm run science && npm run visual && npm run identity && npm run test"
   },
   "dependencies": {

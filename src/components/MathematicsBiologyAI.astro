@@ -1,0 +1,195 @@
+---
+/**
+ * Mathematics × Biology × AI — the merged homepage section (v1.6).
+ *
+ * v1.5 had two sections answering one question. "Background" told the story of
+ * a path (life science → wet lab → computational biology → AI systems), and
+ * "Mathematical Biology" told the story of a method, and both ended up saying
+ * "mathematics, biology and AI, together". On a homepage that is one section,
+ * not two.
+ *
+ * So this is what the homepage keeps:
+ *
+ *   · one heading;
+ *   · three short paragraphs — no more;
+ *   · one signature figure (the concept loop), not four scientific figures;
+ *   · the state-transition expression, once, fused into the figure's own
+ *     footnote instead of occupying a section of its own;
+ *   · the three questions the whole method reduces to.
+ *
+ * What moved out and where:
+ *
+ *   · BackgroundTimeline  → /about  (it is biography, and belongs with it)
+ *   · CellLandscape, ExpressionMatrix, BioNetwork, PhasePortrait → /research
+ *   · EquationNote        → /research
+ *
+ * Nothing here claims a validated model, a digital twin or a clinical result.
+ */
+import { useT, type Lang } from '../i18n/ui';
+import ConceptLoop from './ConceptLoop.astro';
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const questions = [t('mathbio.q1'), t('mathbio.q2'), t('mathbio.q3')];
+
+const spoken =
+  lang === 'zh'
+    ? 'z 下标 t+1 等于 F 下标 theta 作用于 z 下标 t 与 a 下标 t'
+    : 'z sub t plus one equals F sub theta of z sub t and a sub t';
+---
+
+<section class="shell section" id="mathbio">
+  <div class="mb-head">
+    <p class="eyebrow">{t('mbai.eyebrow')}</p>
+    <h2 class="h2 mb-title">{t('mbai.title')}</h2>
+  </div>
+
+  <div class="mb-copy">
+    <p class="body-muted">{t('mbai.body.1')}</p>
+    <p class="body-muted">{t('mbai.body.2')}</p>
+    <p class="body-muted mb-copy-last">{t('mbai.body.3')}</p>
+  </div>
+
+  <div class="mb-signature">
+    <ConceptLoop lang={lang} />
+  </div>
+
+  <div class="mb-foot">
+    <aside class="mb-equation">
+      <p class="mb-equation-label mono">{t('mbai.equation.label')}</p>
+      <p class="mb-equation-math">
+        <math
+          xmlns="http://www.w3.org/1998/Math/MathML"
+          display="inline"
+          aria-label={spoken}
+        >
+          <mrow>
+            <msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+            <mo>=</mo>
+            <msub><mi>F</mi><mi>θ</mi></msub>
+            <mo>(</mo>
+            <msub><mi>z</mi><mi>t</mi></msub>
+            <mo>,</mo>
+            <msub><mi>a</mi><mi>t</mi></msub>
+            <mo>)</mo>
+          </mrow>
+        </math>
+      </p>
+      <p class="mb-equation-caption">{t('mbai.equation.caption')}</p>
+    </aside>
+
+    <div class="mb-questions">
+      <p class="mb-questions-lead mono">{t('mathbio.questions')}</p>
+      <ol class="mb-list">
+        {
+          questions.map((q, i) => (
+            <li class="mb-q">
+              <span class="mb-q-num index-num">{String(i + 1).padStart(2, '0')}</span>
+              <span class="mb-q-text">{q}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+</section>
+
+<style>
+  .mb-head {
+    max-width: 60ch;
+  }
+
+  .mb-title {
+    margin-top: 0.75rem;
+  }
+
+  .mb-copy {
+    display: grid;
+    gap: 1rem 3rem;
+    margin-top: clamp(1.5rem, 3vw, 2.25rem);
+    max-width: 68ch;
+  }
+
+  @media (min-width: 900px) {
+    /* Two columns of short copy keeps the section from growing into the
+       four-paragraph essay it used to be. */
+    .mb-copy {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: none;
+    }
+
+    .mb-copy-last {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .mb-signature {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  .mb-foot {
+    display: grid;
+    gap: 2rem;
+    margin-top: clamp(2rem, 4vw, 3rem);
+    padding-top: clamp(1.5rem, 3vw, 2rem);
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 900px) {
+    .mb-foot {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 4rem;
+      align-items: start;
+    }
+  }
+
+  .mb-equation-label {
+    color: var(--faint);
+  }
+
+  .mb-equation-math {
+    margin: 0.75rem 0 0;
+    font-family: var(--font-mono);
+    font-size: clamp(1.125rem, 2.2vw, 1.5rem);
+    color: var(--ink);
+    overflow-x: auto;
+  }
+
+  .mb-equation-caption {
+    margin: 0.875rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 46ch;
+  }
+
+  .mb-questions-lead {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .mb-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mb-q {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .mb-q-text {
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
+    letter-spacing: -0.012em;
+    line-height: 1.4;
+  }
+</style>

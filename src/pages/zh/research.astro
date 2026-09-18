@@ -1,13 +1,41 @@
 ---
+/**
+ * Research (Chinese) — v1.6.
+ *
+ * The homepage now shows three research rows and nothing more; the full record
+ * lives here, which is where a reader who wants the diagrams has actually
+ * chosen to go:
+ *
+ *   research areas        the five directions, active and concept tiered
+ *   mathematical biology  the full figure set (landscape, matrix, network,
+ *                         phase portrait) plus the concept loop
+ *   conceptual model      the state-transition expression, in full
+ *   lab notes             the complete dated log
+ *
+ * The tier split is a truth claim, not a style choice: a direction tied to
+ * inspectable code is never rendered as the twin of a written concept. TaiYi
+ * Lingjing appears in the concept tier and stays "Concept / Not Started".
+ */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import ResearchArea from '../../components/ResearchArea.astro';
+import MathematicalBiology from '../../components/MathematicalBiology.astro';
+import EquationNote from '../../components/EquationNote.astro';
+import LabNotes from '../../components/LabNotes.astro';
 import { getResearch } from '../../data/research';
 import { useT } from '../../i18n/ui';
 
 const lang = 'zh' as const;
 const t = useT(lang);
 const areas = getResearch(lang);
+
+/**
+ * 层级划分随列表一起迁移。它原先在首页，若只搬列表而丢掉划分，就等于抹掉了一个
+ * 事实判断：有可检视代码的方向，会被渲染成与书面概念同等完成度。
+ * active 指可以打开代码的方向；concept 指目标系统尚不存在的方向。
+ */
+const activeAreas = areas.filter((area) => area.tier === 'active');
+const conceptAreas = areas.filter((area) => area.tier === 'concept');
 
 const path = '/zh/research/';
 const enPath = '/research/';
@@ -32,13 +60,49 @@ const zhPath = '/zh/research/';
     />
 
     <div class="research-body">
-      {areas.map((area) => <ResearchArea area={area} lang={lang} headingLevel="h2" />)}
+      <div class="research-tier">
+        <p class="research-tier-label mono">{t('research.active')}</p>
+        <div class="research-group">
+          {activeAreas.map((area) => <ResearchArea area={area} lang={lang} headingLevel="h2" />)}
+        </div>
+      </div>
+
+      <div class="research-tier">
+        <p class="research-tier-label mono">{t('research.concepts')}</p>
+        <div class="research-group">
+          {conceptAreas.map((area) => <ResearchArea area={area} lang={lang} headingLevel="h2" />)}
+        </div>
+      </div>
     </div>
   </section>
+
+  <!-- 数学 × 生物：完整图集从首页迁到这里。 -->
+  <MathematicalBiology lang={lang} />
+
+  <div class="shell">
+    <EquationNote lang={lang} />
+  </div>
+
+  <!-- 研究札记：完整日志从首页迁到这里。 -->
+  <LabNotes lang={lang} />
 </BaseLayout>
 
 <style>
   .research-body {
     margin-top: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  .research-tier + .research-tier {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .research-tier-label {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line-strong);
+    color: var(--faint);
+  }
+
+  .research-group {
+    margin-top: clamp(1rem, 2vw, 1.5rem);
   }
 </style>

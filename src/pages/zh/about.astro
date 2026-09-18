@@ -1,6 +1,18 @@
 ---
+/**
+ * About (Chinese) — v1.6.
+ *
+ * This page is where the homepage's biography went. The homepage used to carry
+ * "Background" as a section of its own; a path from life science to AI systems
+ * is biography, so it belongs here, next to the rest of it.
+ *
+ * BackgroundTimeline renders the condensed five-node path (life science → wet
+ * lab → computational biology → AI systems → agents); the chain below it
+ * expands the same phases in words. One heading, two levels of detail.
+ */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Timeline from '../../components/Timeline.astro';
+import BackgroundTimeline from '../../components/BackgroundTimeline.astro';
 import ContactLinks from '../../components/ContactLinks.astro';
 import { SITE } from '../../config/site';
 import { useT } from '../../i18n/ui';
@@ -81,6 +93,11 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
     <section class="about-section">
       <h2 class="h2">{about.backgroundTitle}</h2>
       <p class="lead about-section-lead">{about.backgroundIntro}</p>
+
+      <div class="about-path">
+        <BackgroundTimeline lang={lang} />
+      </div>
+
       <ol class="background-chain">
         {
           about.background.map((step) => (
@@ -225,6 +242,11 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
   }
 
   .about-timeline {
+    margin-top: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  /* The condensed path rail, moved here from the homepage in v1.6. */
+  .about-path {
     margin-top: clamp(1.75rem, 3vw, 2.5rem);
   }
 

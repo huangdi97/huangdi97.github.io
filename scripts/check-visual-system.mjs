@@ -9,9 +9,17 @@
  *      real status. No MathML, no formula block, no notation-heavy artwork.
  *   2. CONCEPTUAL SCIENCE VISUAL — ProjectScientificVisual.astro
  *      case-study only. This is the one place a formula may be the subject.
- *   3. AMBIENT SCIENCE LAYER     — ScientificAmbient.astro
- *      page atmosphere. aria-hidden, pointer-events:none, no canvas, no WebGL,
- *      no image, no network request, and inside the theme's opacity budget.
+ *   3. GLOBAL SCIENTIFIC CANVAS  — GlobalScientificCanvas.astro (v1.6)
+ *      page atmosphere, mounted once in BaseLayout behind the whole document.
+ *      aria-hidden, pointer-events:none, no canvas, no WebGL, no image, no
+ *      network request, inside the theme's opacity budget — and, new in v1.6,
+ *      required to carry mathematics, biology AND AI motifs at once, so the
+ *      field can never quietly collapse into "just formulas".
+ *
+ *      v1.4/v1.5 kept this field as section-scoped decoration at 2.5–5.5%
+ *      opacity. The owner's verdict was that nobody could see it, so the
+ *      budget is now deliberately higher (macro 0.06–0.18) and the gate
+ *      enforces a *floor* as well as a ceiling: too faint is a failure too.
  *
  * It also re-checks every cover against the evidence layer, so a cover can
  * never quietly claim a status the truth layer does not support.
@@ -30,8 +38,10 @@ const contentRoot = join(src, 'content', 'projects');
 const problems = [];
 const notes = [];
 let checks = 0;
-/** Per-zone ambient strength, read from the component and reused in the budget. */
-let ambientZones = {};
+/** The four canvas opacity tokens, checked against a floor and a ceiling. */
+const SCIENCE_TOKENS = ['science-macro', 'science-micro', 'science-grid', 'science-accent'];
+/** How much lower notation is inked than large line art, read from the CSS. */
+let notationFactor = 0;
 
 function fail(message) {
   problems.push(message);
@@ -58,14 +68,18 @@ const FORMULA_WORDS = /\b(?:argmin|argmax|softmax|log-likelihood)\b/i;
 
 const COVER = join(src, 'components', 'ProjectCover.astro');
 const SCIENCE = join(src, 'components', 'ProjectScientificVisual.astro');
-const AMBIENT = join(src, 'components', 'ScientificAmbient.astro');
+const CANVAS = join(src, 'components', 'GlobalScientificCanvas.astro');
+const MACRO = join(src, 'components', 'MacroScienceLayer.astro');
+const MICRO = join(src, 'components', 'MicroNotebookLayer.astro');
 const CARD = join(src, 'components', 'ProjectCard.astro');
 const SHOWCASE = join(src, 'components', 'ProjectShowcase.astro');
 
 for (const [name, path] of [
   ['ProjectCover.astro', COVER],
   ['ProjectScientificVisual.astro', SCIENCE],
-  ['ScientificAmbient.astro', AMBIENT],
+  ['GlobalScientificCanvas.astro', CANVAS],
+  ['MacroScienceLayer.astro', MACRO],
+  ['MicroNotebookLayer.astro', MICRO],
 ]) {
   checks += 1;
   if (!existsSync(path)) fail(`${name} is missing — the three visual types must stay separate`);
@@ -120,14 +134,21 @@ for (const page of caseStudyPages) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 1. Ambient layer discipline                                                */
+/* 1. Global scientific canvas discipline                                     */
 /* -------------------------------------------------------------------------- */
 
-if (existsSync(AMBIENT)) {
-  const ambientSource = readFileSync(AMBIENT, 'utf8');
+const canvasFiles = [
+  ['GlobalScientificCanvas.astro', CANVAS],
+  ['MacroScienceLayer.astro', MACRO],
+  ['MicroNotebookLayer.astro', MICRO],
+];
+
+for (const [name, path] of canvasFiles) {
+  if (!existsSync(path)) continue;
+  const source = readFileSync(path, 'utf8');
 
   /* Comments say "no WebGL" on purpose; only the code can actually use it. */
-  const ambient = ambientSource.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '');
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '');
 
   for (const [label, pattern] of [
     ['canvas', /<canvas|getContext\(/i],
@@ -138,59 +159,93 @@ if (existsSync(AMBIENT)) {
     ['a network fetch', /\bfetch\(|XMLHttpRequest|importScripts/],
   ]) {
     checks += 1;
-    if (pattern.test(ambient)) fail(`ScientificAmbient.astro uses ${label} — it must be inline SVG only`);
+    if (pattern.test(code)) fail(`${name} uses ${label} — it must be inline SVG only`);
+  }
+}
+
+if (existsSync(CANVAS)) {
+  const canvas = readFileSync(CANVAS, 'utf8');
+
+  checks += 1;
+  if (!/aria-hidden="true"/.test(canvas)) {
+    fail('GlobalScientificCanvas.astro must render aria-hidden="true"');
+  }
+  checks += 1;
+  if (!/data-global-scientific-canvas/.test(canvas)) {
+    fail('GlobalScientificCanvas.astro must carry data-global-scientific-canvas');
+  }
+  checks += 1;
+  if (!/MacroScienceLayer/.test(canvas) || !/MicroNotebookLayer/.test(canvas)) {
+    fail('GlobalScientificCanvas.astro must compose the macro and micro layers');
+  }
+}
+
+if (existsSync(MACRO)) {
+  const macro = readFileSync(MACRO, 'utf8');
+
+  /* The whole point of v1.6: mathematics AND biology AND AI, at once. A field
+     made only of formulas is the failure mode this check exists for. */
+  const kinds = new Set([...macro.matchAll(/data-sci-kind="(math|biology|ai)"/g)].map((m) => m[1]));
+  for (const kind of ['math', 'biology', 'ai']) {
+    checks += 1;
+    if (!kinds.has(kind)) {
+      fail(`MacroScienceLayer.astro has no "${kind}" motif — the field must carry all three`);
+    }
   }
 
   checks += 1;
-  if (!/aria-hidden="true"/.test(ambient)) {
-    fail('ScientificAmbient.astro must render aria-hidden="true"');
+  if (!/data-sci-mobile='drop'|data-sci-mobile="drop"/.test(macro)) {
+    fail('macro plaques must declare data-sci-mobile so a phone gets fewer, larger motifs');
   }
   checks += 1;
-  if (!/data-scientific-ambient/.test(ambient)) {
-    fail('ScientificAmbient.astro must carry data-scientific-ambient');
+  if (!/@media \(prefers-reduced-motion: reduce\)/.test(macro)) {
+    fail('the macro drift must be declared off under prefers-reduced-motion');
   }
-  checks += 1;
-  if (!/pointer-events:\s*none/.test(ambient)) {
-    fail('ScientificAmbient.astro must set pointer-events: none');
-  }
-  checks += 1;
-  if (!/opacity:\s*calc\(var\(--ambient-base\)\s*\*\s*var\(--ambient-zone\)\)/.test(ambient)) {
-    fail('ambient opacity must be calc(var(--ambient-base) * var(--ambient-zone))');
-  }
-  checks += 1;
-  if (!/data-ambient-mobile='drop'/.test(ambient)) {
-    fail('ambient elements must declare data-ambient-mobile so small screens show fewer marks');
-  }
-  checks += 1;
-  if (!/@media \(prefers-reduced-motion: reduce\)/.test(ambient)) {
-    fail('ambient drift must be disabled under prefers-reduced-motion');
-  }
-  checks += 1;
-  if (!/z-index:\s*-1/.test(ambient)) fail('ambient must sit behind content (z-index: -1)');
 
-  /* Per-zone strength, reused for the opacity budget below. */
-  const zoneBlock = /const ZONE_STRENGTH[\s\S]*?\n\};/.exec(ambient);
+  /* Biology may never be only a formula, and AI may never be a robot head.
+     Comments are stripped first: this file *says* "AI is never a robot, a
+     brain or a circuit head", and that sentence must not trip the check. */
+  const macroCode = macro.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '');
   checks += 1;
-  if (!zoneBlock) fail('ZONE_STRENGTH table not found in ScientificAmbient.astro');
-  if (zoneBlock) {
-    for (const m of zoneBlock[0].matchAll(/(\w+):\s*([0-9.]+),/g)) ambientZones[m[1]] = Number(m[2]);
+  if (/robot|circuit head|\bbrain\b/i.test(macroCode)) {
+    fail('MacroScienceLayer.astro uses a robot / brain / circuit-head shorthand for AI');
   }
 }
 
 /* -------------------------------------------------------------------------- */
-/* 2. Ambient opacity budget per theme                                        */
+/* 2. Canvas opacity budget per theme                                         */
 /* -------------------------------------------------------------------------- */
 
 const cssPath = join(src, 'styles', 'global.css');
 const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : '';
 
+/**
+ * Floor AND ceiling per token, per theme. v1.6 raised both: the v1.4 numbers
+ * were a "safe design" that nobody could see, which the owner rejected
+ * outright. Too faint now fails this gate exactly like too loud does.
+ */
 const BUDGET = {
-  paper: [0.025, 0.055],
-  white: [0.018, 0.045],
-  night: [0.04, 0.08],
+  paper: {
+    'science-macro': [0.08, 0.14],
+    'science-micro': [0.02, 0.05],
+    'science-grid': [0.02, 0.04],
+    'science-accent': [0.05, 0.12],
+  },
+  white: {
+    'science-macro': [0.06, 0.11],
+    'science-micro': [0.015, 0.04],
+    'science-grid': [0.015, 0.04],
+    'science-accent': [0.04, 0.1],
+  },
+  night: {
+    'science-macro': [0.1, 0.18],
+    'science-micro': [0.035, 0.07],
+    'science-grid': [0.03, 0.06],
+    'science-accent': [0.08, 0.16],
+  },
 };
 
-for (const [theme, [min, max]] of Object.entries(BUDGET)) {
+for (const [theme, tokens] of Object.entries(BUDGET)) {
   const start = css.indexOf(`[data-theme='${theme}'] {`);
   checks += 1;
   if (start === -1) {
@@ -198,22 +253,56 @@ for (const [theme, [min, max]] of Object.entries(BUDGET)) {
     continue;
   }
   const slice = css.slice(start, css.indexOf('}', start));
-  const match = /--ambient-base:\s*([0-9.]+)\s*;/.exec(slice);
-  checks += 1;
-  if (!match) {
-    fail(`[${theme}] does not define --ambient-base`);
-    continue;
-  }
-  const base = Number(match[1]);
-  for (const [zone, mult] of Object.entries(ambientZones)) {
+
+  for (const token of SCIENCE_TOKENS) {
+    const [min, max] = tokens[token];
+    const match = new RegExp(`--${token}:\\s*([0-9.]+)\\s*;`).exec(slice);
     checks += 1;
-    const effective = base * mult;
-    if (effective > max + 1e-9) {
-      fail(`[${theme}] ambient ${zone} is ${effective.toFixed(4)} — above the ${max} ceiling`);
-    } else if (effective < min - 1e-9) {
-      fail(`[${theme}] ambient ${zone} is ${effective.toFixed(4)} — below the ${min} floor`);
+    if (!match) {
+      fail(`[${theme}] does not define --${token}`);
+      continue;
+    }
+    const value = Number(match[1]);
+    if (value > max + 1e-9) {
+      fail(`[${theme}] --${token} is ${value} — above the ${max} ceiling`);
+    } else if (value < min - 1e-9) {
+      fail(`[${theme}] --${token} is ${value} — below the ${min} floor (invisible background)`);
     } else {
-      notes.push(`[${theme}] ambient ${zone}: ${effective.toFixed(4)}`);
+      notes.push(`[${theme}] ${token}: ${value}`);
+    }
+  }
+}
+
+/* Notation must stay a step quieter than the composition around it: if a
+   formula is inked at the same weight as a 600px trajectory, the page reads as
+   a maths wallpaper. */
+const notationMatch = /\.sci-notation\s*\{[^}]*opacity:\s*calc\(var\(--science-macro\)\s*\*\s*([0-9.]+)\)/.exec(
+  css,
+);
+checks += 1;
+if (!notationMatch) {
+  fail('global.css must ink .sci-notation at calc(var(--science-macro) * factor)');
+} else {
+  notationFactor = Number(notationMatch[1]);
+  checks += 1;
+  if (notationFactor > 0.7) {
+    fail(`notation factor is ${notationFactor} — it must stay at or below 0.7 of the macro layer`);
+  } else {
+    notes.push(`notation inked at ${notationFactor} × macro`);
+  }
+}
+
+/* No component may hard-code an alpha for the field. */
+for (const [name, path] of canvasFiles) {
+  if (!existsSync(path)) continue;
+  const code = readFileSync(path, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
+  for (const m of code.matchAll(/opacity:\s*([^;]+);/g)) {
+    checks += 1;
+    const value = m[1].trim();
+    if (!/^var\(--science-|^calc\(var\(--science-/.test(value)) {
+      fail(`${name} hard-codes an opacity (${value}) — it must read a --science-* token`);
     }
   }
 }
@@ -399,41 +488,59 @@ for (const rel of HOME_PAGES) {
     }
   });
 
-  /* ---- ambient ---- */
-  const layers = [...html.matchAll(/<div class="ambient"[^>]*data-ambient-zone="([a-z]+)"([^>]*)>/g)];
+  /* ---- global scientific canvas ---- */
   checks += 1;
-  if (layers.length === 0) fail(`${rel} renders no [data-scientific-ambient] layer`);
+  if (!/data-global-scientific-canvas/.test(html)) {
+    fail(`${rel} renders no [data-global-scientific-canvas] layer`);
+  }
 
-  for (const [, zone, attrs] of layers) {
+  const canvasTag = /<div class="global-science"[^>]*data-global-scientific-canvas[^>]*>/.exec(html);
+  checks += 1;
+  if (!canvasTag) {
+    fail(`${rel} canvas layer is missing its .global-science wrapper`);
+  } else {
     checks += 1;
-    if (!/aria-hidden="true"/.test(attrs)) {
-      fail(`${rel} ambient zone "${zone}" is not aria-hidden`);
-    }
+    if (!/aria-hidden="true"/.test(canvasTag[0])) fail(`${rel} canvas layer is not aria-hidden`);
+  }
+
+  /* All three motif classes must survive the build — not just the source. */
+  for (const kind of ['math', 'biology', 'ai']) {
     checks += 1;
-    if (!/data-scientific-ambient/.test(attrs) && !html.includes('data-scientific-ambient')) {
-      fail(`${rel} ambient zone "${zone}" is missing data-scientific-ambient`);
+    if (!html.includes(`data-sci-kind="${kind}"`)) {
+      fail(`${rel} ships no "${kind}" motif in the canvas`);
     }
   }
 
-  const ambientBlocks = [
-    ...html.matchAll(/<div class="ambient"[^>]*data-ambient-zone="([a-z]+)"[\s\S]*?<\/div>/g),
-  ];
-  for (const ambientMatch of ambientBlocks) {
-    const zone = ambientMatch[1];
-    const block = ambientMatch[0];
-    const items = (block.match(/data-ambient-mobile=/g) ?? []).length;
-    const drops = (block.match(/data-ambient-mobile="drop"/g) ?? []).length;
-    checks += 1;
-    if (items === 0) fail(`${rel} ambient zone "${zone}" has no elements`);
-    const dropRatio = items ? drops / items : 0;
+  const marks = (html.match(/data-sci-mobile=/g) ?? []).length;
+  const drops = (html.match(/data-sci-mobile="drop"/g) ?? []).length;
+  checks += 1;
+  if (marks === 0) {
+    fail(`${rel} canvas has no marks`);
+  } else {
+    const dropRatio = drops / marks;
     checks += 1;
     if (dropRatio < 0.4 || dropRatio > 0.75) {
       fail(
-        `${rel} ambient zone "${zone}" drops ${(dropRatio * 100).toFixed(0)}% of its marks on mobile — the target is 50–70%`,
+        `${rel} canvas drops ${(dropRatio * 100).toFixed(0)}% of its marks on mobile — the target is 40–75%`,
       );
     } else {
-      notes.push(`${rel} ambient ${zone}: ${items} marks, ${drops} dropped on mobile`);
+      notes.push(`${rel} canvas: ${marks} marks, ${drops} dropped on mobile`);
     }
+  }
+
+  /* The homepage is the page that was reduced. It must not still be carrying
+     the sections that moved to /projects, /research and /about. */
+  checks += 1;
+  if (html.includes('id="artifacts"')) {
+    fail(`${rel} still renders the #artifacts evidence room — it moved to /projects`);
+  }
+  checks += 1;
+  if (html.includes('aria-labelledby="now-label"')) {
+    fail(`${rel} still renders the NOW strip — it moved to /projects`);
+  }
+  checks += 1;
+  if (/class="oss-list"/.test(html)) {
+    fail(`${rel} still renders the open-source table — it moved to /projects`);
   }
 }
 
@@ -447,7 +554,9 @@ if (problems.length) {
 }
 
 console.log(`Visual gate passed (${checks} checks).`);
-console.log(`  • 3 visual types separated: cover / conceptual science / ambient`);
+console.log('  • 3 visual types separated: cover / conceptual science / global canvas');
 console.log(`  • ${projectFiles.length} project file(s) × 6 cover fields, re-checked against evidence`);
-console.log('  • ambient: inline SVG only, aria-hidden, pointer-events:none, themed opacity');
+console.log('  • canvas: inline SVG only, aria-hidden, pointer-events:none, math + biology + AI');
+console.log('  • canvas: opacity floors and ceilings held, notation kept a step quieter');
+console.log('  • homepage: reduced — no artifact room, no NOW strip, no open-source table');
 for (const note of notes) console.log(`  • ${note}`);

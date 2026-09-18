@@ -1,5 +1,5 @@
 /**
- * Project cover + ambient layer tests (v1.4.1).
+ * Project cover + global scientific canvas tests (v1.6).
  *
  * Two things this suite exists to prevent:
  *
@@ -9,8 +9,11 @@
  *   2. A cover that drifts back into being a mathematics poster. No MathML,
  *      and a hard cap on notation characters inside the cover.
  *
- * The ambient layer is the other half of the split: it must be present,
- * invisible to assistive technology, and inert to the pointer.
+ * The canvas is the other half of the split. v1.4 shipped it at 2.5–5.5%
+ * opacity and the owner could not see it, so this suite now asserts both
+ * directions: the field must be inert and hidden from assistive technology,
+ * AND it must be inked inside a band that is genuinely visible. A floor is as
+ * much a part of the contract as a ceiling.
  */
 
 import { test, expect, type Page } from '@playwright/test';
@@ -105,66 +108,108 @@ test.describe('featured project covers', () => {
   }
 });
 
-test.describe('scientific ambient layer', () => {
+test.describe('global scientific canvas', () => {
   for (const home of HOMES) {
-    test(`${home} renders an inert, hidden atmosphere layer`, async ({ page }) => {
+    test(`${home} renders an inert, document-level field`, async ({ page }) => {
       await visit(page, home);
 
-      const layers = page.locator('[data-scientific-ambient]');
-      expect(await layers.count()).toBeGreaterThanOrEqual(1);
+      const canvas = page.locator('[data-global-scientific-canvas]');
+      await expect(canvas).toHaveCount(1);
+      await expect(canvas).toHaveAttribute('aria-hidden', 'true');
 
-      const count = await layers.count();
-      for (let i = 0; i < count; i += 1) {
-        const layer = layers.nth(i);
-        await expect(layer).toHaveAttribute('aria-hidden', 'true');
-
-        // Atmosphere, not a target: the pointer must pass straight through.
-        const pointerEvents = await layer.evaluate(
-          (el) => getComputedStyle(el as HTMLElement).pointerEvents,
-        );
-        expect(pointerEvents).toBe('none');
-      }
+      // Atmosphere, not a target: the pointer must pass straight through.
+      const pointerEvents = await canvas.evaluate(
+        (el) => getComputedStyle(el as HTMLElement).pointerEvents,
+      );
+      expect(pointerEvents).toBe('none');
 
       // Nothing behind the text may join the tab order.
-      const focusable = await page.locator('[data-scientific-ambient] a, [data-scientific-ambient] button')
-        .count();
-      expect(focusable).toBe(0);
+      expect(await canvas.locator('a, button, [tabindex]').count()).toBe(0);
+
+      /* Document-level, not viewport-fixed. A `fixed` layer stops being a
+         sheet of research paper and becomes wallpaper, so the position and the
+         height are both part of the contract. */
+      const geometry = await canvas.evaluate((el) => {
+        const style = getComputedStyle(el as HTMLElement);
+        return {
+          position: style.position,
+          height: (el as HTMLElement).getBoundingClientRect().height,
+          document: document.documentElement.scrollHeight,
+        };
+      });
+      expect(geometry.position).toBe('absolute');
+      expect(geometry.height).toBeGreaterThan(geometry.document * 0.9);
     });
 
-    test(`${home} ambient stays inside the theme's opacity budget`, async ({ page }) => {
+    test(`${home} carries mathematics, biology and AI`, async ({ page }) => {
       await visit(page, home);
 
-      const opacities = await page
-        .locator('[data-scientific-ambient]')
-        .evaluateAll((nodes) =>
-          nodes.map((node) => Number(getComputedStyle(node as HTMLElement).opacity)),
-        );
-
-      expect(opacities.length).toBeGreaterThan(0);
-      for (const value of opacities) {
-        // Paper: 0.025–0.055. Visible, never wallpaper.
-        expect(value).toBeGreaterThan(0);
-        expect(value).toBeLessThan(0.06);
+      // The failure mode this guards: a field made only of formulas.
+      for (const kind of ['math', 'biology', 'ai']) {
+        const count = await page.locator(`[data-sci-kind="${kind}"]`).count();
+        expect(count, `${kind} motifs in the canvas`).toBeGreaterThan(0);
       }
     });
 
-    test(`${home} a 390px screen keeps only part of the atmosphere`, async ({ page }) => {
+    test(`${home} inks the field inside the v1.6 band`, async ({ page }) => {
+      await visit(page, home);
+
+      const weights = await page.evaluate(() => {
+        const read = (cls: string): number | null => {
+          const el = document.querySelector(`.global-science .${cls}`);
+          return el ? Number(getComputedStyle(el as HTMLElement).opacity) : null;
+        };
+        return {
+          macro: read('sci-stroke'),
+          notation: read('sci-notation'),
+          micro: read('sci-micro'),
+          grid: read('sci-grid'),
+        };
+      });
+
+      expect(weights.macro, 'macro layer').not.toBeNull();
+      expect(weights.notation, 'notation layer').not.toBeNull();
+      expect(weights.micro, 'micro layer').not.toBeNull();
+      expect(weights.grid, 'grid layer').not.toBeNull();
+
+      /* Paper, the default theme. The floors are the v1.6 decision: the v1.4
+         ambient layer lived at 0.025–0.055 and was invisible, so "faint enough
+         to be safe" is now a failure, not a virtue. */
+      expect(weights.macro as number).toBeGreaterThanOrEqual(0.08);
+      expect(weights.macro as number).toBeLessThanOrEqual(0.14);
+      expect(weights.notation as number).toBeGreaterThanOrEqual(0.05);
+      expect(weights.notation as number).toBeLessThanOrEqual(0.09);
+      expect(weights.micro as number).toBeGreaterThanOrEqual(0.02);
+      expect(weights.micro as number).toBeLessThanOrEqual(0.05);
+      expect(weights.grid as number).toBeGreaterThanOrEqual(0.02);
+      expect(weights.grid as number).toBeLessThanOrEqual(0.04);
+
+      // Hierarchy: a formula never out-shouts the composition around it.
+      expect(weights.notation as number).toBeLessThan(weights.macro as number);
+      expect(weights.grid as number).toBeLessThan(weights.micro as number);
+    });
+
+    test(`${home} a 390px screen gets fewer motifs, not a squashed desktop`, async ({ page }) => {
       await page.setViewportSize({ width: 1440, height: 900 });
       await visit(page, home);
-      const desktop = await page
-        .locator('[data-scientific-ambient] [data-ambient-mobile]:visible')
-        .count();
+      const desktop = await page.locator('.global-science [data-sci-mobile]:visible').count();
 
       await page.setViewportSize({ width: 390, height: 844 });
       await visit(page, home);
-      const mobile = await page
-        .locator('[data-scientific-ambient] [data-ambient-mobile]:visible')
-        .count();
+      const mobile = await page.locator('.global-science [data-sci-mobile]:visible').count();
 
       expect(desktop).toBeGreaterThan(0);
+      // Still present — the answer to a small screen is "fewer", not "none".
       expect(mobile).toBeGreaterThan(0);
-      // The spec asks a phone to show 30–50% of the desktop marks.
       expect(mobile / desktop).toBeLessThanOrEqual(0.6);
+
+      // And all three sciences survive the reduction.
+      for (const kind of ['math', 'biology', 'ai']) {
+        const count = await page
+          .locator(`.global-science [data-sci-kind="${kind}"]:visible`)
+          .count();
+        expect(count, `${kind} motifs at 390px`).toBeGreaterThan(0);
+      }
     });
   }
 });

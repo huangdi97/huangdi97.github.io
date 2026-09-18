@@ -10,7 +10,8 @@ description: >-
   canonical 依赖模型，以及一致性测试套件、本地仓储层与密码学身份——全程不依赖托管账号体系。
   规范本身即是产物，目前没有任何实现公开发布。
 tags: ['本地优先', 'Canonical 规范', '跨平台', '密码学', '原生 UI']
-featured: true
+# v1.6：不再出现在首页。首页精选保持 4 个项目；PDIG 的完整案例继续留在 /projects。
+featured: false
 order: 5
 role: '规范制定与系统设计'
 groups: ['infrastructure', 'experiments']

@@ -1,0 +1,47 @@
+---
+/**
+ * Global Scientific Canvas — the page-level background system (v1.6).
+ *
+ * v1.4 and v1.5 both treated the scientific field as *section decoration*: a
+ * layer dropped inside a `<section>`, at 2.5–5.5% opacity, cropped to that
+ * section's box. The result was a background nobody could see. v1.6 makes it
+ * what the owner asked for: one canvas behind the entire document, mathematics
+ * / biology / AI as the environment every section sits in.
+ *
+ * Structure — two layers, both inline SVG, both inert:
+ *
+ *   Layer A  MacroScienceLayer   280–800px scientific compositions
+ *   Layer B  MicroNotebookLayer  notation, ticks, matrices, links
+ *
+ * Placement contract:
+ *
+ *   body (position: relative)
+ *     └── <GlobalScientificCanvas />   ← this file, z-index: -1
+ *     ├── <Header />
+ *     ├── <main>…</main>
+ *     └── <Footer />
+ *
+ * It is `position: absolute` — document-level, not viewport-fixed — so it
+ * scrolls with the page and its plaques stay attached to the sections they
+ * sit behind. A fixed layer would read as wallpaper; this reads as a very
+ * large sheet of research paper.
+ *
+ * Accessibility and performance:
+ *
+ *   · aria-hidden="true" — never read, never announced;
+ *   · pointer-events: none — never in the way of a link or a button;
+ *   · inline SVG only — no <canvas>, no WebGL, no three.js, no image, no
+ *     fetch, no extra request of any kind;
+ *   · every stroke and fill resolves to a CSS custom property, so one SVG
+ *     serves paper, white and night;
+ *   · the only motion is two very slow drifts, disabled under
+ *     prefers-reduced-motion.
+ */
+import MacroScienceLayer from './MacroScienceLayer.astro';
+import MicroNotebookLayer from './MicroNotebookLayer.astro';
+---
+
+<div class="global-science" data-global-scientific-canvas aria-hidden="true">
+  <MacroScienceLayer />
+  <MicroNotebookLayer />
+</div>

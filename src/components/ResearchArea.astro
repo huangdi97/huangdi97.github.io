@@ -1,6 +1,7 @@
 ---
 import { useT, type Lang } from '../i18n/ui';
 import type { ResearchArea as Area } from '../data/research';
+import { getProjectEvidence } from '../data/evidence';
 
 export interface Props {
   area: Area;
@@ -12,6 +13,17 @@ export interface Props {
 const { area, lang, headingLevel = 'h3' } = Astro.props;
 const t = useT(lang);
 const Heading = headingLevel;
+
+/**
+ * Each related project carries the state its own evidence entry reports —
+ * never one written here. This is what keeps a concept from being rendered as
+ * the twin of an active build once the tier label is a heading away: TaiYi
+ * Lingjing reads "Concept / Not Started" on the project link itself.
+ */
+const stateOf = (href: string) => {
+  const slug = href.replace(/\/+$/, '').split('/').pop() ?? '';
+  return getProjectEvidence(slug)?.headline[lang] ?? null;
+};
 ---
 
 <article class="research-area">
@@ -42,6 +54,7 @@ const Heading = headingLevel;
               <li>
                 <a href={p.href} class="link-arrow">
                   {p.label}
+                  {stateOf(p.href) && <span class="area-state">{stateOf(p.href)}</span>}
                   <span class="arrow" aria-hidden="true">
                     →
                   </span>
@@ -131,5 +144,19 @@ const Heading = headingLevel;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 0.5rem 2rem;
+  }
+
+  /* The project's own evidence headline, read-only. A concept never wears a
+     build's ink here either. */
+  .area-state {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .area-state::before {
+    content: '· ';
   }
 </style>

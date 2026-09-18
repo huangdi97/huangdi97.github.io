@@ -65,16 +65,23 @@
     --formula-opacity: 0.06;
     --grid-opacity: 0.05;
 
-    /* Scientific ambient layer — how inked the background atmosphere is.
-       Multiplied by a per-section --ambient-zone (0.5–1.3), which puts the
-       final value inside 0.025–0.055 for paper. */
-    --ambient-base: 0.04;
+    /* Global scientific canvas (v1.6) — the page-wide mathematics / biology /
+       AI field. Four dials, one per mark weight, so a grid line and a
+       600px trajectory are never inked the same:
 
-    /* Scientific canvas (v1.5 sample) — the large-scale mathematics / biology
-       / AI field behind a section. Same discipline as the ambient layer
-       (inline SVG, aria-hidden, theme-coloured), but composed at wall scale
-       and inked to be *felt*: roughly 2.5× the ambient layer. */
-    --canvas-base: 0.13;
+         macro   large line art     0.08–0.14
+         micro   notebook marginalia 0.02–0.05
+         grid    rules and ticks     0.02–0.04
+         accent  the single blue     0.05–0.12
+
+       The v1.4 ambient layer sat at 0.025–0.055 and read as nothing; these
+       values are deliberately set where a visitor notices the science without
+       having to look for it. Notation is inked at 0.62 × macro (≈0.074), so a
+       formula never shouts louder than the composition around it. */
+    --science-macro: 0.12;
+    --science-micro: 0.045;
+    --science-grid: 0.035;
+    --science-accent: 0.09;
   }
 
   [data-theme='white'] {
@@ -117,10 +124,12 @@
     --formula-opacity: 0.05;
     --grid-opacity: 0.045;
 
-    /* Flat white shows ink faster, so the ambient layer sits lower:
-       0.0196–0.0364 across zones. */
-    --ambient-base: 0.028;
-    --canvas-base: 0.105;
+    /* Flat white shows ink fastest, so every dial sits a step lower than
+       paper while staying inside the same visible band. */
+    --science-macro: 0.1;
+    --science-micro: 0.035;
+    --science-grid: 0.028;
+    --science-accent: 0.075;
   }
 
   [data-theme='night'] {
@@ -165,11 +174,13 @@
     --formula-opacity: 0.09;
     --grid-opacity: 0.05;
 
-    /* On a dark canvas the marks need more presence to be felt at all:
-       0.042–0.078 across zones. */
-    --ambient-base: 0.06;
-    /* Dark canvas absorbs ink, so the field has to be inked harder to read. */
-    --canvas-base: 0.185;
+    /* A dark canvas absorbs ink, so the field has to be inked harder to read
+       at all. Night is the one theme where the macro layer is allowed past
+       0.14. */
+    --science-macro: 0.16;
+    --science-micro: 0.06;
+    --science-grid: 0.05;
+    --science-accent: 0.13;
   }
 
   :root {
@@ -185,13 +196,15 @@
     --gutter: 1.5rem;
     --header-h: 68px;
 
-    /* Scientific ambient layer — per-section strength, set inline by
-       ScientificAmbient.astro and multiplied by the theme's --ambient-base. */
-    --ambient-zone: 1;
-
-    /* Scientific canvas — per-section strength, set inline by
-       ScientificCanvas.astro and multiplied by the theme's --canvas-base. */
-    --canvas-zone: 1;
+    /* Scientific canvas — placement defaults for a macro plaque. Each plaque
+       overrides these inline, so a plaque declares only where it sits and how
+       wide it is. Declared here rather than left implicit so that every custom
+       property referenced anywhere in this file has exactly one home. */
+    --sci-top: 0%;
+    --sci-left: auto;
+    --sci-right: auto;
+    --sci-w: 480px;
+    --sci-max-w: 92vw;
 
     /* Motion */
     --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
@@ -214,6 +227,11 @@
   }
 
   body {
+    /* The global scientific canvas is an absolutely positioned child that must
+       span the whole document, not one viewport. That requires body to be the
+       containing block — without this the layer would resolve against the
+       initial containing block and stop after the first screen. */
+    position: relative;
     background-color: var(--canvas);
     background-image: var(--grain);
     background-repeat: repeat;
@@ -725,12 +743,98 @@
     position: relative;
   }
 
-  /* Host for a section-scoped ScientificAmbient layer. `isolation: isolate`
-     keeps the layer's `z-index: -1` above this section's own background but
-     below every word in it. */
-  .ambient-host {
-    position: relative;
-    isolation: isolate;
+  /* Host for the page-level GlobalScientificCanvas. It is an absolutely
+     positioned child of body (which is `position: relative`), so it spans the
+     full document and scrolls with it. `z-index: -1` keeps it above the body
+     background and below every word; `overflow: hidden` crops the macro
+     plaques that deliberately run off the page edge. */
+  .global-science {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* A macro plaque: one large scientific composition, placed by percentage of
+     document height so the field redistributes itself as the page grows or
+     shrinks. Widths are capped in vw as well as px so a 700px drawing cannot
+     force horizontal scroll on a phone. */
+  .sci-plaque {
+    position: absolute;
+    top: var(--sci-top);
+    left: var(--sci-left);
+    right: var(--sci-right);
+    width: var(--sci-w);
+    max-width: var(--sci-max-w);
+    height: auto;
+  }
+
+  .sci-plaque svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Four weights, one token each — a grid line and a 600px trajectory are
+     never inked the same, and no opacity is hard-coded in a component. */
+  .sci-stroke {
+    opacity: var(--science-macro);
+  }
+
+  .sci-notation {
+    opacity: calc(var(--science-macro) * 0.62);
+  }
+
+  .sci-micro {
+    opacity: var(--science-micro);
+  }
+
+  .sci-grid {
+    opacity: var(--science-grid);
+  }
+
+  .sci-accent {
+    opacity: var(--science-accent);
+  }
+
+  /* Notation is set in the mono face everywhere on this site; the background
+     field is no exception, or it reads as a different document. */
+  .sci-notation text,
+  .sci-micro text {
+    font-family: var(--font-mono);
+  }
+
+  /* A field breathes; it does not animate. Eight pixels, over a minute. */
+  .sci-drift {
+    animation: sci-drift 78s var(--ease) infinite alternate;
+  }
+
+  @keyframes sci-drift {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-8px, 11px, 0);
+    }
+  }
+
+  /* A phone is not a compressed desktop: the macro plaques are re-placed, not
+     shrunk. Which plaques move, and where to, is decided in
+     MacroScienceLayer.astro — next to the composition it is changing — rather
+     than through a second set of global placement tokens. Roughly half the
+     marks stay, which lands the field at top 2 / middle 1 / bottom 1. */
+  @media (max-width: 640px) {
+    .global-science [data-sci-mobile='drop'] {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sci-drift {
+      animation: none;
+    }
   }
 
   /* Conceptual-notation badge. A formula that is not the project's own
@@ -781,6 +885,19 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  /* Present for assistive technology, absent on screen. Used where a link's
+     visible text is a label but its accessible name should carry the value. */
+  .vh {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
   .stroke-line {
     border-top: 1px solid var(--line);
@@ -838,7 +955,8 @@
   .mobile-nav,
   .reveal-trigger,
   .ambient,
-  .canvas-field {
+  .canvas-field,
+  .global-science {
     display: none !important;
   }
 

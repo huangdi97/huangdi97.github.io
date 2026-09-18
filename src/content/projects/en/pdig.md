@@ -12,7 +12,9 @@ description: >-
   cryptography for identity — all without a hosted account system. The spec
   is the artifact; no implementation is published.
 tags: ['Local-first', 'Canonical Spec', 'Cross-platform', 'Cryptography', 'Native UI']
-featured: true
+# v1.6: no longer on the homepage. Selected Work carries four projects; PDIG
+# keeps its full case study here on /projects.
+featured: false
 order: 5
 role: 'Specification and system design'
 groups: ['infrastructure', 'experiments']

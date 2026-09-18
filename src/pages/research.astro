@@ -1,13 +1,33 @@
 ---
+/**
+ * Research (English) — v1.6.
+ *
+ * The homepage keeps three research rows; the full record — the five
+ * directions, the complete mathematical-biology figure set, the conceptual
+ * model and the dated lab-note log — lives here. See the Chinese mirror.
+ */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import ResearchArea from '../components/ResearchArea.astro';
+import MathematicalBiology from '../components/MathematicalBiology.astro';
+import EquationNote from '../components/EquationNote.astro';
+import LabNotes from '../components/LabNotes.astro';
 import { getResearch } from '../data/research';
 import { useT } from '../i18n/ui';
 
 const lang = 'en' as const;
 const t = useT(lang);
 const areas = getResearch(lang);
+
+/**
+ * The tier split travels with the list. It used to live on the homepage, and
+ * moving the list here without it would have flattened a truth claim: a
+ * direction tied to inspectable code would have rendered as the twin of a
+ * written concept. `active` is code you can open; `concept` is a direction
+ * whose target system does not exist yet.
+ */
+const activeAreas = areas.filter((area) => area.tier === 'active');
+const conceptAreas = areas.filter((area) => area.tier === 'concept');
 
 const path = '/research/';
 const enPath = '/research/';
@@ -32,13 +52,49 @@ const zhPath = '/zh/research/';
     />
 
     <div class="research-body">
-      {areas.map((area) => <ResearchArea area={area} lang={lang} headingLevel="h2" />)}
+      <div class="research-tier">
+        <p class="research-tier-label mono">{t('research.active')}</p>
+        <div class="research-group">
+          {activeAreas.map((area) => <ResearchArea area={area} lang={lang} headingLevel="h2" />)}
+        </div>
+      </div>
+
+      <div class="research-tier">
+        <p class="research-tier-label mono">{t('research.concepts')}</p>
+        <div class="research-group">
+          {conceptAreas.map((area) => <ResearchArea area={area} lang={lang} headingLevel="h2" />)}
+        </div>
+      </div>
     </div>
   </section>
+
+  <!-- Mathematics × Biology: the full figure set, moved off the homepage. -->
+  <MathematicalBiology lang={lang} />
+
+  <div class="shell">
+    <EquationNote lang={lang} />
+  </div>
+
+  <!-- Lab Notes: the complete log, moved off the homepage. -->
+  <LabNotes lang={lang} />
 </BaseLayout>
 
 <style>
   .research-body {
     margin-top: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  .research-tier + .research-tier {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .research-tier-label {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line-strong);
+    color: var(--faint);
+  }
+
+  .research-group {
+    margin-top: clamp(1rem, 2vw, 1.5rem);
   }
 </style>

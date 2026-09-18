@@ -1,5 +1,24 @@
 ---
-import { useT, localizedPath, type Lang } from '../i18n/ui';
+/**
+ * Footer — theme-continuous (v1.6).
+ *
+ * Until v1.5 this was `<footer class="site-footer night">`, which forced the
+ * inverted artifact palette onto the bottom of every page. On paper and white
+ * that meant the document fell into a black block the moment you stopped
+ * scrolling. The footer is not an evidence room: there is nothing here to
+ * verify, so there is no reason for it to invert.
+ *
+ * It now reads the active theme like any other surface — transparent
+ * background over the page canvas, a single hairline rule, and
+ * `--ink` / `--muted` / `--faint` for text. Paper gets a warm-paper footer,
+ * white gets a white one, night gets a night one, and the global scientific
+ * canvas runs underneath all three without interruption.
+ *
+ * Kept deliberately small: the identity line, the contact row (required on
+ * every route, because this is the only contact surface the inner pages have),
+ * the two preferences, and the copyright. No three-column block, no CTA.
+ */
+import { useT, type Lang } from '../i18n/ui';
 import { SITE } from '../config/site';
 import LanguageSwitcher from './LanguageSwitcher.astro';
 import ThemeSwitcher from './ThemeSwitcher.astro';
@@ -14,69 +33,129 @@ const t = useT(lang);
 const year = new Date().getFullYear();
 ---
 
-<footer class="site-footer night no-print mt-auto">
-  <div class="shell section-tight">
-    <div class="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
-      <div class="max-w-md">
-        <p class="font-mono text-[13px] uppercase tracking-[0.18em] text-night-ink">HAO LEI</p>
-        <p class="mt-3 text-[0.9375rem] text-night-muted">{SITE.tagline}</p>
-        <p class="mt-6 text-[0.8125rem] text-night-muted">{t('footer.built')}</p>
+<footer class="site-footer no-print mt-auto">
+  <!-- A scientific coda, not a block: the three motifs the page is about, at
+       0.02–0.04, sitting under the rule rather than behind a dark panel. -->
+  <svg class="footer-coda" viewBox="0 0 1200 40" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <g class="sci-micro" fill="currentColor">
+      <text x="0" y="26" font-size="15">∂x/∂t</text>
+      <text x="560" y="26" font-size="15">gene → pathway → phenotype</text>
+      <text x="1130" y="26" font-size="15" text-anchor="end">z(t+1)</text>
+    </g>
+    <g class="sci-grid" fill="none" stroke="currentColor" stroke-width="1">
+      <line x1="0" y1="34" x2="1200" y2="34" />
+    </g>
+  </svg>
+
+  <div class="shell footer-inner">
+    <div class="footer-band">
+      <div class="footer-identity">
+        <p class="footer-mark">HAO LEI</p>
+        <p class="footer-tagline">{SITE.tagline}</p>
       </div>
 
-      <div class="flex flex-col gap-8 sm:flex-row sm:gap-16">
-        <nav aria-label={t('nav.primary')}>
-          <ul class="flex flex-col gap-1">
-            <li>
-              <a
-                href={localizedPath(lang, '/projects')}
-                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-night-muted transition-colors duration-150 hover:text-night-ink"
-              >
-                {t('nav.work')}
-              </a>
-            </li>
-            <li>
-              <a
-                href={localizedPath(lang, '/research')}
-                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-night-muted transition-colors duration-150 hover:text-night-ink"
-              >
-                {t('nav.research')}
-              </a>
-            </li>
-            <li>
-              <a
-                href={localizedPath(lang, '/about')}
-                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-night-muted transition-colors duration-150 hover:text-night-ink"
-              >
-                {t('nav.about')}
-              </a>
-            </li>
-            <li>
-              <a
-                href={localizedPath(lang, '/resume')}
-                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-night-muted transition-colors duration-150 hover:text-night-ink"
-              >
-                {t('nav.resume')}
-              </a>
-            </li>
-          </ul>
-        </nav>
-
-        <div class="flex flex-col gap-6">
-          <ContactLinks lang={lang} variant="footer" heading={t('contact.title')} />
-          <div class="flex min-h-[44px] items-center gap-4">
-            <LanguageSwitcher lang={lang} variant="footer" />
-            <span class="h-4 w-px bg-[var(--artifact-line)]" aria-hidden="true"></span>
-            <span class="mono text-night-muted">{t('appearance.label')}</span>
-          </div>
-          <ThemeSwitcher lang={lang} variant="list" />
-        </div>
+      <div class="footer-prefs">
+        <LanguageSwitcher lang={lang} variant="footer" />
+        <span class="footer-divider" aria-hidden="true"></span>
+        <ThemeSwitcher lang={lang} variant="inline" />
       </div>
     </div>
 
-    <hr class="rule my-10" />
+    <div class="footer-band footer-band-contact">
+      <ContactLinks lang={lang} variant="row" />
 
-    <p class="font-mono text-[11px] uppercase tracking-[0.12em] text-night-muted">
-      © {year} Hao Lei — {t('footer.rights')}
-    </p>
+      <p class="footer-copy">
+        © {year} Hao Lei — {t('footer.rights')}
+      </p>
+    </div>
   </div>
 </footer>
+
+<style>
+  .site-footer {
+    /* Transparent on purpose: the canvas the page has been drawn on continues
+       to the last line. A theme swap is the only thing that changes it. */
+    background: transparent;
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+    position: relative;
+  }
+
+  .footer-coda {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: 1.75rem;
+    pointer-events: none;
+  }
+
+  .footer-inner {
+    padding-block: 1.5rem 2.5rem;
+  }
+
+  .footer-band {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+  }
+
+  .footer-band-contact {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .footer-identity {
+    min-width: 0;
+  }
+
+  .footer-mark {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .footer-tagline {
+    margin-top: 0.4rem;
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  .footer-prefs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+  }
+
+  .footer-divider {
+    width: 1px;
+    height: 1rem;
+    background: var(--line-strong);
+  }
+
+  .footer-copy {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 640px) {
+    /* A phone gets the identity, the preferences and the contact row — the
+       copyright line is the one thing that can wait. */
+    .footer-copy {
+      display: none;
+    }
+
+    .footer-band-contact {
+      margin-top: 1.25rem;
+    }
+  }
+</style>
