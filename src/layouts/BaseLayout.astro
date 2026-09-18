@@ -15,12 +15,28 @@ export interface Props {
   ogImage?: string;
   type?: 'website' | 'article' | 'profile';
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Verbatim <title> override, forwarded to Seo. */
+  seoTitle?: string;
+  /** Withhold the page from indexing. Used for print-only variants. */
+  noindex?: boolean;
   /** Pages that should not show the footer CTA spacer. */
   mainClass?: string;
 }
 
-const { title, description, lang, path, enPath, zhPath, ogImage, type, jsonLd, mainClass } =
-  Astro.props;
+const {
+  title,
+  description,
+  lang,
+  path,
+  enPath,
+  zhPath,
+  ogImage,
+  type,
+  jsonLd,
+  seoTitle,
+  noindex = false,
+  mainClass,
+} = Astro.props;
 
 const t = useT(lang);
 const htmlLang = lang === 'zh' ? 'zh-Hans' : 'en';
@@ -47,6 +63,8 @@ const htmlLang = lang === 'zh' ? 'zh-Hans' : 'en';
       ogImage={ogImage}
       type={type}
       jsonLd={jsonLd}
+      seoTitle={seoTitle}
+      noindex={noindex}
     />
 
     <script is:inline>

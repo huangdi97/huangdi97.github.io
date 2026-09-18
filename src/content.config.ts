@@ -28,6 +28,14 @@ import { glob } from 'astro/loaders';
 
 const projectSchema = z.object({
   title: z.string(),
+  /**
+   * Brand name in the other locale, shown under the title.
+   * Product brand and repository slug are allowed to differ; this keeps both
+   * visible without turning the page into a rename notice.
+   */
+  subtitle: z.string().optional(),
+  /** Verbatim <title> override when the SEO title is a fixed phrase. */
+  seoTitle: z.string().optional(),
   slug: z.string(),
   year: z.number().int(),
   status: z.enum(['Active', 'Research', 'Prototype', 'Stable', 'Archived']),

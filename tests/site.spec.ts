@@ -78,7 +78,7 @@ test.describe('projects', () => {
 
   test('case study renders its full structure', async ({ page }) => {
     await page.goto('/projects/wennian/');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('WenNian');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('ZhiShen · WenNian');
     for (const heading of ['Overview', 'Problem', 'Architecture', 'Current Status', 'Next']) {
       await expect(page.locator('h2', { hasText: heading }).first()).toBeVisible();
     }
@@ -155,7 +155,7 @@ test.describe('language switching', () => {
       await page.goto('/projects/wennian/');
       await page.getByRole('banner').getByRole('link', { name: /Language/ }).click();
     await page.waitForURL('**/zh/projects/wennian/**');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('WenNian');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('知身·问年');
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-Hans');
   });
 
@@ -206,23 +206,32 @@ test.describe('resume', () => {
     for (const section of [
       'Profile',
       'Focus',
+      'Experience',
+      'Education',
+      'Research Experience',
+      'Research Output',
       'Selected Projects',
       'Technical Areas',
       'Open Source',
       'Contact',
     ]) {
-      await expect(page.locator('h2', { hasText: section })).toBeVisible();
+      // Exact name — "Experience" must not be satisfied by "Research Experience".
+      await expect(page.getByRole('heading', { level: 2, name: section, exact: true })).toBeVisible();
     }
 
-    // Education is hidden until verified data is supplied — it must never be
-    // rendered as a visitor-facing placeholder.
-    await expect(page.locator('h2', { hasText: 'Education' })).toHaveCount(0);
-    await expect(page.getByText(/no verified record/i)).toHaveCount(0);
+    // The record is complete — the page no longer carries a "pending" notice.
+    await expect(page.getByText(/no verified record|unverified/i)).toHaveCount(0);
   });
 
-  test('shows no PDF download button while no real PDF exists', async ({ page }) => {
+  test('only offers downloads for PDFs that resolve', async ({ page }) => {
     await page.goto('/resume/');
-    await expect(page.getByRole('link', { name: /Download PDF/ })).toHaveCount(0);
+    const downloads = page.locator('a[data-resume-pdf]');
+    const count = await downloads.count();
+    for (let i = 0; i < count; i += 1) {
+      const href = await downloads.nth(i).getAttribute('href');
+      const response = await page.request.get(href as string);
+      expect(response.status(), `dead download link: ${href}`).toBe(200);
+    }
   });
 });
 

@@ -2,6 +2,7 @@
 import { useT, localizedPath, type Lang } from '../i18n/ui';
 import { SITE } from '../config/site';
 import LanguageSwitcher from './LanguageSwitcher.astro';
+import ContactLinks from './ContactLinks.astro';
 
 export interface Props {
   lang: Lang;
@@ -59,30 +60,8 @@ const year = new Date().getFullYear();
           </ul>
         </nav>
 
-        <div class="flex flex-col gap-1">
-          <a
-            href={SITE.github}
-            class="inline-flex min-h-[44px] items-center gap-2 text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub
-            <span aria-hidden="true" class="text-[0.75rem]">↗</span>
-          </a>
-          {
-            SITE.email ? (
-              <a
-                href={`mailto:${SITE.email}`}
-                class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#a1a1a1] transition-colors duration-150 hover:text-night-ink"
-              >
-                {SITE.email}
-              </a>
-            ) : (
-              <span class="inline-flex min-h-[44px] items-center text-[0.9375rem] text-[#8a8a8a]">
-                {t('contact.viaGithub')}
-              </span>
-            )
-          }
+        <div class="flex flex-col gap-6">
+          <ContactLinks lang={lang} variant="footer" heading={t('contact.title')} />
           <div class="flex min-h-[44px] items-center">
             <LanguageSwitcher lang={lang} variant="footer" />
           </div>

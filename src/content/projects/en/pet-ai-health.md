@@ -53,8 +53,8 @@ over, and carrying the accumulated context across the hand-over.
 
 Animals cannot report symptoms. Everything the system knows comes from owner
 observation and device signals, which means observation quality is the binding
-constraint on everything downstream — the same lesson WenNian's interview
-stage teaches on the human side.
+constraint on everything downstream — the same lesson ZhiShen · WenNian's
+interview stage teaches on the human side.
 
 The stakes of a wrong escalation are also asymmetric. Under-escalating an
 urgent case is far worse than over-escalating a benign one, so the routing
@@ -106,7 +106,7 @@ consultation, and escalation to a veterinarian. The policy is inspectable and
 versioned, because it is the part that carries clinical risk.
 
 **Consultation.** Structured history-taking with a bounded number of
-follow-up rounds, following the same pattern used in WenNian's interview
+follow-up rounds, following the same pattern used in ZhiShen · WenNian's interview
 stage.
 
 **Care coordination.** Adapters for external providers — clinics, telehealth,

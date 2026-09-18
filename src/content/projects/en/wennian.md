@@ -1,5 +1,7 @@
 ---
-title: 'WenNian / 知身·问年'
+title: 'ZhiShen · WenNian'
+subtitle: '知身·问年'
+seoTitle: 'ZhiShen · WenNian — AI Aging Assessment & Decision Support'
 slug: 'wennian'
 year: 2026
 status: 'Active'
@@ -23,7 +25,7 @@ stack: ['Python 3.10+', 'FastAPI', 'Gradio', 'pytest', 'YAML config']
 
 ## Overview
 
-WenNian (问年) is not an aging test. It is a decision engine: it estimates
+ZhiShen · WenNian (知身·问年) is not an aging test. It is a decision engine: it estimates
 where a person sits across several biological aging axes, works out which axis
 is actually driving that profile, and reasons about what to change first.
 
@@ -168,6 +170,10 @@ editing config rather than code where that is possible.
 
 The system runs locally — `python src/ui/app.py` serves the interface on
 `127.0.0.1` — and the test suite runs with `pytest`.
+
+Public code repository: `WenNian`. The product brand on this page is
+ZhiShen · WenNian; the repository and this page's URL keep the original
+`wennian` slug so existing links and indexed canonicals do not break.
 
 ## Validation
 

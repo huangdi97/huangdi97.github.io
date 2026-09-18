@@ -73,6 +73,7 @@ const ld: Record<string, unknown>[] = [
 
 <BaseLayout
   title={d.title}
+  seoTitle={d.seoTitle}
   description={d.summary}
   lang={lang}
   path={path}
@@ -93,6 +94,7 @@ const ld: Record<string, unknown>[] = [
     <header class="case-head">
       <p class="eyebrow">{d.category}</p>
       <h1 class="h1 case-title">{d.title}</h1>
+      {d.subtitle && <p class="case-subtitle">{d.subtitle}</p>}
       <p class="case-thesis">{d.summary}</p>
 
       <div class="case-meta">
@@ -254,6 +256,14 @@ const ld: Record<string, unknown>[] = [
 
   .case-title {
     margin-top: 1rem;
+  }
+
+  .case-subtitle {
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
   }
 
   .case-thesis {

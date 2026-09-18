@@ -107,7 +107,7 @@ const pages = [
 ];
 
 const projects = [
-  { file: 'wennian.png', title: 'WenNian', subtitle: 'AI aging assessment and intervention decision system.' },
+  { file: 'wennian.png', title: 'ZhiShen · WenNian', subtitle: 'AI aging assessment and intervention decision system.' },
   { file: 'hycell.png', title: 'HyCell', subtitle: 'AI virtual-cell infrastructure for biological representation and simulation.' },
   { file: 'taiyi-lingjing.png', title: 'TaiYi Lingjing', subtitle: 'An agentic discovery platform for biology, evidence, simulation and experiment.' },
   { file: 'pet-ai-health.png', title: 'Pet AI Health', subtitle: 'Observation, risk assessment, consultation and care workflows.' },

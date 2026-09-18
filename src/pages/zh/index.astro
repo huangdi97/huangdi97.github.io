@@ -10,6 +10,7 @@ import { getFeaturedProjects, projectsHref } from '../../lib/projects';
 import { getResearch } from '../../data/research';
 import { getHow } from '../../data/how';
 import { OSS_CAPTURED_AT, OSS_HIGHLIGHTS } from '../../data/oss';
+import { personSchema } from '../../data/profile';
 
 const lang = 'zh' as const;
 const t = useT(lang);
@@ -22,16 +23,7 @@ const path = '/zh/';
 const enPath = '/';
 const zhPath = '/zh/';
 
-const personLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Person',
-  name: SITE.nameEn,
-  alternateName: SITE.nameZh,
-  url: SITE.url,
-  sameAs: [SITE.github],
-  ...(SITE.email ? { email: `mailto:${SITE.email}` } : {}),
-  knowsAbout: SITE.focusAreas.map((a) => a.zh),
-};
+const personLd = personSchema(lang);
 
 const websiteLd = {
   '@context': 'https://schema.org',

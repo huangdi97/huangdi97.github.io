@@ -157,7 +157,7 @@ without changing the loop.
 
 Where a subsystem already exists as a working prototype elsewhere in this
 portfolio — compact biological state from HyCell, structured interview and
-auditor patterns from WenNian — the design reuses those interfaces instead of
+auditor patterns from ZhiShen · WenNian — the design reuses those interfaces instead of
 defining new ones.
 
 ## Validation

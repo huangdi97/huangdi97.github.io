@@ -1,10 +1,12 @@
 ---
-title: 'WenNian / 知身·问年'
+title: '知身·问年'
+subtitle: 'ZhiShen · WenNian'
+seoTitle: '知身·问年 — AI 衰老评估与干预决策'
 slug: 'wennian'
 year: 2026
 status: 'Active'
 category: 'AI 健康 · 衰老智能 · 决策支持'
-summary: 'AI 衰老评估、主动追问、连续感知与干预决策系统。'
+summary: 'AI 衰老评估、主动追问与干预决策系统。'
 description: >-
   面向衰老干预的决策引擎。基于常规血检指标运行多时钟生物学年龄评估，通过主动追问把模糊主诉
   转化为结构化评估维度，并输出带置信区间与稽核记录的干预优先级。
@@ -21,7 +23,7 @@ stack: ['Python 3.10+', 'FastAPI', 'Gradio', 'pytest', 'YAML 配置']
 
 ## 概览
 
-问年不是一次衰老检测。它是一个决策引擎：估算一个人在多个衰老轴上的位置，判断真正驱动该画像的是哪个轴，并推理应当先改变什么。
+知身·问年不是一次衰老检测。它是一个决策引擎：估算一个人在多个衰老轴上的位置，判断真正驱动该画像的是哪个轴，并推理应当先改变什么。
 
 开源 MVP 覆盖三项能力：衰老全谱评估、结构化健康访谈、白标报告生成。评估之后的所有环节——驱动维度识别、干预优先级、报告内容——都来自同一条流水线，因此页面上的数字与它背后的推理不会各说各话。
 
@@ -100,6 +102,8 @@ stack: ['Python 3.10+', 'FastAPI', 'Gradio', 'pytest', 'YAML 配置']
 仓库按与流水线阶段对齐的模块边界组织：`core`、`clocks`、`dimensions`、`integrator`、`causality`、`agents`、`knowledge`、`inputs`、`outputs`、`validation`、`commercial`、`api`、`ui`。配置集中在 `config/` 下的 YAML，能改配置解决的行为就不改代码。
 
 系统本地运行——`python src/ui/app.py` 在 `127.0.0.1` 提供服务——测试使用 `pytest` 运行。
+
+公开代码仓库：`WenNian`。本页使用的产品品牌是「知身·问年」；代码仓库与本页 URL 保留原始 `wennian` slug，以免既有链接与已索引的 canonical 失效。
 
 ## 验证
 

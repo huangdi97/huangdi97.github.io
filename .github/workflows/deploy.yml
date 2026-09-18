@@ -20,8 +20,8 @@ env:
   NODE_VERSION: '22'
 
 # Quality gate — every step below is blocking.
-# Order: npm ci → lint → typecheck → build → verify → test.
-# Pages is configured, uploaded and deployed only after all six pass.
+# Order: npm ci → lint → typecheck → build → verify → identity → test.
+# Pages is configured, uploaded and deployed only after all seven pass.
 # A failing test means no deployment, without exception.
 jobs:
   build:
@@ -50,6 +50,9 @@ jobs:
 
       - name: Verify build output
         run: npm run verify
+
+      - name: Check public identity
+        run: npm run identity
 
       # Resolve the exact Playwright version so browser binaries are cached
       # against it rather than against a floating "latest" key.

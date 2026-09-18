@@ -1,0 +1,185 @@
+---
+import { getContactLinks } from '../data/contact';
+import type { Lang } from '../i18n/ui';
+
+/**
+ * Contact identity, rendered from one data source.
+ *
+ * Used by the footer, the About page, the Resume page and the mobile
+ * navigation. Because every surface reads the same array, it is impossible for
+ * one page to show the Gmail address while another still shows only QQ Mail.
+ *
+ * Order is fixed: Gmail → QQ Mail → GitHub → Resume.
+ */
+export interface Props {
+  lang: Lang;
+  /** `footer` = stacked links on the dark footer, `buttons` = CTA row, `list` = label + value rows. */
+  variant?: 'footer' | 'buttons' | 'list';
+  /** Small mono heading rendered above the links. */
+  heading?: string;
+}
+
+const { lang, variant = 'list', heading } = Astro.props;
+const links = getContactLinks(lang);
+---
+
+{
+  variant === 'footer' && (
+    <div class="contact-footer">
+      {heading && <p class="contact-heading">{heading}</p>}
+      <ul class="contact-footer-list">
+        {links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              data-contact-id={link.id}
+              target={link.external ? '_blank' : undefined}
+              rel={link.external ? 'noopener noreferrer' : undefined}
+            >
+              <span class="contact-label">{link.label}</span>
+              <span class="contact-value">{link.value}</span>
+              {link.external && (
+                <span aria-hidden="true" class="contact-ext">
+                  ↗
+                </span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+{
+  variant === 'buttons' && (
+    <div class="contact-buttons">
+      {links.map((link) => (
+        <a
+          href={link.href}
+          class:list={['btn', link.id === 'github' ? 'btn-primary' : 'btn-outline']}
+          data-contact-id={link.id}
+          target={link.external ? '_blank' : undefined}
+          rel={link.external ? 'noopener noreferrer' : undefined}
+        >
+          {link.label}
+          <span class="contact-btn-value">{link.value}</span>
+          {link.external && <span aria-hidden="true">↗</span>}
+        </a>
+      ))}
+    </div>
+  )
+}
+
+{
+  variant === 'list' && (
+    <ul class="contact-list">
+      {links.map((link) => (
+        <li>
+          <span class="contact-list-label">{link.label}</span>
+          <a
+            class="contact-list-value"
+            href={link.href}
+            data-contact-id={link.id}
+            target={link.external ? '_blank' : undefined}
+            rel={link.external ? 'noopener noreferrer' : undefined}
+          >
+            {link.value}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<style>
+  .contact-heading {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #8a8a8a;
+    margin-bottom: 0.5rem;
+  }
+
+  .contact-footer-list,
+  .contact-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .contact-list {
+    gap: 0.625rem;
+  }
+
+  .contact-footer a {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.75rem;
+    min-height: 44px;
+    padding-block: 0.55rem;
+    color: var(--night-ink);
+  }
+
+  .contact-footer a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .contact-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #8a8a8a;
+    min-width: 4.25rem;
+  }
+
+  .contact-value {
+    font-size: 0.875rem;
+    color: var(--night-muted);
+  }
+
+  .contact-ext {
+    font-size: 0.75rem;
+  }
+
+  .contact-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .contact-btn-value {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    opacity: 0.7;
+  }
+
+  .contact-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 1rem;
+  }
+
+  .contact-list-label {
+    font-size: 0.9375rem;
+    color: var(--ink);
+  }
+
+  .contact-list-value {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .contact-list-value:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+</style>

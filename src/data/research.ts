@@ -44,7 +44,7 @@ const en: ResearchArea[] = [
     ],
     projects: [
       { label: 'TaiYi Lingjing', href: '/projects/taiyi-lingjing' },
-      { label: 'WenNian', href: '/projects/wennian' },
+      { label: 'ZhiShen · WenNian', href: '/projects/wennian' },
     ],
   },
   {
@@ -61,7 +61,7 @@ const en: ResearchArea[] = [
       'Guardrails that keep a wellness product from drifting into diagnosis.',
     ],
     projects: [
-      { label: 'WenNian', href: '/projects/wennian' },
+      { label: 'ZhiShen · WenNian', href: '/projects/wennian' },
       { label: 'HyCell', href: '/projects/hycell' },
       { label: 'Pet AI Health', href: '/projects/pet-ai-health' },
     ],
@@ -81,7 +81,7 @@ const en: ResearchArea[] = [
     ],
     projects: [
       { label: 'HyCell', href: '/projects/hycell' },
-      { label: 'WenNian', href: '/projects/wennian' },
+      { label: 'ZhiShen · WenNian', href: '/projects/wennian' },
     ],
   },
   {
@@ -133,7 +133,7 @@ const zh: ResearchArea[] = [
     ],
     projects: [
       { label: 'TaiYi Lingjing / 太一·灵境', href: '/zh/projects/taiyi-lingjing' },
-      { label: 'WenNian / 知身·问年', href: '/zh/projects/wennian' },
+      { label: '知身·问年', href: '/zh/projects/wennian' },
     ],
   },
   {
@@ -149,7 +149,7 @@ const zh: ResearchArea[] = [
       '让健康产品不越界滑向诊断的护栏设计。',
     ],
     projects: [
-      { label: 'WenNian / 知身·问年', href: '/zh/projects/wennian' },
+      { label: '知身·问年', href: '/zh/projects/wennian' },
       { label: 'HyCell', href: '/zh/projects/hycell' },
       { label: 'Pet AI Health', href: '/zh/projects/pet-ai-health' },
     ],
@@ -168,7 +168,7 @@ const zh: ResearchArea[] = [
     ],
     projects: [
       { label: 'HyCell', href: '/zh/projects/hycell' },
-      { label: 'WenNian / 知身·问年', href: '/zh/projects/wennian' },
+      { label: '知身·问年', href: '/zh/projects/wennian' },
     ],
   },
   {

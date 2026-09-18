@@ -32,6 +32,10 @@ pnpm-debug.log*
 # Local scratch files (audit / build captures)
 _*.log
 _*.txt
+_*.py
+
+# Workspace agent data
+.workbuddy/
 
 # OS junk
 .DS_Store

@@ -31,7 +31,9 @@ export type RealityState =
   | 'planned'
   | 'not-public';
 
-export type Bi = { en: string; zh: string };
+import type { Bi } from './bi';
+
+export type { Bi };
 
 export type RealityRow = {
   label: Bi;
@@ -70,6 +72,15 @@ export type ProjectEvidence = {
   /** Short reality sentence used beside the headline. */
   reality: Bi;
   publicCode: 'open' | 'none';
+  /**
+   * Date the publicly inspectable evidence was last read (ISO 8601).
+   *
+   * An active project moves faster than its public snapshot. Recording the
+   * snapshot date means future work does not invalidate every published fact —
+   * the page states which state was read, and that development may be ahead
+   * of it.
+   */
+  snapshot?: { date: string };
   rows: RealityRow[];
   panels: EvidencePanel[];
 };
@@ -80,6 +91,7 @@ const wennian: ProjectEvidence = {
   headline: { en: 'Open-source MVP', zh: '开源 MVP' },
   reality: { en: 'Code, tests, UI, API and deployment files are public.', zh: '代码、测试、界面、接口与部署文件均已公开。' },
   publicCode: 'open',
+  snapshot: { date: '2026-09-18' },
   rows: [
     {
       label: { en: 'Multi-clock assessment engine', zh: '多时钟评估引擎' },

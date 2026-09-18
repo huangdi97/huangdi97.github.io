@@ -86,6 +86,7 @@ const en = {
   'meta.publicCode': 'Public code',
   'meta.reality': 'Reality',
   'meta.what': 'What',
+  'meta.snapshot': 'Evidence snapshot',
 
   'publiccode.open': 'Public repository',
   'publiccode.none': 'None — nothing published',
@@ -107,6 +108,8 @@ const en = {
   'evidence.tableCaption':
     'States describe what a visitor can verify, not how finished something feels.',
   'evidence.stateCount': 'Rows marked',
+  'evidence.snapshotNote':
+    'Current product development may be ahead of the latest publicly inspectable repository snapshot.',
 
   'reality.built': 'Built',
   'reality.validated': 'Validated',
@@ -141,11 +144,17 @@ const en = {
   'resume.projects': 'Selected Projects',
   'resume.technical': 'Technical Areas',
   'resume.education': 'Education',
+  'resume.experience': 'Experience',
+  'resume.research': 'Research Experience',
+  'resume.output': 'Research Output',
   'resume.opensource': 'Open Source',
   'resume.contact': 'Contact',
+  'resume.downloads': 'Download',
   'resume.note':
     'This page is the resume. Print it from your browser (Ctrl/Cmd + P) for a clean single-column PDF.',
   'resume.download': 'Download PDF',
+
+  'about.background': 'Where this comes from',
 
   'status.active': 'Active',
   'status.research': 'Research',
@@ -154,6 +163,7 @@ const en = {
   'status.archived': 'Archived',
 
   'contact.viaGithub': 'Contact via GitHub',
+  'contact.title': 'Contact',
 
   'footer.rights': 'All rights reserved.',
   'footer.built': 'Built with Astro. Static, no tracking.',
@@ -234,6 +244,7 @@ const zh: Dict = {
   'meta.publicCode': '公开代码',
   'meta.reality': '实际状态',
   'meta.what': '是什么',
+  'meta.snapshot': '证据快照',
 
   'publiccode.open': '公开仓库',
   'publiccode.none': '无 — 未公开发布',
@@ -253,6 +264,7 @@ const zh: Dict = {
   'evidence.close': '关闭大图',
   'evidence.tableCaption': '状态描述的是访问者能够核实的内容，而不是"看起来完成了多少"。',
   'evidence.stateCount': '已标注条目',
+  'evidence.snapshotNote': '当前产品研发进度可能领先于公开可核验仓库快照。',
 
   'reality.built': '已实现',
   'reality.validated': '已验证',
@@ -286,11 +298,17 @@ const zh: Dict = {
   'resume.focus': '方向',
   'resume.projects': '精选项目',
   'resume.technical': '技术领域',
-  'resume.education': '教育',
+  'resume.education': '教育经历',
+  'resume.experience': '工作经历',
+  'resume.research': '科研经历',
+  'resume.output': '研究成果',
   'resume.opensource': '开源',
   'resume.contact': '联系',
+  'resume.downloads': '下载',
   'resume.note': '本页即为简历。用浏览器打印（Ctrl/Cmd + P）即可得到干净的单栏 PDF。',
   'resume.download': '下载 PDF',
+
+  'about.background': '来路',
 
   'status.active': '进行中',
   'status.research': '研究中',
@@ -299,6 +317,7 @@ const zh: Dict = {
   'status.archived': '已归档',
 
   'contact.viaGithub': '通过 GitHub 联系',
+  'contact.title': '联系',
 
   'footer.rights': '保留所有权利。',
   'footer.built': '基于 Astro 构建。纯静态，无追踪脚本。',

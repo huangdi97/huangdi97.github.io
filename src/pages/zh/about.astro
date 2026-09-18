@@ -1,10 +1,12 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Timeline from '../../components/Timeline.astro';
+import ContactLinks from '../../components/ContactLinks.astro';
 import { SITE } from '../../config/site';
-import { useT, localizedPath } from '../../i18n/ui';
+import { useT } from '../../i18n/ui';
 import { getAbout } from '../../data/about';
 import { getHow } from '../../data/how';
+import { profilePageJsonLd } from '../../data/profile';
 
 const lang = 'zh' as const;
 const t = useT(lang);
@@ -15,26 +17,13 @@ const path = '/zh/about/';
 const enPath = '/about/';
 const zhPath = '/zh/about/';
 
-const profileLd = {
-  '@context': 'https://schema.org',
-  '@type': 'ProfilePage',
-  name: `${SITE.nameZh} — 关于`,
-  url: new URL(path, SITE.url).href,
-  inLanguage: 'zh-Hans',
-  mainEntity: {
-    '@type': 'Person',
-    name: SITE.nameEn,
-    alternateName: SITE.nameZh,
-    url: SITE.url,
-    sameAs: [SITE.github],
-    knowsAbout: SITE.focusAreas.map((a) => a.zh),
-  },
-};
+const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
 ---
 
 <BaseLayout
   title="关于"
-  description="AI 系统、智能体、计算生物学、数字健康与仿真——从问题定义到部署上线，端到端构建。"
+  seoTitle="郝磊 — 关于 | AI 系统、智能体与生命科学"
+  description="郝磊 —— 以生命科学实验研究、计算生物学与 IVD / 疫苗产业经历为底的 AI 系统工程。"
   lang={lang}
   path={path}
   enPath={enPath}
@@ -90,6 +79,21 @@ const profileLd = {
     </section>
 
     <section class="about-section">
+      <h2 class="h2">{about.backgroundTitle}</h2>
+      <p class="lead about-section-lead">{about.backgroundIntro}</p>
+      <ol class="background-chain">
+        {
+          about.background.map((step) => (
+            <li class="background-step">
+              <p class="background-step-title">{step.title}</p>
+              <p class="background-step-body">{step.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="about-section">
       <h2 class="h2">{about.approachTitle}</h2>
       <p class="lead about-section-lead">{about.approachIntro}</p>
       <div class="about-timeline">
@@ -108,18 +112,7 @@ const profileLd = {
       <h2 class="h2">{about.contactTitle}</h2>
       <p class="lead about-section-lead">{about.contactIntro}</p>
       <div class="about-actions">
-        <a href={SITE.github} class="btn btn-primary" target="_blank" rel="noopener noreferrer">
-          GitHub
-          <span aria-hidden="true">↗</span>
-        </a>
-        <a href={localizedPath(lang, '/resume')} class="btn btn-outline">{t('nav.resume')}</a>
-        {
-          SITE.email && (
-            <a href={`mailto:${SITE.email}`} class="btn btn-outline">
-              {SITE.email}
-            </a>
-          )
-        }
+        <ContactLinks lang={lang} variant="buttons" />
       </div>
     </section>
   </article>
@@ -261,6 +254,44 @@ const profileLd = {
     width: 10px;
     height: 1px;
     background: var(--ink);
+  }
+
+  .background-chain {
+    list-style: none;
+    margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem 2.5rem;
+  }
+
+  @media (min-width: 700px) {
+    .background-chain {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .background-chain {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .background-step {
+    border-top: 1px solid var(--line);
+    padding-top: 1rem;
+  }
+
+  .background-step-title {
+    font-size: 0.9375rem;
+    color: var(--ink);
+  }
+
+  .background-step-body {
+    margin-top: 0.4rem;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--muted);
   }
 
   .about-actions {

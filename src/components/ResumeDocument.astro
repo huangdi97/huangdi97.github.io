@@ -1,0 +1,524 @@
+---
+import { useT, type Lang } from '../i18n/ui';
+import { getResume, availableResumePdfs } from '../data/resume';
+import { SITE } from '../config/site';
+import ContactLinks from './ContactLinks.astro';
+
+/**
+ * The whole résumé, rendered once and used by both locales.
+ *
+ * One HTML résumé, one data source. The two locale pages differ only in SEO
+ * metadata — the document body is not duplicated per language.
+ */
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useT(lang);
+const resume = getResume(lang);
+const pdfs = availableResumePdfs();
+const eyebrow = lang === 'zh' ? '简历' : 'Resume';
+---
+
+<article class="shell resume">
+  <div class="resume-bar no-print">
+    <p class="mono">{t('resume.note')}</p>
+    <div class="resume-bar-actions">
+      {
+        pdfs.length > 0 && (
+          <div class="resume-downloads">
+            <p class="resume-downloads-label mono">{t('resume.downloads')}</p>
+            <div class="resume-downloads-actions">
+              {pdfs.map((pdf) => (
+                <a
+                  href={pdf.path}
+                  class="btn btn-outline"
+                  download
+                  data-resume-pdf={pdf.id}
+                >
+                  <span class="resume-pdf-label">{pdf.label[lang]}</span>
+                  <span class="resume-pdf-note">{pdf.note[lang]}</span>
+                  <span aria-hidden="true">↓</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )
+      }
+      <button type="button" class="btn btn-primary" data-print>{t('resume.print')}</button>
+    </div>
+  </div>
+
+  <header class="resume-head">
+    <p class="eyebrow">{eyebrow}</p>
+    <h1 class="h1 resume-name">{resume.name}</h1>
+    <p class="resume-headline">{resume.headline}</p>
+    {/* Filled only for the derived PDF variants; empty on the live page. */}
+    <p class="resume-variant mono" data-resume-variant hidden></p>
+    <div class="resume-head-contact">
+      <ContactLinks lang={lang} variant="list" />
+    </div>
+  </header>
+
+  {
+    resume.blocks.map((block) => (
+      <section class="resume-block" data-resume-section={block.id}>
+        <h2 class="resume-block-title">{block.title}</h2>
+
+        {block.kind === 'text' &&
+          block.paragraphs.map((p) => <p class="resume-text">{p}</p>)}
+
+        {block.kind === 'list' && (
+          <ul class="resume-list">
+            {block.items.map((item) => (
+              <li>
+                {item.href ? (
+                  <a href={item.href} target="_blank" rel="noopener noreferrer">
+                    <span class="resume-label">{item.label}</span>
+                    {item.value && <span class="resume-value">{item.value}</span>}
+                  </a>
+                ) : (
+                  <>
+                    <span class="resume-label">{item.label}</span>
+                    {item.value && <span class="resume-value">{item.value}</span>}
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {block.kind === 'entries' && (
+          <ul class="resume-entries">
+            {block.entries.map((entry) => (
+              <li class="resume-entry">
+                <div class="resume-entry-meta">
+                  {entry.period && <p class="resume-entry-period">{entry.period}</p>}
+                  {entry.location && <p class="resume-entry-loc">{entry.location}</p>}
+                  {entry.org && <p class="resume-entry-org">{entry.org}</p>}
+                </div>
+
+                <div class="resume-entry-body">
+                  <h3 class="resume-entry-title">{entry.title}</h3>
+                  {entry.subtitle && <p class="resume-entry-sub">{entry.subtitle}</p>}
+
+                  {entry.focus && (
+                    <div class="resume-focus">
+                      <p class="resume-focus-label">{entry.focus.label}</p>
+                      <p class="resume-focus-items">{entry.focus.items.join(' · ')}</p>
+                      {entry.focus.methods && entry.focus.methods.length > 0 && (
+                        <p class="resume-focus-methods">{entry.focus.methods.join(' · ')}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {entry.lines && entry.lines.length > 0 && (
+                    <ul class="resume-entry-lines">
+                      {entry.lines.map((line) => (
+                        <li>{line}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {block.kind === 'groups' && (
+          <div class="resume-groups">
+            {block.groups.map((group) => (
+              <div class="resume-group">
+                <p class="resume-group-title">{group.title}</p>
+                <ul class="resume-group-list">
+                  {group.items.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {block.kind === 'projects' && (
+          <ul class="resume-projects">
+            {block.items.map((item) => (
+              <li>
+                <a href={item.href}>
+                  <span class="resume-label">{item.label}</span>
+                </a>
+                {item.value && <p class="resume-value">{item.value}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {block.kind === 'outputs' && (
+          <ul class="resume-outputs">
+            {block.items.map((item) => (
+              <li class="resume-output">
+                <p class="resume-output-title">{item.title}</p>
+                <p class="resume-output-status">
+                  <span class="resume-status-chip">{item.status}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {block.kind === 'contact' && <ContactLinks lang={lang} variant="list" />}
+      </section>
+    ))
+  }
+
+  <p class="resume-foot mono no-print">
+    {SITE.domain} · {SITE.github.replace('https://', '')}
+  </p>
+</article>
+
+<script>
+  document.querySelector('[data-print]')?.addEventListener('click', () => window.print());
+</script>
+
+<style>
+  .resume {
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+    max-width: 60rem;
+  }
+
+  .resume-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .resume-bar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .resume-downloads {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .resume-downloads-label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .resume-downloads-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .resume-pdf-label {
+    font-size: 0.9375rem;
+  }
+
+  .resume-pdf-note {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    opacity: 0.7;
+  }
+
+  .resume-head {
+    padding-top: clamp(2rem, 4vw, 3rem);
+    max-width: 52ch;
+  }
+
+  .resume-name {
+    margin-top: 1rem;
+  }
+
+  .resume-headline {
+    margin-top: 1rem;
+    font-size: clamp(1.0625rem, 1.8vw, 1.25rem);
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  .resume-head-contact {
+    margin-top: 1.5rem;
+  }
+
+  .resume-block {
+    margin-top: clamp(2.25rem, 4.5vw, 3.25rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .resume-block-title {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 1.25rem;
+  }
+
+  .resume-text {
+    font-size: 0.9375rem;
+    line-height: 1.72;
+    color: var(--muted);
+    max-width: 68ch;
+    margin-bottom: 0.75rem;
+  }
+
+  .resume-list,
+  .resume-entries,
+  .resume-projects,
+  .resume-outputs,
+  .resume-entry-lines,
+  .resume-group-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .resume-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .resume-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 1rem;
+  }
+
+  .resume-label {
+    font-size: 0.9375rem;
+    color: var(--ink);
+  }
+
+  .resume-list a:hover .resume-label {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .resume-value {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  /* ── Entry timeline ──────────────────────────────────────────────── */
+
+  .resume-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  .resume-entry {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.35rem 1.5rem;
+    break-inside: avoid;
+  }
+
+  @media (min-width: 760px) {
+    .resume-entry {
+      grid-template-columns: 11.5rem minmax(0, 1fr);
+      gap: 0.35rem 2rem;
+    }
+  }
+
+  .resume-entry-meta {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--faint);
+  }
+
+  .resume-entry-period {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .resume-entry-title {
+    font-size: 1.0625rem;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  .resume-entry-sub {
+    margin-top: 0.15rem;
+    font-size: 0.9375rem;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  .resume-entry-lines {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  /*
+   * Marker stays in flow on purpose. An absolutely positioned pseudo-element
+   * forces `position: relative` on the item, which pushes every bullet to the
+   * end of the PDF paint order — invisible on screen, but it scrambles text
+   * extraction and ATS parsing of the exported résumé.
+   */
+  .resume-entry-lines li {
+    padding-left: 1.1rem;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 66ch;
+  }
+
+  .resume-entry-lines li::before {
+    content: '—';
+    display: inline-block;
+    width: 1.1rem;
+    margin-left: -1.1rem;
+    color: var(--faint);
+  }
+
+  .resume-focus {
+    margin-top: 0.75rem;
+    padding-top: 0.6rem;
+    border-top: 1px dotted var(--line-strong);
+  }
+
+  .resume-focus-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .resume-focus-items,
+  .resume-focus-methods {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .resume-focus-methods {
+    color: var(--faint);
+  }
+
+  /* ── Technical groups ────────────────────────────────────────────── */
+
+  .resume-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .resume-group-title {
+    font-size: 0.9375rem;
+    color: var(--ink);
+  }
+
+  .resume-group-list {
+    margin-top: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .resume-group-list li {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 68ch;
+  }
+
+  /* ── Projects & outputs ──────────────────────────────────────────── */
+
+  .resume-projects {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+  }
+
+  .resume-projects a:hover .resume-label {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .resume-projects .resume-value {
+    margin-top: 0.25rem;
+    max-width: 62ch;
+    line-height: 1.7;
+  }
+
+  .resume-outputs {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .resume-output-title {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--ink);
+    max-width: 68ch;
+  }
+
+  .resume-output-status {
+    margin-top: 0.4rem;
+  }
+
+  .resume-status-chip {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 2px;
+    color: var(--muted);
+  }
+
+  .resume-foot {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.75rem;
+    color: var(--faint);
+  }
+
+  @media print {
+    .resume {
+      max-width: none;
+      padding: 0;
+    }
+
+    .resume-block {
+      margin-top: 1.35rem;
+      padding-top: 0.85rem;
+    }
+
+    .resume-entries {
+      gap: 1.1rem;
+    }
+
+    .resume-head {
+      padding-top: 0;
+    }
+  }
+</style>

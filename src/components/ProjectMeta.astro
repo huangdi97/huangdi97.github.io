@@ -18,6 +18,8 @@ export interface Props {
   publicCode?: 'open' | 'none';
   /** One factual sentence about what exists. Omitted when unavailable. */
   reality?: string;
+  /** Date the public evidence was last read, when the project is active. */
+  snapshotDate?: string;
 }
 
 const {
@@ -30,6 +32,7 @@ const {
   compact = false,
   publicCode,
   reality,
+  snapshotDate,
 } = Astro.props;
 const t = useT(lang);
 
@@ -93,6 +96,17 @@ const statusKey = `status.${status.toLowerCase()}`;
       <div class="meta-row">
         <dt>{t('meta.reality')}</dt>
         <dd class="meta-reality">{reality}</dd>
+      </div>
+    )
+  }
+  {
+    snapshotDate && (
+      <div class="meta-row">
+        <dt>{t('meta.snapshot')}</dt>
+        <dd class="meta-snapshot">
+          <span class="meta-snapshot-date">{snapshotDate}</span>
+          <span class="meta-snapshot-note">{t('evidence.snapshotNote')}</span>
+        </dd>
       </div>
     )
   }
@@ -164,6 +178,26 @@ const statusKey = `status.${status.toLowerCase()}`;
 
   .meta-reality {
     line-height: 1.6;
+  }
+
+  .meta-snapshot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+  }
+
+  .meta-snapshot-date {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .meta-snapshot-note {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 52ch;
   }
 
   .codeflag {

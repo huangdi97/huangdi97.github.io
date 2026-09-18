@@ -1,6 +1,6 @@
 ---
 import { useT, localizedPath, type Lang } from '../i18n/ui';
-import { SITE } from '../config/site';
+import ContactLinks from './ContactLinks.astro';
 
 export interface Props {
   lang: Lang;
@@ -59,24 +59,8 @@ const links = [
       }
     </ul>
 
-    <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
-      <a
-        href={SITE.github}
-        class="link-arrow"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`GitHub ${t('a11y.external')}`}
-      >
-        GitHub
-        <span class="arrow" aria-hidden="true">↗</span>
-      </a>
-      {
-        SITE.email && (
-          <a href={`mailto:${SITE.email}`} class="link-arrow">
-            {SITE.email}
-          </a>
-        )
-      }
+    <div class="mt-8">
+      <ContactLinks lang={lang} variant="list" />
     </div>
   </nav>
 </div>

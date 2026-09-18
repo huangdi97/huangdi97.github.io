@@ -1,11 +1,16 @@
 /**
  * Single source of truth for site-wide facts.
  *
- * Fact discipline: every value here is either (a) confirmed from the public
- * GitHub account @huangdi97, (b) confirmed from a repository README shipped
- * by that account, or (c) typographic/structural. Nothing is inferred,
- * rounded up or embellished. If a fact is unverified it is absent from this
- * file rather than guessed.
+ * Fact discipline: every value here is either (a) an owner-confirmed resume
+ * fact, (b) confirmed from the public GitHub account @huangdi97, (c) confirmed
+ * from a repository README shipped by that account, or (d) typographic /
+ * structural. Nothing is inferred, rounded up or embellished. If a fact is
+ * unverified it is absent from this file rather than guessed.
+ *
+ * Owner-confirmed resume facts (education, employment, contact addresses) are
+ * personal history, not engineering claims — they are published as supplied and
+ * are never "downgraded" for want of a repository to point at. Project
+ * implementation state stays under strict evidence discipline.
  */
 
 export const SITE = {
@@ -33,24 +38,51 @@ export const SITE = {
   /** Confirmed from the account and from the WenNian README. */
   github: 'https://github.com/huangdi97',
   githubHandle: '@huangdi97',
-  /** Published by the author in the WenNian repository README. */
-  email: '304418554@qq.com',
 
   /**
-   * Path to a real, owner-supplied resume PDF.
+   * Public contact addresses, in display order: Gmail, then QQ Mail.
    *
-   * Null until such a file exists. The resume page shows a download button
-   * only when this is set — a button that 404s is worse than no button, and a
-   * generated-but-unreviewed PDF would not match the printed page.
+   * Source: owner-confirmed (v1.2 identity closure). Both are rendered
+   * everywhere through `ContactLinks`, so no page can drift out of sync.
+   *
+   * Not public by policy: the 163 address used for doctoral applications and
+   * the mobile number printed on the private job-application PDFs. Neither
+   * appears in source copy, JSON-LD, OG metadata or any published PDF.
    */
-  resumePdf: null as string | null,
+  emails: [
+    { id: 'gmail', label: { en: 'Gmail', zh: 'Gmail' }, value: 'h30441854@gmail.com' },
+    { id: 'qq', label: { en: 'QQ Mail', zh: 'QQ 邮箱' }, value: '304418554@qq.com' },
+  ],
+
+  /**
+   * Public-safe resume PDFs, generated from this site's own resume data.
+   *
+   * Empty until a sanitised file exists at the given path. The resume page
+   * shows a download button only for files that are actually present — a
+   * button that 404s is worse than no button.
+   */
+  resumePdfs: [
+    {
+      id: 'ai-agent',
+      path: '/resume/Hao-Lei-AI-Agent-Resume-ZH.pdf',
+      label: { en: 'AI / Agent Resume', zh: 'AI / Agent 简历' },
+      note: { en: 'PDF · 中文', zh: 'PDF · 中文' },
+    },
+    {
+      id: 'ai-lifescience',
+      path: '/resume/Hao-Lei-AI-LifeScience-Resume-ZH.pdf',
+      label: { en: 'AI × Life Science Resume', zh: 'AI × 生命科学简历' },
+      note: { en: 'PDF · 中文', zh: 'PDF · 中文' },
+    },
+  ],
 
   /**
    * Portrait image path, relative to /public.
    *
    * Null until a real photograph is supplied. The About page has a slot for
    * it and keeps its text-only layout while this is null — no placeholder
-   * avatar, no generated face, no stock image.
+   * avatar, no generated face, no stock image. A portrait is optional and is
+   * not treated as a gap that blocks release.
    */
   portrait: null as string | null,
 
@@ -74,6 +106,11 @@ export const SITE = {
     { en: 'Research Engineering', zh: '研究工程' },
   ],
 } as const;
+
+/** The address used in structured data. Only the primary one is published. */
+export function primaryEmail(): string {
+  return SITE.emails[0].value;
+}
 
 /**
  * Public repositories confirmed to exist under the `huangdi97` account.

@@ -15,6 +15,8 @@ export interface Props {
   type?: 'website' | 'article' | 'profile';
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   noindex?: boolean;
+  /** Verbatim <title> override, for pages whose SEO title is a fixed phrase. */
+  seoTitle?: string;
 }
 
 const {
@@ -28,6 +30,7 @@ const {
   type = 'website',
   jsonLd,
   noindex = false,
+  seoTitle,
 } = Astro.props;
 
 const canonical = new URL(path, SITE.url).href;
@@ -35,7 +38,7 @@ const enHref = new URL(enPath, SITE.url).href;
 const zhHref = new URL(zhPath, SITE.url).href;
 const image = new URL(ogImage, SITE.url).href;
 
-const fullTitle = title === SITE.nameEn ? title : `${title} — ${SITE.nameEn}`;
+const fullTitle = seoTitle ?? (title === SITE.nameEn ? title : `${title} — ${SITE.nameEn}`);
 
 const locale = lang === 'zh' ? 'zh_CN' : 'en_US';
 const altLocale = lang === 'zh' ? 'en_US' : 'zh_CN';
