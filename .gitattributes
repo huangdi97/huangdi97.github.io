@@ -1,0 +1,27 @@
+# Line endings.
+#
+# The tooling in this repo assumes LF. `scripts/check-visual-system.mjs` and
+# `check-science-copy.mjs` match frontmatter with `\n`-anchored regular
+# expressions, and Prettier is configured for LF. On a Windows checkout with the
+# default `core.autocrlf=true`, git rewrites tracked files to CRLF on checkout —
+# which builds fine but silently turns those gates red, with a failure message
+# ("coverDescription is too short") that points nowhere near the real cause.
+#
+# `eol=lf` makes the working tree LF on every platform, so the gates mean the
+# same thing everywhere.
+* text=auto eol=lf
+
+# Binary formats must never be touched.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.zip binary
+
+# Generated assets are checked in as-is.
+public/og/*.png binary
+public/resume/*.pdf binary
