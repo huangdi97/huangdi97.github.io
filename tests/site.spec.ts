@@ -58,12 +58,12 @@ test.describe('homepage', () => {
 
   test('hero keeps the AI × Life Science × Agents line', async ({ page }) => {
     await visit(page, '/');
-    await expect(page.locator('.hero-sub')).toContainText('AI × Life Science × Agents');
+    await expect(page.locator('.hero-role')).toContainText('AI × Life Science × Agents');
   });
 
   test('lists exactly four featured projects, in the confirmed order', async ({ page }) => {
     await visit(page, '/');
-    const cards = page.locator('[data-mosaic-card]');
+    const cards = page.locator('[data-featured-row]');
     await expect(cards).toHaveCount(4);
 
     const titles = await cards.locator('h3 a').allInnerTexts();
@@ -77,7 +77,7 @@ test.describe('homepage', () => {
 
   test('selected work never features TaiYi or PDIG', async ({ page }) => {
     await visit(page, '/');
-    const mosaic = page.locator('.mosaic');
+    const mosaic = page.locator('#work');
     await expect(mosaic.getByText('TaiYi Lingjing')).toHaveCount(0);
     await expect(mosaic.getByRole('link', { name: /TaiYi/ })).toHaveCount(0);
     // PDIG keeps its full case study under /projects; the homepage carries four.
@@ -85,33 +85,69 @@ test.describe('homepage', () => {
   });
 
   /**
-   * v1.7 prototype: a homepage card identifies a project, it does not explain
-   * one. Each card carries a name, one line of type, a labelled illustration,
-   * one reality status and one case link — and none of the apparatus v1.6
-   * stacked on top of that.
+   * v2.0 (§13–§14): a homepage row shows a project, it does not explain one.
+   * Each row carries a name, one line of type, one status, one project link and
+   * a labelled drawing — and none of the apparatus a card used to stack on top
+   * of that.
    */
-  test('each mosaic card identifies the project and nothing more', async ({ page }) => {
+  test('each featured row shows the project and nothing more', async ({ page }) => {
     await visit(page, '/');
-    const cards = page.locator('[data-mosaic-card]');
-    await expect(cards).toHaveCount(4);
+    const rows = page.locator('[data-featured-row]');
+    await expect(rows).toHaveCount(4);
 
     for (const slug of ['wennian', 'hycell', 'morn', 'biopulse']) {
-      const card = page.locator(`[data-mosaic-slug="${slug}"]`);
-      await expect(card).toHaveCount(1);
-      await expect(card.locator('.card-name')).toBeVisible();
-      await expect(card.locator('.card-type')).toBeVisible();
-      await expect(card.locator('.card-status')).toBeVisible();
-      await expect(card.locator('.card-link')).toBeVisible();
+      const row = page.locator(`[data-featured-row][data-slug="${slug}"]`);
+      await expect(row).toHaveCount(1);
+      await expect(row.locator('.row-name')).toBeVisible();
+      await expect(row.locator('.row-type')).toBeVisible();
+      await expect(row.locator('.row-status')).toHaveCount(1);
+      await expect(row.locator('.row-status')).toBeVisible();
+      await expect(row.locator('.row-link')).toBeVisible();
 
-      // The illustration carries meaning now, so it is a labelled image.
-      const visual = card.locator('[data-mosaic-visual] svg');
+      // The drawing carries meaning, so it is a labelled image.
+      const visual = row.locator('[data-artwork] svg');
       await expect(visual).toHaveAttribute('role', 'img');
       await expect(visual).toHaveAttribute('aria-label', /.{12,}/);
 
-      // Removed in v1.7.
-      await expect(card.locator('[data-cover-caps]')).toHaveCount(0);
-      await expect(card.locator('[data-proof]')).toHaveCount(0);
-      await expect(card.locator('.tag')).toHaveCount(0);
+      // Removed in v2.0: the card shell and everything that came with it.
+      await expect(row.locator('[data-mosaic-card]')).toHaveCount(0);
+      await expect(row.locator('.card-eyebrow')).toHaveCount(0);
+      await expect(row.locator('.card-index')).toHaveCount(0);
+      await expect(row.locator('.card-keywords')).toHaveCount(0);
+      await expect(row.locator('[data-cover-caps]')).toHaveCount(0);
+      await expect(row.locator('[data-proof]')).toHaveCount(0);
+      await expect(row.locator('.tag')).toHaveCount(0);
+    }
+  });
+
+  /**
+   * The four rows alternate sides (§11) without becoming four different
+   * heights, and each one stays inside the 360–520px band the brief sets (§12).
+   */
+  test('the four featured rows alternate sides at a consistent height', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'desktop-only: the row grid is a wide layout');
+    await visit(page, '/');
+    await page.locator('#work').scrollIntoViewIfNeeded();
+
+    const rows = page.locator('[data-featured-row]');
+    const heights: number[] = [];
+    const sides: string[] = [];
+
+    for (let i = 0; i < 4; i += 1) {
+      const row = rows.nth(i);
+      const box = await row.boundingBox();
+      heights.push(box?.height ?? 0);
+
+      const art = await row.locator('.row-art').boundingBox();
+      // Which side the drawing sits on, relative to the row's own centre.
+      const centre = (box?.x ?? 0) + (box?.width ?? 0) / 2;
+      sides.push((art?.x ?? 0) + (art?.width ?? 0) / 2 < centre ? 'left' : 'right');
+    }
+
+    expect(sides).toEqual(['left', 'right', 'left', 'right']);
+    for (const [i, height] of heights.entries()) {
+      expect(height, `row #${i + 1} height`).toBeGreaterThanOrEqual(340);
+      expect(height, `row #${i + 1} height`).toBeLessThanOrEqual(540);
     }
   });
 
@@ -137,23 +173,51 @@ test.describe('homepage', () => {
     await expect(page.locator('.rn-list')).toHaveCount(0);
   });
 
-  test('the hero is words and canvas, with no system figure', async ({ page }) => {
+  /**
+   * v2.0 (§5, §8): the hero is the name, then one complete artwork. It is not a
+   * text column beside a bordered system figure, and it is not a text column
+   * over a page-wide field either — both of those are what the reset removes.
+   */
+  test('the hero is the name and one artwork, with no system figure', async ({ page }) => {
     await visit(page, '/');
 
     const hero = page.locator('.hero');
     await expect(hero.getByRole('heading', { level: 1 })).toContainText('HAO LEI');
-    await expect(hero.locator('.hero-sub')).toContainText('AI × Life Science × Agents');
+    await expect(hero.locator('.hero-role')).toContainText('AI × Life Science × Agents');
     await expect(hero.getByRole('link', { name: 'Explore Work' })).toBeVisible();
 
-    // The bordered system diagram is gone from the homepage.
+    // Exactly one drawing, and it is the hero artwork.
+    await expect(hero.locator('[data-artwork]')).toHaveCount(1);
+    await expect(hero.locator('[data-artwork="hero"]')).toHaveCount(1);
+    const art = hero.locator('[data-artwork="hero"] svg');
+    await expect(art).toHaveAttribute('role', 'img');
+    await expect(art).toHaveAttribute('aria-label', /.{12,}/);
+
+    // The figures and the page-wide canvas are gone from the homepage.
     await expect(hero.locator('.hero-system')).toHaveCount(0);
     await expect(hero.locator('.hero-field')).toHaveCount(0);
+    await expect(page.locator('[data-global-scientific-canvas]')).toHaveCount(0);
+  });
 
-    // The copy occupies the left half; the rest of the first screen is canvas.
+  /**
+   * The composition itself: words on the left, the drawing taking the rest, and
+   * a first screen that is 76vh rather than a full one. This is the wide layout
+   * only — below 900px the hero stacks, with the drawing under the words — so it
+   * is asserted where that layout actually exists.
+   */
+  test('the hero splits into copy and drawing on wide screens', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'desktop-only: the hero is two columns above 900px');
+    await visit(page, '/');
+
+    const hero = page.locator('.hero');
+
+    // The copy occupies the left half; the drawing takes the rest.
     const copy = await hero.locator('.hero-copy').boundingBox();
+    const artBox = await hero.locator('.hero-art').boundingBox();
     expect(copy?.width ?? 0).toBeLessThan(1440 * 0.55);
+    expect((copy?.x ?? 0) + (copy?.width ?? 0)).toBeLessThan(artBox?.x ?? 0);
 
-    // 75–88vh, not a full screen.
+    // 76vh, not a full screen.
     const height = (await hero.boundingBox())?.height ?? 0;
     expect(height).toBeGreaterThan(900 * 0.6);
     expect(height).toBeLessThan(900 * 0.95);
@@ -176,17 +240,19 @@ test.describe('homepage', () => {
     expect(height, 'statement band height').toBeLessThanOrEqual(460);
   });
 
+  /**
+   * v2.0 (§29): the close is a name, one positioning line and four links. No
+   * eyebrow, no card, no second content block.
+   */
   test('homepage contact band carries name, positioning line and contact links', async ({
     page,
   }) => {
     await visit(page, '/');
     const band = page.locator('#contact');
 
-    await expect(band).toContainText('About / Contact');
     await expect(band).toContainText('Hao Lei');
-    await expect(band).toContainText(
-      'AI systems and agents, with a life-science and computational biology background.',
-    );
+    await expect(band).toContainText('Life Science × Computational Biology × AI Systems');
+    await expect(band.locator('.eyebrow')).toHaveCount(0);
 
     // Order is fixed by the shared contact data: Gmail → QQ → GitHub → Resume.
     const ids = await band
@@ -206,11 +272,23 @@ test.describe('homepage', () => {
     expect(background).toBe('rgba(0, 0, 0, 0)');
   });
 
-  test('the background field is present on the homepage', async ({ page }) => {
+  /**
+   * v2.0 (§9): the homepage does not mount the page-wide canvas. Its visual
+   * work is carried by one hero artwork and four project drawings, and the
+   * inner pages keep the canvas — which `cover.spec.ts` verifies.
+   */
+  test('the homepage carries its own drawings instead of the page-wide canvas', async ({
+    page,
+  }) => {
     await visit(page, '/');
-    const canvas = page.locator('[data-global-scientific-canvas]');
-    await expect(canvas).toHaveCount(1);
-    await expect(canvas).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.locator('[data-global-scientific-canvas]')).toHaveCount(0);
+
+    const drawings = page.locator('main [data-artwork] svg[role="img"]');
+    await expect(drawings).toHaveCount(5);
+    const slugs = await page
+      .locator('main [data-artwork]')
+      .evaluateAll((nodes) => nodes.map((n) => (n as HTMLElement).dataset.artwork ?? ''));
+    expect([...new Set(slugs)]).toEqual(['hero', 'wennian', 'hycell', 'morn', 'biopulse']);
   });
 
   test('research is split into active and concept tiers on /research', async ({ page }) => {
@@ -260,9 +338,9 @@ test.describe('homepage', () => {
   });
 
 
-  test('every project illustration is exposed as a labelled image', async ({ page }) => {
+  test('every project drawing is exposed as a labelled image', async ({ page }) => {
     await visit(page, '/');
-    const visuals = page.locator('[data-mosaic-visual] svg[role="img"]');
+    const visuals = page.locator('[data-featured-row] [data-artwork] svg[role="img"]');
     await expect(visuals).toHaveCount(4);
     const count = await visuals.count();
     for (let i = 0; i < count; i += 1) {
@@ -344,18 +422,27 @@ test.describe('evidence layer', () => {
     await expect(page.locator('figure.ev-panel .ev-source-value').first()).toBeVisible();
   });
 
-  test('home page cards carry a reality status', async ({ page }) => {
+  test('home page rows carry one reality status each', async ({ page }) => {
     await visit(page, '/');
-    /* v1.7: the mosaic states each project's reality once, in words, from the
-       evidence layer — no pill, no second code label, no trailing status word.
-       ZhiShen reads "Open-source MVP"; every card carries a headline. */
-    const statuses = page.locator('[data-mosaic-card] .card-status');
+    /* v2.0 (§14): each row states the project once, in words, from the evidence
+       layer — exactly one line. ZhiShen and HyCell are identified by their
+       reality headline; Morn and BioPulse by the public-code fact. No pill, no
+       second code label, no trailing status word, no proof line. */
+    const statuses = page.locator('[data-featured-row] .row-status');
     await expect(statuses).toHaveCount(4);
-    await expect(page.locator('[data-mosaic-slug="wennian"] .card-status')).toContainText(
+
+    await expect(page.locator('[data-featured-row][data-slug="wennian"] .row-status')).toHaveText(
       'Open-source MVP',
     );
-    // The public-code fact is stated once, beside the headline, not twice.
-    await expect(statuses.first()).toContainText('Public repository');
+    await expect(page.locator('[data-featured-row][data-slug="hycell"] .row-status')).toHaveText(
+      'Research prototype',
+    );
+    await expect(page.locator('[data-featured-row][data-slug="morn"] .row-status')).toHaveText(
+      'Public repository',
+    );
+    await expect(page.locator('[data-featured-row][data-slug="biopulse"] .row-status')).toHaveText(
+      'Public repository',
+    );
   });
 
   test('open source table shows checked-in license and update metadata on /projects', async ({

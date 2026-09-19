@@ -1,0 +1,86 @@
+---
+/**
+ * Editorial artwork frame — the one component that renders the five drawings in
+ * `src/assets/home/`.
+ *
+ * Why the SVG is inlined rather than referenced with <img>: the drawings are
+ * painted with the `--art-*` tokens, and a custom property cannot cross a
+ * document boundary. Inlining is what lets one asset follow Paper, White and
+ * Night without a second copy of the file.
+ *
+ * The drawings are real, version-controlled assets produced by
+ * `scripts/generate-home-artwork.mjs` (`npm run artwork`) — not markup written
+ * by hand inside a component. Astro cannot infer a `role`/`aria-label` for a raw
+ * SVG, so the two attributes are injected here, where the locale is known.
+ *
+ * The tonal wash behind the drawing is a CSS gradient on the frame rather than
+ * part of the file: `stop-color` cannot read a custom property from a
+ * presentation attribute, so an SVG gradient would have to hard-code a colour
+ * and stop being themeable.
+ */
+import heroSvg from '../assets/home/hero.svg?raw';
+import wennianSvg from '../assets/home/wennian.svg?raw';
+import hycellSvg from '../assets/home/hycell.svg?raw';
+import mornSvg from '../assets/home/morn.svg?raw';
+import biopulseSvg from '../assets/home/biopulse.svg?raw';
+
+export type ArtworkName = 'hero' | 'wennian' | 'hycell' | 'morn' | 'biopulse';
+
+export interface Props {
+  name: ArtworkName;
+  /** Spoken description. The drawing carries meaning, so it is never silent. */
+  label: string;
+  /** Extra classes on the frame, for layout only. */
+  class?: string;
+}
+
+const { name, label, class: className } = Astro.props;
+
+const ART: Record<ArtworkName, string> = {
+  hero: heroSvg,
+  wennian: wennianSvg,
+  hycell: hycellSvg,
+  morn: mornSvg,
+  biopulse: biopulseSvg,
+};
+
+const safeLabel = label.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+/* Astro cannot type a `?raw` import as anything but a string, so the one
+   attribute injection happens here, explicitly, instead of being hoped for. */
+const svg = ART[name].replace(
+  '<svg ',
+  `<svg role="img" aria-label="${safeLabel}" `,
+);
+---
+
+<figure class:list={['art', `art--${name}`, className]} data-artwork={name}>
+  <div class="art-ink" set:html={svg} />
+</figure>
+
+<style>
+  .art {
+    position: relative;
+    margin: 0;
+    /* The tonal mass. Two very low-alpha gradients, one neutral and one cobalt,
+       give the drawing depth without ever becoming a panel: there is no fill,
+       no border and no edge. */
+    background-image:
+      radial-gradient(62% 66% at 62% 52%, var(--art-wash), transparent 74%),
+      radial-gradient(44% 48% at 84% 22%, var(--art-glow), transparent 72%);
+    background-repeat: no-repeat;
+  }
+
+  .art-ink {
+    display: block;
+  }
+
+  /* set:html content is not scoped by Astro, so the inner svg is targeted
+     through :global(). */
+  .art-ink :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+</style>

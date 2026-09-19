@@ -8,6 +8,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "assets": "node scripts/generate-assets.mjs",
+    "artwork": "node scripts/generate-home-artwork.mjs",
     "build": "npm run assets && astro build",
     "preview": "astro preview",
     "astro": "astro",

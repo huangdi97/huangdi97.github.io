@@ -29,6 +29,18 @@ export interface Props {
    * contact surface.
    */
   minimalFooter?: boolean;
+  /**
+   * Whether to mount the page-level scientific canvas behind the document.
+   *
+   * The homepage sets this to false in v2.0 (§9). The canvas was doing the
+   * homepage's visual work in v1.7 — a page-wide field of contour, formula and
+   * node marks — and that is exactly the "one hairline language everywhere"
+   * problem the reset exists to fix. The homepage now has one strong visual
+   * (the hero artwork), four project drawings, and clean paper between them.
+   *
+   * Inner pages keep the canvas: it is their atmosphere and nothing replaces it.
+   */
+  canvas?: boolean;
 }
 
 const {
@@ -45,6 +57,7 @@ const {
   noindex = false,
   mainClass,
   minimalFooter = false,
+  canvas = true,
 } = Astro.props;
 
 const t = useT(lang);
@@ -89,8 +102,10 @@ const htmlLang = lang === 'zh' ? 'zh-Hans' : 'en';
   <body class="flex min-h-screen flex-col">
     <!-- Atmosphere for the whole document: mathematics, biology and AI behind
          every section. Absolute, document-level, inert and decorative — it
-         scrolls with the page and is hidden from assistive technology. -->
-    <GlobalScientificCanvas />
+         scrolls with the page and is hidden from assistive technology.
+         The homepage opts out in v2.0: its visual work is carried by the hero
+         artwork and the four project drawings instead (§9). -->
+    {canvas && <GlobalScientificCanvas />}
 
     <a href="#main" class="skip-link">{t('nav.skip')}</a>
 

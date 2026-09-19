@@ -92,6 +92,25 @@
     /* Background-only. A desaturated moss, not a theme colour: it never appears
        on a button, a link or a border. */
     --science-bio-ink: #547265;
+
+    /* Editorial artwork ink (v2.0) — the palette the five homepage drawings in
+       `src/assets/home/` are painted with. Separate from the two above on
+       purpose: `--science-*` is the page-level atmosphere layer, which the
+       homepage no longer mounts, and `--science-bio-ink` is background-only by
+       contract. These are foreground artwork colours, and the artwork is a
+       labelled image rather than a texture.
+
+       Paper carries the most ink of the three themes because it is the only
+       theme under review this round (§31). */
+    --art-ink: #151515;
+    --art-line: rgba(21, 21, 21, 0.46);
+    --art-line-soft: rgba(21, 21, 21, 0.23);
+    --art-ghost: rgba(21, 21, 21, 0.15);
+    --art-bio: rgba(84, 114, 101, 0.58);
+    --art-stipple: rgba(21, 21, 21, 0.38);
+    --art-node: #151515;
+    --art-wash: rgba(21, 21, 21, 0.05);
+    --art-glow: rgba(46, 86, 242, 0.06);
   }
 
   [data-theme='white'] {
@@ -143,6 +162,18 @@
     --science-grid: 0.026;
     --science-accent: 0.09;
     --science-bio-ink: #54756a;
+
+    /* Editorial artwork ink (v2.0). Flat white shows ink fastest, so the
+       drawing sits a step lighter than on paper — but only a step. */
+    --art-ink: #111111;
+    --art-line: rgba(0, 0, 0, 0.4);
+    --art-line-soft: rgba(0, 0, 0, 0.19);
+    --art-ghost: rgba(0, 0, 0, 0.13);
+    --art-bio: rgba(84, 117, 106, 0.5);
+    --art-stipple: rgba(0, 0, 0, 0.32);
+    --art-node: #111111;
+    --art-wash: rgba(0, 0, 0, 0.045);
+    --art-glow: rgba(46, 86, 242, 0.055);
   }
 
   [data-theme='night'] {
@@ -196,20 +227,49 @@
     --science-grid: 0.04;
     --science-accent: 0.13;
     --science-bio-ink: #8fae9f;
+
+    /* Editorial artwork ink (v2.0). A dark canvas absorbs ink, so the drawing
+       has to be inked harder to read at all. Night is out of scope this round
+       (§31) — it only has to not break. */
+    --art-ink: #ecece7;
+    --art-line: rgba(236, 236, 231, 0.4);
+    --art-line-soft: rgba(236, 236, 231, 0.19);
+    --art-ghost: rgba(236, 236, 231, 0.13);
+    --art-bio: rgba(143, 174, 159, 0.45);
+    --art-stipple: rgba(236, 236, 231, 0.3);
+    --art-node: #ecece7;
+    --art-wash: rgba(110, 139, 255, 0.07);
+    --art-glow: rgba(110, 139, 255, 0.1);
   }
 
   :root {
-    /* Typography */
+    /* Typography
+     *
+     * The CJK faces are listed *before* `system-ui` on purpose. `system-ui`
+     * resolves to the platform UI font, which on Windows carries Han glyphs —
+     * so putting it earlier meant every Chinese character on the site was
+     * resolved by it and never reached 'Microsoft YaHei'. On the machine this
+     * round was reviewed on, that produced a calligraphic kai face
+     * (HYXiXingKaiW) for all Chinese body copy: an accident, not a design
+     * decision, and the single largest typographic defect the v2.0 screenshots
+     * exposed. Latin is unaffected — Inter, Geist, the platform UI font and
+     * Roboto all precede the CJK faces and all carry Latin glyphs. */
     --font-sans:
-      'Inter', 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
-      'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+      'Inter', 'Geist', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC',
+      'Hiragino Sans GB', 'Microsoft YaHei', 'Microsoft YaHei UI', 'Noto Sans SC', system-ui,
+      sans-serif;
     --font-mono:
-      'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+      'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'PingFang SC',
+      'Microsoft YaHei', 'Noto Sans SC', monospace;
 
     /* Layout */
     --shell: 1200px;
     --gutter: 1.5rem;
     --header-h: 68px;
+
+    /* The artwork's cobalt is the site's cobalt. Aliased rather than repeated,
+       so a theme can never end up with two different blues. */
+    --art-accent: var(--accent);
 
     /* Scientific canvas — placement defaults for a composition. Each
        composition declares only where it sits and how tall it is; the three of

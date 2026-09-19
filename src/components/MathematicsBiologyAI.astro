@@ -66,15 +66,38 @@ const spoken =
 </section>
 
 <style>
-  /* Desktop target: 260–420px, and 10–15% of the page. The band earns its space
-     from padding rather than from more content: it is one statement, and it
-     should feel like a breath between the work and the close.
-     
+  /* Desktop target: 300–400px, and well under a tenth of the page. The band
+     earns its space from padding rather than from more content: it is one
+     statement, and it should feel like a breath between the work and the close.
+
      A desktop min-height keeps that deterministic. Without it the band's height
      depended on how the statement happened to wrap, which moved it by ~130px
      between a cold load and a warm one. */
   .statement-band {
+    position: relative;
     padding-block: clamp(2rem, 4vw, 3.25rem);
+  }
+
+  /* The one place after the hero where the page is allowed a little scientific
+     texture again (§9) — and it is a CSS gradient, not another drawing: faint
+     ruled lines, faded at both edges, sitting behind the words. Adding a second
+     SVG here would rebuild the "many small diagrams" problem this round removes. */
+  .statement-band::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      var(--grid-line) 0 1px,
+      transparent 1px 30px
+    );
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 32%, #000 68%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 32%, #000 68%, transparent);
+    pointer-events: none;
+  }
+
+  .statement-band > * {
+    position: relative;
   }
 
   @media (min-width: 900px) {
@@ -82,14 +105,14 @@ const spoken =
       display: flex;
       flex-direction: column;
       justify-content: center;
-      min-height: 380px;
+      min-height: 320px;
     }
   }
 
   .band-grid {
     display: grid;
     gap: 1.75rem;
-    margin-top: clamp(1.5rem, 3vw, 2.25rem);
+    margin-top: clamp(1.25rem, 2.4vw, 1.75rem);
   }
 
   @media (min-width: 900px) {
@@ -102,10 +125,10 @@ const spoken =
 
   .band-statement {
     margin: 0;
-    font-size: clamp(1.5rem, 2.9vw, 2.125rem);
-    line-height: 1.42;
+    font-size: clamp(1.375rem, 2.5vw, 1.875rem);
+    line-height: 1.44;
     letter-spacing: -0.024em;
-    max-width: 44ch;
+    max-width: 42ch;
   }
 
   .band-side {

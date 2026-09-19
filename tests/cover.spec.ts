@@ -19,7 +19,16 @@
 import { test, expect, type Page } from '@playwright/test';
 import { visit } from './helpers';
 
-const HOMES = ['/', '/zh/'] as const;
+/**
+ * Pages that still mount the page-wide canvas.
+ *
+ * v2.0 removed it from the homepage (§9) — the homepage's visual work is one
+ * hero artwork plus four project drawings, and a page-wide field behind them
+ * would rebuild the "one hairline language on every screen" problem the reset
+ * exists to fix. The canvas itself is unchanged and still has to behave, so the
+ * suite checks it where it still renders: the inner pages, one per locale.
+ */
+const CANVAS_PAGES = ['/projects/', '/zh/research/'] as const;
 const PROJECTS = ['/projects/', '/zh/projects/'] as const;
 
 /** Notation that used to end up on project covers. */
@@ -32,10 +41,10 @@ function covers(page: Page) {
 /**
  * The words-first cover contract.
  *
- * v1.7 moved the homepage off covers: Selected Work is now a mosaic of large
- * illustrations with identification-only text, so the "a cover explains itself
- * in words" rule is checked where covers still render — the /projects grid.
- * The rule itself is unchanged, and it still has to hold.
+ * v1.7 moved the homepage off covers, and v2.0 moved it off the page-wide
+ * canvas as well, so the "a cover explains itself in words" rule is checked
+ * where covers still render — the /projects grid. The rule itself is unchanged,
+ * and it still has to hold.
  */
 test.describe('project covers on /projects', () => {
   for (const home of PROJECTS) {
@@ -118,7 +127,7 @@ test.describe('project covers on /projects', () => {
 });
 
 test.describe('global scientific canvas', () => {
-  for (const home of HOMES) {
+  for (const home of CANVAS_PAGES) {
     test(`${home} renders an inert, document-level field`, async ({ page }) => {
       await visit(page, home);
 

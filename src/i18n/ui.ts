@@ -47,6 +47,9 @@ const en = {
     'Work whose state you can check yourself — public repositories, real artifacts, honest labels. Nothing here is a rendered mockup.',
   'work.all': 'View all projects',
   'work.case': 'View Case Study',
+  /* v2.0 homepage row link (§14): one primary link, and it points at the
+     project, not at "a case study". The case-study label stays for /projects. */
+  'work.project': 'View project',
   'work.repo': 'Repository',
   'work.more': 'More Experiments',
 
@@ -248,10 +251,11 @@ const en = {
   'rnotes.entryHint': 'Read the case study',
   'rnotes.snapshot': 'Compiled from the research and notes records',
 
-  /* v1.6 homepage — the closing contact band. */
+  /* v1.6 homepage — the closing contact band.
+     v2.0 (§29) reduces the band to a name, this one positioning line and four
+     links, so the eyebrow and the /about link are no longer rendered here. */
   'home.contact.eyebrow': 'About / Contact',
-  'home.contact.line':
-    'AI systems and agents, with a life-science and computational biology background.',
+  'home.contact.line': 'Life Science × Computational Biology × AI Systems',
   'home.contact.more': 'More about how I work',
 
   'equation.eyebrow': 'Equation',
@@ -321,6 +325,8 @@ const zh: Dict = {
     '可以自己打开核查的项目——公开仓库、真实产物、如实标注。这里没有为不存在的产品绘制的界面假图。',
   'work.all': '查看全部项目',
   'work.case': '查看案例',
+  /* v2.0 首页项目条目主链接（§14）：只保留一个主链接，指向项目本身。 */
+  'work.project': '查看项目',
   'work.repo': '代码仓库',
   'work.more': '更多实验',
 
@@ -509,9 +515,11 @@ const zh: Dict = {
   'rnotes.entryHint': '查看案例',
   'rnotes.snapshot': '整理自研究方向与札记记录',
 
-  /* v1.6 首页 —— 收尾的联系板块。 */
+  /* v1.6 首页 —— 收尾的联系板块。
+     v2.0（§29）把这一块收束为姓名、这一行定位与四个链接，因此 eyebrow 与
+     /about 链接不再在首页渲染。 */
   'home.contact.eyebrow': '关于 / 联系',
-  'home.contact.line': 'AI 系统与智能体，来自生命科学与计算生物学背景。',
+  'home.contact.line': '生命科学 × 计算生物学 × AI 系统',
   'home.contact.more': '进一步了解我的工作方式',
 
   'equation.eyebrow': '公式',

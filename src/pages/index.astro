@@ -1,22 +1,23 @@
 ---
 /**
- * Homepage (English) — v1.7-P0 visual prototype.
+ * Homepage (English) — v2.0-P0 visual reset.
  *
- * The locale mirror of /zh/. English is not the reviewed locale this round, but
- * it must build and must not diverge structurally: a visitor who switches
- * language should not land in a different information architecture.
+ * The locale mirror of /zh/. English is not the reviewed locale this round
+ * (§32), but it must build and must not diverge structurally: a visitor who
+ * switches language should not land in a different information architecture.
  *
  * See `src/pages/zh/index.astro` for what changed and why, and
- * V1_7_P0_VISUAL_PROTOTYPE_REPORT.md for what is deliberately unfinished.
+ * V2_0_P0_HOMEPAGE_VISUAL_RESET_REPORT.md for what is deliberately unfinished.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import SectionHeading from '../components/SectionHeading.astro';
-import ProjectMosaic from '../components/ProjectMosaic.astro';
+import Artwork from '../components/Artwork.astro';
+import ProjectFeatureRow from '../components/ProjectFeatureRow.astro';
 import MathematicsBiologyAI from '../components/MathematicsBiologyAI.astro';
 import ContactLinks from '../components/ContactLinks.astro';
 import { SITE } from '../config/site';
 import { useT, localizedPath } from '../i18n/ui';
 import { getFeaturedProjects, projectsHref } from '../lib/projects';
+import { ARTWORK_LABELS } from '../data/home';
 import { personSchema } from '../data/profile';
 
 const lang = 'en' as const;
@@ -53,15 +54,15 @@ const websiteLd = {
   type="profile"
   jsonLd={[personLd, websiteLd]}
   minimalFooter={true}
+  canvas={false}
 >
   <!-- ───────────────────────────── HERO ──────────────────────────────── -->
   <section class="shell hero">
     <div class="hero-copy">
-      <p class="eyebrow">{t('hero.eyebrow')}</p>
-      <h1 class="display hero-title">{t('hero.title')}</h1>
-      <p class="hero-sub">{t('hero.subtitle')}</p>
+      <h1 class="hero-name">{t('hero.title')}</h1>
+      <p class="hero-role">{t('hero.subtitle')}</p>
       <p class="hero-statement">{t('hero.statement')}</p>
-      <p class="lead hero-support">{t('hero.support')}</p>
+      <p class="hero-support">{t('hero.support')}</p>
 
       <div class="hero-actions">
         <a href={projectsHref(lang)} class="btn btn-primary">{t('hero.cta.work')}</a>
@@ -73,131 +74,139 @@ const websiteLd = {
         </a>
       </div>
     </div>
+
+    <div class="hero-art">
+      <Artwork name="hero" label={ARTWORK_LABELS.hero[lang]} />
+    </div>
   </section>
 
-  <!-- ───────────────────────── SELECTED WORK ─────────────────────────── -->
+  <!-- ─────────────────────── FEATURED PROJECTS ───────────────────────── -->
   <section class="shell section" id="work">
-    <SectionHeading
-      eyebrow={t('work.eyebrow')}
-      title={t('work.title')}
-      lead={t('work.lead')}
-      href={projectsHref(lang)}
-      linkLabel={t('work.all')}
-    />
+    <h2 class="work-title">{t('work.title')}</h2>
 
-    <ProjectMosaic projects={featured} lang={lang} />
+    <div class="work-list">
+      {featured.map((project, i) => <ProjectFeatureRow project={project} lang={lang} index={i} />)}
+    </div>
+
+    <p class="work-more">
+      <a href={projectsHref(lang)} class="link-arrow">
+        {t('work.all')}
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </p>
   </section>
 
   <!-- ──────────────────── MATHEMATICS × BIOLOGY × AI ─────────────────── -->
   <MathematicsBiologyAI lang={lang} />
 
-  <!-- ───────────────────────── ABOUT / CONTACT ───────────────────────── -->
+  <!-- ──────────────────────────── CONTACT ────────────────────────────── -->
   <section class="shell section-tight" id="contact">
-    <div class="contact-band">
-      <div class="contact-copy">
-        <p class="eyebrow">{t('home.contact.eyebrow')}</p>
-        <h2 class="h2 contact-name">{SITE.nameEn}</h2>
-        <p class="lead contact-line">{t('home.contact.line')}</p>
-        <a href={localizedPath(lang, '/about')} class="link-arrow contact-more">
-          {t('home.contact.more')}
-          <span class="arrow" aria-hidden="true">→</span>
-        </a>
-      </div>
-
-      <div class="contact-links">
-        <ContactLinks lang={lang} variant="inline" />
-      </div>
+    <h2 class="contact-name">{SITE.nameEn}</h2>
+    <p class="contact-line">{t('home.contact.line')}</p>
+    <div class="contact-links">
+      <ContactLinks lang={lang} variant="inline" />
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  /* 82vh, not 100vh: the first screen should hand the eye on to the work rather
-     than insisting on filling itself. The copy sits in the left 46%; the rest
-     belongs to the canvas. */
+  /* The first screen is 76vh rather than a full one: the page should hand the
+     eye on to the work instead of insisting on filling itself. */
   .hero {
-    min-height: 82vh;
-    display: flex;
+    min-height: 76vh;
+    display: grid;
+    gap: clamp(2rem, 5vw, 3.5rem);
     align-items: center;
-    padding-block: clamp(2.5rem, 6vh, 5rem);
+    padding-block: clamp(2.5rem, 6vh, 4.5rem);
   }
 
-  .hero-copy {
-    width: min(100%, 46%);
-    max-width: 38rem;
-  }
-
-  @media (max-width: 900px) {
-    .hero-copy {
-      width: 100%;
-      max-width: 34rem;
+  @media (min-width: 900px) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr);
+      column-gap: clamp(2.5rem, 5vw, 4.5rem);
     }
   }
 
-  .hero-title {
-    margin-top: 1rem;
+  .hero-copy {
+    min-width: 0;
+    max-width: 34rem;
   }
 
-  .hero-sub {
-    margin-top: 0.875rem;
+  .hero-name {
+    margin: 0;
+    font-size: clamp(2.75rem, 5.4vw, 4.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.038em;
+    font-weight: 500;
+  }
+
+  .hero-role {
+    margin: 1rem 0 0;
     font-family: var(--font-mono);
-    font-size: clamp(0.8125rem, 1.4vw, 0.9375rem);
-    letter-spacing: 0.08em;
+    font-size: clamp(0.8125rem, 1.3vw, 0.9375rem);
+    letter-spacing: 0.07em;
     color: var(--muted);
   }
 
   .hero-statement {
-    margin-top: 1.5rem;
-    font-size: clamp(1.25rem, 2.4vw, 1.75rem);
-    line-height: 1.38;
-    letter-spacing: -0.02em;
-    max-width: 24ch;
+    margin: 1.75rem 0 0;
+    font-size: clamp(1.25rem, 2.3vw, 1.6875rem);
+    line-height: 1.42;
+    letter-spacing: -0.022em;
+    max-width: 22ch;
   }
 
   .hero-support {
-    margin-top: 1.125rem;
-    max-width: 42ch;
+    margin: 1.125rem 0 0;
+    font-size: clamp(1rem, 1.4vw, 1.125rem);
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 40ch;
   }
 
   .hero-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: 2rem;
+    margin-top: clamp(1.75rem, 3vw, 2.25rem);
   }
 
-  /* No surface, no border, no card: the closing band is part of the page, and a
-     large box here would cut the scientific canvas in half. */
-  .contact-band {
-    display: grid;
-    gap: 2rem;
-    padding-top: clamp(1.5rem, 3vw, 2.25rem);
-    border-top: 1px solid var(--line);
+  .hero-art {
+    min-width: 0;
   }
 
-  @media (min-width: 900px) {
-    .contact-band {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 4rem;
-      align-items: start;
-    }
+  .work-title {
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    letter-spacing: -0.028em;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .work-list {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3rem, 6.5vw, 5.5rem);
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .work-more {
+    margin: clamp(2.5rem, 5vw, 3.5rem) 0 0;
   }
 
   .contact-name {
-    margin-top: 0.75rem;
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    letter-spacing: -0.028em;
+    font-weight: 500;
+    margin: 0;
   }
 
   .contact-line {
-    margin-top: 0.5rem;
-    max-width: 40ch;
-  }
-
-  .contact-more {
-    display: inline-flex;
-    margin-top: 1.25rem;
+    margin: 0.625rem 0 0;
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
+    color: var(--muted);
   }
 
   .contact-links {
-    padding-top: 0.25rem;
+    margin-top: 1.25rem;
   }
 </style>

@@ -506,11 +506,31 @@ for (const file of projectFiles) {
   if (flat.length < 12) fail(`${rel} coverDescription is too short to explain the project`);
 }
 
-/* -------------------------------------------------------------------------- */
-/* 4. Built pages — the mosaic identifies, the canvas is inert and captionless */
+/* 4. Built pages — five drawings, four rows, and no second canvas            */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * v2.0 replaced the v1.7 homepage contract wholesale (§3–§14), so this section
+ * is a rewrite rather than an amendment. What it now enforces:
+ *
+ *   1. the homepage carries five drawings and no sixth — one hero artwork and
+ *      one per featured project — each of them a labelled image;
+ *   2. four featured rows, stacked, carrying a name, one line of type, one
+ *      status and one project link, and none of the apparatus a card carries:
+ *      no index number, no category eyebrow, no keyword pills, no proof line,
+ *      no capability chips, no MathML;
+ *   3. the page-wide scientific canvas is NOT mounted on the homepage. That
+ *      layer inked every screen with the same contour / formula / node language,
+ *      which is the problem this reset exists to fix (§9);
+ *   4. the page is still reduced — four content areas, and none of the sections
+ *      that moved to /projects, /research and /about have crept back.
+ *
+ * The canvas itself is still verified: section 3 above checks its source, and
+ * the browser suite checks its behaviour on the inner pages that keep it.
+ */
+
 const HOME_PAGES = ['dist/index.html', 'dist/zh/index.html'];
+const FEATURED = ['wennian', 'hycell', 'morn', 'biopulse'];
 
 for (const rel of HOME_PAGES) {
   const path = join(root, rel);
@@ -520,151 +540,135 @@ for (const rel of HOME_PAGES) {
     continue;
   }
   const html = readFileSync(path, 'utf8');
+  const zh = rel.includes('zh');
 
-  /* ---- the mosaic: four cards, identification only ---- */
-  const cards = html.split(/<article class="mosaic-card"/).slice(1);
+  /* ---- four featured rows, identification only ---- */
+  const rows = html.split(/<article[^>]*data-featured-row/).slice(1);
   checks += 1;
-  if (cards.length !== 4) {
-    fail(`${rel} renders ${cards.length} mosaic cards — the homepage features four`);
+  if (rows.length !== 4) {
+    fail(`${rel} renders ${rows.length} featured rows — the homepage features four`);
   }
 
-  cards.forEach((chunk, i) => {
+  rows.forEach((chunk, i) => {
     const region = chunk.slice(0, chunk.indexOf('</article>'));
-    const label = `${rel} mosaic card #${i + 1}`;
+    const label = `${rel} featured row #${i + 1}`;
 
-    /* Present: a name, one line of type, a labelled illustration, one status,
-       one case link. */
     checks += 1;
-    if (!/<h3[^>]*class="card-name"[\s\S]*?<\/h3>/.test(region)) fail(`${label} has no name`);
+    if (!/class="row-name"/.test(region)) fail(`${label} has no name`);
     checks += 1;
-    if (!/class="card-type"/.test(region)) fail(`${label} has no one-line type`);
+    if (!/class="row-type"/.test(region)) fail(`${label} has no one-line type`);
     checks += 1;
-    if (!/data-mosaic-visual=/.test(region)) fail(`${label} has no illustration`);
+    if (!/class="row-status"/.test(region)) fail(`${label} has no status`);
     checks += 1;
-    if (!/class="card-status/.test(region)) fail(`${label} has no reality status`);
-    checks += 1;
-    if (!/class="card-link"/.test(region)) fail(`${label} has no case link`);
+    if (!/class="row-link"/.test(region)) fail(`${label} has no project link`);
 
-    /* The illustration must be a labelled image, not an unlabelled decoration:
-       it carries the project's meaning now, so it has to be readable. */
-    const svg = /<svg[^>]*data-astro-cid[\s\S]*?<\/svg>/.exec(region)?.[0] ?? '';
+    /* Exactly one status line. A reality headline plus a second public-code
+       label is the four-part apparatus §14 removes. */
+    const statusCount = (region.match(/class="row-status"/g) ?? []).length;
     checks += 1;
-    if (!/role="img"/.test(svg)) fail(`${label} illustration is not exposed as an image`);
-    checks += 1;
-    if (!/aria-label="[^"]{12,}"/.test(svg)) {
-      fail(`${label} illustration has no descriptive label`);
+    if (statusCount !== 1) {
+      fail(`${label} prints ${statusCount} status lines — the budget is one`);
     }
 
-    /* Removed in v1.7: the chips, the proof line and the tag pills. A homepage
-       card identifies a project; the case study explains it. */
+    /* The drawing is a labelled image, not silent decoration: it carries the
+       project's meaning, so it has to be readable. */
     checks += 1;
-    if (/data-cover-caps/.test(region)) fail(`${label} still lists capability chips`);
+    if (!/data-artwork=/.test(region)) fail(`${label} has no artwork`);
+    const svg = /<svg[^>]*>[\s\S]*?<\/svg>/.exec(region)?.[0] ?? '';
     checks += 1;
-    if (/data-proof/.test(region)) fail(`${label} still carries a proof line`);
+    if (!/role="img"/.test(svg)) fail(`${label} artwork is not exposed as an image`);
     checks += 1;
-    if (/class="tag"/.test(region)) fail(`${label} still carries tag pills`);
-    checks += 1;
-    if (/<math|mathml/i.test(region)) fail(`${label} renders MathML`);
+    if (!/aria-label="[^"]{12,}"/.test(svg)) fail(`${label} artwork has no descriptive label`);
 
-    /* Text budget (§58): the card's *body* — the one-line type, the brand
-       subtitle and up to three keywords — stays short. The name, the category
-       eyebrow and the reality status are identification, not body copy, so they
-       are measured separately and not counted here. */
-    const bodyOf = (cls) =>
-      [...region.matchAll(new RegExp(`class="${cls}[^"]*"[^>]*>([\\s\\S]*?)</(?:p|ul|div)>`, 'g'))]
-        .map((m) =>
-          m[1]
-            .replace(/<[^>]+>/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim(),
-        )
-        .join(' ');
-    const words = [bodyOf('card-type'), bodyOf('card-sub'), bodyOf('card-keywords')]
-      .filter(Boolean)
+    /* Removed in v2.0. */
+    for (const [pattern, what] of [
+      [/data-mosaic-card/, 'the mosaic card shell'],
+      [/class="card-eyebrow/, 'the category eyebrow'],
+      [/class="card-index/, 'the index number'],
+      [/class="card-keywords/, 'the keyword list'],
+      [/data-proof/, 'the proof line'],
+      [/data-cover-caps/, 'the capability chips'],
+      [/class="tag"/, 'the tag pills'],
+      [/<math|mathml/i, 'MathML'],
+    ]) {
+      checks += 1;
+      if (pattern.test(region)) fail(`${label} still renders ${what}`);
+    }
+
+    /* Text budget: the row's prose is one line of type and one status. The
+       name and the link labels are identification, not body copy. */
+    const body = [...region.matchAll(/class="row-(?:type|status)"[^>]*>([\s\S]*?)<\/p>/g)]
+      .map((m) =>
+        m[1]
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim(),
+      )
       .join(' ')
-      .replace(/\s+/g, ' ')
       .trim();
-    const budget = rel.includes('zh') ? 60 : 130;
+    const budget = zh ? 60 : 120;
     checks += 1;
-    if (words.length > budget) {
-      fail(`${label} carries ${words.length} characters of body copy — the budget is ${budget}`);
+    if (body.length > budget) {
+      fail(`${label} carries ${body.length} characters of body copy — the budget is ${budget}`);
     } else {
-      notes.push(`${rel} card #${i + 1}: ${words.length} chars of body copy`);
+      notes.push(`${rel} row #${i + 1}: ${body.length} chars of body copy`);
     }
   });
 
-  /* ---- global scientific canvas ---- */
+  /* Every featured project appears once, in the confirmed order. */
+  const order = [...html.matchAll(/data-featured-row[\s\S]{0,120}?data-slug="([a-z]+)"/g)].map(
+    (m) => m[1],
+  );
   checks += 1;
-  if (!/data-global-scientific-canvas/.test(html)) {
-    fail(`${rel} renders no [data-global-scientific-canvas] layer`);
+  if (order.length !== 4 || order.join() !== FEATURED.join()) {
+    fail(`${rel} featured order is [${order.join(', ')}] — expected [${FEATURED.join(', ')}]`);
   }
 
-  const canvasTag = /<div class="global-science"[^>]*data-global-scientific-canvas[^>]*>/.exec(html);
+  /* ---- five drawings, and no sixth ---- */
+  const artworks = [...html.matchAll(/data-artwork="([a-z]+)"/g)].map((m) => m[1]);
+  const distinct = [...new Set(artworks)];
   checks += 1;
-  if (!canvasTag) {
-    fail(`${rel} canvas layer is missing its .global-science wrapper`);
+  if (distinct.length !== 5) {
+    fail(`${rel} renders ${distinct.length} distinct drawings — the set is five`);
+  }
+  checks += 1;
+  if (distinct[0] !== 'hero') {
+    fail(`${rel} first drawing is "${distinct[0] ?? 'none'}" — the hero artwork comes first`);
+  }
+
+  const workAt = html.indexOf('id="work"');
+  checks += 1;
+  if (workAt > 0 && /data-artwork="hero"/.test(html.slice(workAt))) {
+    fail(`${rel} renders a second hero artwork inside Featured Projects`);
+  }
+
+  /* ---- the page-wide canvas is not mounted here (§9) ---- */
+  checks += 1;
+  if (/data-global-scientific-canvas/.test(html)) {
+    fail(`${rel} still mounts the page-wide scientific canvas — the homepage carries its own drawings`);
   } else {
+    notes.push(`${rel}: no page-wide canvas, five drawings`);
+  }
+
+  /* ---- still reduced ---- */
+  for (const [pattern, what] of [
+    [/id="artifacts"/, 'the #artifacts evidence room'],
+    [/aria-labelledby="now-label"/, 'the NOW strip'],
+    [/class="oss-list"/, 'the open-source table'],
+    [/class="hero-system"/, 'the hero system figure'],
+    [/class="hero-field"/, 'the hero field figure'],
+    [/class="rn-list"/, 'Research & Notes'],
+  ]) {
     checks += 1;
-    if (!/aria-hidden="true"/.test(canvasTag[0])) fail(`${rel} canvas layer is not aria-hidden`);
+    if (pattern.test(html)) fail(`${rel} still renders ${what}`);
   }
 
-  /* All three motif classes must survive the build — not just the source. */
-  for (const kind of ['math', 'biology', 'ai']) {
-    checks += 1;
-    if (!html.includes(`data-sci-kind="${kind}"`)) {
-      fail(`${rel} ships no "${kind}" motif in the canvas`);
-    }
-  }
-
-  const marks = (html.match(/data-sci-mobile=/g) ?? []).length;
-  const drops = (html.match(/data-sci-mobile="drop"/g) ?? []).length;
-  checks += 1;
-  if (marks === 0) {
-    fail(`${rel} canvas has no marks`);
-  } else {
-    const dropRatio = drops / marks;
-    checks += 1;
-    if (dropRatio < 0.4 || dropRatio > 0.75) {
-      fail(
-        `${rel} canvas drops ${(dropRatio * 100).toFixed(0)}% of its marks on mobile — the target is 40–75%`,
-      );
-    } else {
-      notes.push(`${rel} canvas: ${marks} marks, ${drops} dropped on mobile`);
-    }
-  }
-
-  /* The homepage is the page that was reduced. It must not still be carrying
-     the sections that moved to /projects, /research and /about. */
-  checks += 1;
-  if (html.includes('id="artifacts"')) {
-    fail(`${rel} still renders the #artifacts evidence room — it moved to /projects`);
-  }
-  checks += 1;
-  if (html.includes('aria-labelledby="now-label"')) {
-    fail(`${rel} still renders the NOW strip — it moved to /projects`);
-  }
-  checks += 1;
-  if (/class="oss-list"/.test(html)) {
-    fail(`${rel} still renders the open-source table — it moved to /projects`);
-  }
-
-  /* v1.7 prototype: four content areas and no more. Research & Notes is hidden
-     for this round, and the hero no longer carries a bordered system figure. */
   const sections = (html.match(/<section class="shell[^"]*"/g) ?? []).length;
   checks += 1;
   if (sections > 4) {
-    fail(`${rel} renders ${sections} content areas — the prototype keeps four`);
+    fail(`${rel} renders ${sections} content areas — the page keeps four`);
   } else {
     notes.push(`${rel}: ${sections} content areas`);
-  }
-
-  checks += 1;
-  if (html.includes('class="hero-system"')) {
-    fail(`${rel} still renders the hero system figure — the canvas is the hero's right half`);
-  }
-  checks += 1;
-  if (html.includes('class="rn-list"')) {
-    fail(`${rel} still renders Research & Notes — hidden for the v1.7 prototype`);
   }
 }
 
@@ -682,5 +686,7 @@ console.log('  • 3 visual types separated: cover / conceptual science / global
 console.log(`  • ${projectFiles.length} project file(s) × 6 cover fields, re-checked against evidence`);
 console.log('  • canvas: inline SVG only, aria-hidden, pointer-events:none, math + biology + AI');
 console.log('  • canvas: opacity floors and ceilings held, notation kept a step quieter');
+console.log('  • homepage: five drawings (hero + four project covers), four stacked rows');
+console.log('  • homepage: no page-wide canvas, no cards, no index numbers, no pills');
 console.log('  • homepage: reduced — no artifact room, no NOW strip, no open-source table');
 for (const note of notes) console.log(`  • ${note}`);

@@ -1,0 +1,213 @@
+---
+/**
+ * Featured project row — one project as a piece of work, not a card (v2.0).
+ *
+ * What this replaces. v1.7 laid Selected Work out as a 2 × 2 mosaic of bordered
+ * cards, each with a category eyebrow, an index number, a type line, a large
+ * illustration, up to three keywords, a reality status, a case link and a
+ * repository link. Individually restrained, together still a design system:
+ * four boxes with eight labelled slots each. The owner's read was that the
+ * projects looked like engineering cards rather than work.
+ *
+ * v2.0 makes four rows, stacked, alternating sides, and cuts the row down to
+ * what a visitor actually uses to decide whether to click:
+ *
+ *   name · one line of type · one status · one link (plus the repository)
+ *
+ * Removed: the index number, the category eyebrow, the keyword list, the proof
+ * line, the second copy of the public-code fact, the border, the card fill.
+ * What is left is separated by whitespace, not by hairlines.
+ *
+ * Row 1 and 3 put the drawing on the left; rows 2 and 4 put it on the right, so
+ * the eye zigzags down the page without the rows becoming a list of identical
+ * bands. Every row is the same height — an alternating layout that also varied
+ * in height would read as broken rather than as rhythm.
+ */
+import { useT, type Lang } from '../i18n/ui';
+import { projectHref, type ProjectEntry } from '../lib/projects';
+import { getProjectEvidence } from '../data/evidence';
+import { ARTWORK_LABELS, HOME_STATUS } from '../data/home';
+import Artwork, { type ArtworkName } from './Artwork.astro';
+
+export interface Props {
+  project: ProjectEntry;
+  lang: Lang;
+  /** Zero-based position in the featured list. Drives the side alternation. */
+  index: number;
+}
+
+const { project, lang, index } = Astro.props;
+const t = useT(lang);
+const d = project.data;
+
+const evidence = getProjectEvidence(d.slug);
+const statusField = HOME_STATUS[d.slug] ?? 'headline';
+const status =
+  evidence && statusField === 'publicCode'
+    ? evidence.publicCode === 'open'
+      ? t('publiccode.open')
+      : t('publiccode.none')
+    : (evidence?.headline[lang] ?? null);
+
+const href = projectHref(lang, d.slug);
+const label = ARTWORK_LABELS[d.slug]?.[lang] ?? d.title;
+const flipped = index % 2 === 1;
+---
+
+<article
+  class:list={['row', flipped && 'row--flipped']}
+  data-featured-row
+  data-slug={d.slug}
+>
+  <div class="row-art">
+    <Artwork name={d.slug as ArtworkName} label={label} />
+  </div>
+
+  <div class="row-copy">
+    <h3 class="row-name">
+      <a href={href}>{d.title}</a>
+    </h3>
+
+    {/* The project's own type line. It is the only prose in the row. */}
+    <p class="row-type">{d.coverType}</p>
+
+    {status && <p class="row-status">{status}</p>}
+
+    <p class="row-actions">
+      <a href={href} class="row-link">
+        {t('work.project')}
+        <span aria-hidden="true">→</span>
+      </a>
+
+      {d.repo && (
+        <a
+          href={d.repo}
+          class="row-repo"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          GitHub
+          <span aria-hidden="true">↗</span>
+        </a>
+      )}
+    </p>
+  </div>
+</article>
+
+<style>
+  /* Two blocks of a twelve-column field, with the empty column between them
+     doing the separating. The drawing takes seven columns and the words four,
+     so neither side is a caption for the other. */
+  .row {
+    display: grid;
+    gap: clamp(1.75rem, 4vw, 3rem);
+    align-items: center;
+  }
+
+  @media (min-width: 900px) {
+    .row {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: clamp(2.5rem, 5vw, 4.5rem);
+    }
+
+    .row-art {
+      grid-column: 1 / span 7;
+    }
+
+    .row-copy {
+      grid-column: 9 / span 4;
+    }
+
+    .row--flipped .row-art {
+      grid-column: 6 / span 7;
+      grid-row: 1;
+    }
+
+    .row--flipped .row-copy {
+      grid-column: 1 / span 4;
+      grid-row: 1;
+    }
+  }
+
+  /* On a phone the drawing still leads — it is what makes the row a piece of
+     work rather than a line in an index. */
+  .row-art {
+    order: 0;
+  }
+
+  .row-copy {
+    order: 1;
+  }
+
+  .row-name {
+    font-size: clamp(1.5rem, 2.7vw, 2.125rem);
+    line-height: 1.08;
+    letter-spacing: -0.028em;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .row-name a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 7px;
+  }
+
+  .row-type {
+    margin: 0.875rem 0 0;
+    font-size: clamp(0.9375rem, 1.2vw, 1.0625rem);
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 32ch;
+  }
+
+  /* One status, in the mono face but never shouted: no uppercase, no pill, no
+     badge, no second code label beside it. */
+  .row-status {
+    margin: 1.125rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--faint);
+  }
+
+  .row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1.5rem;
+    margin: clamp(1.5rem, 2.6vw, 2rem) 0 0;
+  }
+
+  .row-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    min-height: 44px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .row-link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+
+  .row-repo {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--faint);
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .row-repo:hover {
+    color: var(--ink);
+  }
+</style>

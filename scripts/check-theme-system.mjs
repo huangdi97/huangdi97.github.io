@@ -68,6 +68,19 @@ const REQUIRED_TOKENS = [
   'science-grid',
   'science-accent',
   'science-bio-ink',
+  /* Editorial artwork ink (v2.0). The five drawings in `src/assets/home/` are
+     painted with these, so a theme that forgets one renders a drawing with a
+     hole in it. `--art-accent` is deliberately absent: it is aliased to
+     `--accent` once in the shared `:root` block, not redefined per theme. */
+  'art-ink',
+  'art-line',
+  'art-line-soft',
+  'art-ghost',
+  'art-bio',
+  'art-stipple',
+  'art-node',
+  'art-wash',
+  'art-glow',
 ];
 
 const problems = [];

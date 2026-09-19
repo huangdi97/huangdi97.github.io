@@ -1,44 +1,52 @@
 ---
 /**
- * Homepage (Chinese) — v1.7-P0 visual prototype.
+ * Homepage (Chinese) — v2.0-P0 visual reset.
  *
- * NOT A RELEASE. Paper only, /zh only, awaiting owner visual approval.
+ * NOT A RELEASE. Paper only, /zh reviewed, awaiting owner visual approval.
  *
- * v1.6 fixed the page's length (15138px → 7279px) and its footer, but the page
- * still read as a research document rather than somebody's work:
+ * This page is not an improvement on v1.7. It abandons the v1.7 visual paradigm.
  *
- *   · the hero was a text column beside a bordered system diagram, with the
- *     global scientific canvas behind both — three visual languages in the
- *     first screen;
- *   · the background was eight independent captioned plates;
- *   · Selected Work was four full-width blocks of ~900px each, more than half
- *     the page;
- *   · Mathematics × Biology × AI was a research section with a figure and three
- *     numbered questions;
- *   · Research & Notes added a fourth block the prototype does not need in
- *     order to answer the question being asked.
+ * What was wrong. v1.7 answered "make the homepage shorter" and "stop it reading
+ * as a document" by rearranging the same ingredients: a hero that was a text
+ * column beside the page-wide scientific canvas, Selected Work as a 2 × 2 mosaic
+ * of bordered cards, and a statement band. It was shorter. It was still built
+ * out of one hairline-geometry language used everywhere — background contour,
+ * background formula, card borders, project diagrams — and the owner's verdict
+ * was that it was not beautiful.
  *
- * v1.7-P0 changes exactly four things: the hero, Selected Work, the scientific
- * canvas, and the spacing around them. Four content areas, in this order:
+ * The reset (§3–§7):
  *
- *   Hero                       the name, one line, one action row — and the
- *                              scientific canvas doing the visual work
- *   Selected Work              a 2 × 2 editorial mosaic
- *   Mathematics × Biology × AI  a statement band, one breath long
- *   About / Contact            the close, with no card
+ *   · the page-wide canvas is gone from the homepage. It was the reason every
+ *     screen carried the same texture;
+ *   · the hero is one complete editorial artwork, not a field of marks. It is
+ *     the strongest visual on the page, and the only one in the first screen;
+ *   · the four featured projects are four stacked rows, alternating sides, each
+ *     with its own drawing, its name, one line of type, one status and one link.
+ *     No cards, no index numbers, no keyword pills, no proof lines;
+ *   · Mathematics × Biology × AI is one breath — a statement, one expression,
+ *     one way out;
+ *   · the close is a name, a positioning line and four links. No card, no
+ *     eyebrow, no second content block.
  *
- * Research & Notes is hidden for the prototype; the component and its data are
- * untouched. White, Night, mobile and every other route are deliberately out of
- * scope — see V1_7_P0_VISUAL_PROTOTYPE_REPORT.md.
+ * The visual rhythm is deliberate (§9): strong (hero) → clear (work) → a light
+ * thought (statement) → close. It is not one texture all the way down.
+ *
+ * Page order (§36): Header · Hero · Featured Projects · Mathematics × Biology ×
+ * AI · Contact · Footer. Research & Notes stays off the homepage; the component
+ * and its data are untouched.
+ *
+ * See V2_0_P0_HOMEPAGE_VISUAL_RESET_REPORT.md for what is deliberately
+ * unfinished, and src/pages/index.astro for the English mirror.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import SectionHeading from '../../components/SectionHeading.astro';
-import ProjectMosaic from '../../components/ProjectMosaic.astro';
+import Artwork from '../../components/Artwork.astro';
+import ProjectFeatureRow from '../../components/ProjectFeatureRow.astro';
 import MathematicsBiologyAI from '../../components/MathematicsBiologyAI.astro';
 import ContactLinks from '../../components/ContactLinks.astro';
 import { SITE } from '../../config/site';
 import { useT, localizedPath } from '../../i18n/ui';
 import { getFeaturedProjects, projectsHref } from '../../lib/projects';
+import { ARTWORK_LABELS } from '../../data/home';
 import { personSchema } from '../../data/profile';
 
 const lang = 'zh' as const;
@@ -75,18 +83,18 @@ const websiteLd = {
   type="profile"
   jsonLd={[personLd, websiteLd]}
   minimalFooter={true}
+  canvas={false}
 >
   <!-- ───────────────────────────── 首屏 / HERO ──────────────────────────
-       No figure, no panel, no border. The right half of the first screen
-       belongs to the scientific canvas, which is the hero's second half rather
-       than a decoration behind it. -->
+       The name first, then the drawing, then the mathematics and biology
+       underneath it (§8). One artwork, no figure, no panel, no border, and no
+       background canvas behind either half. -->
   <section class="shell hero">
     <div class="hero-copy">
-      <p class="eyebrow">{t('hero.eyebrow')}</p>
-      <h1 class="display hero-title">{t('hero.title')}</h1>
-      <p class="hero-sub">{t('hero.subtitle')}</p>
+      <h1 class="hero-name">{t('hero.title')}</h1>
+      <p class="hero-role">{t('hero.subtitle')}</p>
       <p class="hero-statement">{t('hero.statement')}</p>
-      <p class="lead hero-support">{t('hero.support')}</p>
+      <p class="hero-support">{t('hero.support')}</p>
 
       <div class="hero-actions">
         <a href={projectsHref(lang)} class="btn btn-primary">{t('hero.cta.work')}</a>
@@ -98,131 +106,150 @@ const websiteLd = {
         </a>
       </div>
     </div>
+
+    <div class="hero-art">
+      <Artwork name="hero" label={ARTWORK_LABELS.hero[lang]} />
+    </div>
   </section>
 
-  <!-- ─────────────────────── 精选项目 / SELECTED WORK ──────────────────── -->
+  <!-- ────────────────────── 精选项目 / FEATURED PROJECTS ─────────────────
+       Four rows, stacked, alternating sides (§10–§12). The heading is a plain
+       one: no eyebrow, no hairline, no lead paragraph and no "view all" beside
+       it. The work is the argument. -->
   <section class="shell section" id="work">
-    <SectionHeading
-      eyebrow={t('work.eyebrow')}
-      title={t('work.title')}
-      lead={t('work.lead')}
-      href={projectsHref(lang)}
-      linkLabel={t('work.all')}
-    />
+    <h2 class="work-title">{t('work.title')}</h2>
 
-    <ProjectMosaic projects={featured} lang={lang} />
+    <div class="work-list">
+      {featured.map((project, i) => <ProjectFeatureRow project={project} lang={lang} index={i} />)}
+    </div>
+
+    <p class="work-more">
+      <a href={projectsHref(lang)} class="link-arrow">
+        {t('work.all')}
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </p>
   </section>
 
   <!-- ─────────────────── 数学 × 生物 × AI / MATHEMATICS × BIOLOGY × AI ─── -->
   <MathematicsBiologyAI lang={lang} />
 
-  <!-- ───────────────────── 关于 / 联系 / ABOUT & CONTACT ──────────────── -->
+  <!-- ─────────────────────────── 联系 / CONTACT ──────────────────────────
+       A name, one line and four links (§29). The /about route is in the header;
+       repeating it here would make this band a second content block. -->
   <section class="shell section-tight" id="contact">
-    <div class="contact-band">
-      <div class="contact-copy">
-        <p class="eyebrow">{t('home.contact.eyebrow')}</p>
-        <h2 class="h2 contact-name">{SITE.nameZh}</h2>
-        <p class="lead contact-line">{t('home.contact.line')}</p>
-        <a href={localizedPath(lang, '/about')} class="link-arrow contact-more">
-          {t('home.contact.more')}
-          <span class="arrow" aria-hidden="true">→</span>
-        </a>
-      </div>
-
-      <div class="contact-links">
-        <ContactLinks lang={lang} variant="inline" />
-      </div>
+    <h2 class="contact-name">{SITE.nameZh}</h2>
+    <p class="contact-line">{t('home.contact.line')}</p>
+    <div class="contact-links">
+      <ContactLinks lang={lang} variant="inline" />
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  /* 82vh, not 100vh: the first screen should hand the eye on to the work rather
-     than insisting on filling itself. The copy sits in the left 46%; the rest
-     belongs to the canvas. */
+  /* The first screen is 76vh rather than a full one: the page should hand the
+     eye on to the work instead of insisting on filling itself. */
   .hero {
-    min-height: 82vh;
-    display: flex;
+    min-height: 76vh;
+    display: grid;
+    gap: clamp(2rem, 5vw, 3.5rem);
     align-items: center;
-    padding-block: clamp(2.5rem, 6vh, 5rem);
+    padding-block: clamp(2.5rem, 6vh, 4.5rem);
   }
 
-  .hero-copy {
-    width: min(100%, 46%);
-    max-width: 38rem;
-  }
-
-  @media (max-width: 900px) {
-    .hero-copy {
-      width: 100%;
-      max-width: 34rem;
+  @media (min-width: 900px) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr);
+      column-gap: clamp(2.5rem, 5vw, 4.5rem);
     }
   }
 
-  .hero-title {
-    margin-top: 1rem;
+  .hero-copy {
+    min-width: 0;
+    max-width: 34rem;
   }
 
-  .hero-sub {
-    margin-top: 0.875rem;
+  .hero-name {
+    margin: 0;
+    font-size: clamp(2.75rem, 5.4vw, 4.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.038em;
+    font-weight: 500;
+  }
+
+  .hero-role {
+    margin: 1rem 0 0;
     font-family: var(--font-mono);
-    font-size: clamp(0.8125rem, 1.4vw, 0.9375rem);
-    letter-spacing: 0.08em;
+    font-size: clamp(0.8125rem, 1.3vw, 0.9375rem);
+    letter-spacing: 0.07em;
     color: var(--muted);
   }
 
   .hero-statement {
-    margin-top: 1.5rem;
-    font-size: clamp(1.25rem, 2.4vw, 1.75rem);
-    line-height: 1.38;
-    letter-spacing: -0.02em;
-    max-width: 24ch;
+    margin: 1.75rem 0 0;
+    font-size: clamp(1.25rem, 2.3vw, 1.6875rem);
+    line-height: 1.42;
+    letter-spacing: -0.022em;
+    max-width: 22ch;
   }
 
   .hero-support {
-    margin-top: 1.125rem;
-    max-width: 42ch;
+    margin: 1.125rem 0 0;
+    font-size: clamp(1rem, 1.4vw, 1.125rem);
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 40ch;
   }
 
   .hero-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: 2rem;
+    margin-top: clamp(1.75rem, 3vw, 2.25rem);
   }
 
-  /* No surface, no border, no card: the closing band is part of the page, and a
-     large box here would cut the scientific canvas in half. */
-  .contact-band {
-    display: grid;
-    gap: 2rem;
-    padding-top: clamp(1.5rem, 3vw, 2.25rem);
-    border-top: 1px solid var(--line);
+  .hero-art {
+    min-width: 0;
   }
 
-  @media (min-width: 900px) {
-    .contact-band {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 4rem;
-      align-items: start;
-    }
+  /* ── the work ─────────────────────────────────────────────────────────── */
+
+  .work-title {
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    letter-spacing: -0.028em;
+    font-weight: 500;
+    margin: 0;
   }
+
+  /* Whitespace, not hairlines: four rules across four rows is the "borders
+     everywhere" problem §26 names. The gap is the separator. */
+  .work-list {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3rem, 6.5vw, 5.5rem);
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .work-more {
+    margin: clamp(2.5rem, 5vw, 3.5rem) 0 0;
+  }
+
+  /* ── the close ────────────────────────────────────────────────────────── */
 
   .contact-name {
-    margin-top: 0.75rem;
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    letter-spacing: -0.028em;
+    font-weight: 500;
+    margin: 0;
   }
 
   .contact-line {
-    margin-top: 0.5rem;
-    max-width: 40ch;
-  }
-
-  .contact-more {
-    display: inline-flex;
-    margin-top: 1.25rem;
+    margin: 0.625rem 0 0;
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
+    color: var(--muted);
   }
 
   .contact-links {
-    padding-top: 0.25rem;
+    margin-top: 1.25rem;
   }
 </style>
