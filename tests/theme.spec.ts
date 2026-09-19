@@ -235,7 +235,11 @@ test.describe('footer follows the theme', () => {
   }
 
   test('the footer keeps language, appearance and contact usable', async ({ page }) => {
-    await visit(page, '/zh/');
+    /* v1.7 makes the homepage footer minimal — identity, preferences and
+       copyright only — because the homepage already lists the four contact
+       entries directly above it. Inner pages keep the full row, and that is
+       where this contract is checked. */
+    await visit(page, '/zh/projects/');
     const footer = page.locator('footer.site-footer');
 
     await expect(footer.locator('[data-lang-switch]').first()).toBeVisible();
@@ -245,5 +249,18 @@ test.describe('footer follows the theme', () => {
     // The appearance row is a plain inline control — no popover in the footer.
     await footer.locator('[data-theme-option="white"]').click();
     expect(await activeTheme(page)).toBe('white');
+  });
+
+  test('the homepage footer is minimal and repeats no contact', async ({ page }) => {
+    await visit(page, '/zh/');
+    const footer = page.locator('footer.site-footer');
+
+    // Identity, the two preferences and the copyright — nothing else.
+    await expect(footer).toContainText('HAO LEI');
+    await expect(footer.locator('[data-lang-switch]').first()).toBeVisible();
+    await expect(footer.locator('[data-theme-option]')).toHaveCount(3);
+
+    // No contact row: the band directly above the footer already carries it.
+    await expect(footer.locator('[data-contact-id]')).toHaveCount(0);
   });
 });

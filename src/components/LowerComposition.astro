@@ -1,0 +1,94 @@
+---
+/**
+ * Lower composition — the third movement (v1.7).
+ *
+ * Near the foot of the page the drawing thins out rather than stopping: a
+ * probability curve and its axis, one line leaving the curve, and three nodes
+ * where that line arrives. Weights fall away as the page ends — the axis is
+ * inked at the tick weight, the connector at the notation weight, and only the
+ * curve keeps the major weight.
+ *
+ * The v1.6 footer also carried its own three-formula coda. That is gone: the
+ * canvas already runs to the last line, so a second set of formulas in the
+ * footer was the same idea said twice.
+ */
+---
+
+<div
+  class="sci-composition"
+  data-sci-composition="lower"
+  style="--sci-top:84%;--sci-left:0;--sci-right:0;--sci-w:100%;--sci-h:min(30vw,420px)"
+>
+  <svg
+    viewBox="0 0 1460 420"
+    preserveAspectRatio="xMidYMid slice"
+    focusable="false"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <!-- ── the curve, the one heavy mark left at the foot of the page ──── -->
+    <path
+      class="sci-major"
+      data-sci-mobile="keep"
+      d="M72,308 C 196,308 232,116 348,116 C 464,116 500,308 624,308"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.6"
+      stroke-linecap="round"
+    />
+
+    <!-- ── its axis, inked at tick weight so the page fades rather than ends -->
+    <g
+      class="sci-grid"
+      data-sci-mobile="drop"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.3"
+    >
+      <line x1="56" y1="308" x2="648" y2="308" />
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+        <line x1={56 + i * 98} y1="308" x2={56 + i * 98} y2="317" />
+      ))}
+      <line x1="56" y1="308" x2="56" y2="150" />
+    </g>
+
+    <!-- ── where the curve goes next, at notation weight ───────────────── -->
+    <path
+      class="sci-formula" data-sci-mobile="drop"
+      d="M348,116 C 560,116 660,196 880,178"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-dasharray="7 9"
+    />
+
+    <!-- ── AI: three nodes, arriving and then gone ─────────────────────── -->
+    <g
+      class="sci-accent"
+      data-sci-kind="ai"
+      data-sci-mobile="drop"
+      fill="none"
+      stroke="var(--accent)"
+      stroke-width="1.5"
+    >
+      <line x1="880" y1="178" x2="996" y2="132" stroke-dasharray="6 8" />
+      <line x1="996" y1="132" x2="1096" y2="206" stroke-dasharray="6 8" />
+    </g>
+    <g
+      class="sci-accent"
+      data-sci-kind="ai"
+      data-sci-mobile="drop"
+      fill="var(--accent)"
+      stroke="none"
+    >
+      <circle cx="880" cy="178" r="7" />
+      <circle cx="996" cy="132" r="8" />
+      <circle cx="1096" cy="206" r="6" />
+    </g>
+
+    <!-- ── the last two marks on the page ─────────────────────────────── -->
+    <g class="sci-formula" data-sci-kind="math" fill="currentColor" stroke="none">
+      <text x="92" y="94" font-size="21">∇L</text>
+      <text x="628" y="352" font-size="18" data-sci-mobile="drop">p(x)</text>
+    </g>
+  </svg>
+</div>

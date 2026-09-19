@@ -23,6 +23,12 @@ export interface Props {
   noindex?: boolean;
   /** Pages that should not show the footer CTA spacer. */
   mainClass?: string;
+  /**
+   * v1.7 prototype: the homepage footer carries identity, preferences and
+   * copyright only. Inner pages keep the contact row, which is their only
+   * contact surface.
+   */
+  minimalFooter?: boolean;
 }
 
 const {
@@ -38,6 +44,7 @@ const {
   seoTitle,
   noindex = false,
   mainClass,
+  minimalFooter = false,
 } = Astro.props;
 
 const t = useT(lang);
@@ -93,7 +100,7 @@ const htmlLang = lang === 'zh' ? 'zh-Hans' : 'en';
       <slot />
     </main>
 
-    <Footer lang={lang} />
+    <Footer lang={lang} minimal={minimalFooter} />
 
     <script>
       // Language preference. The switch stays a plain link so it works with

@@ -1,0 +1,281 @@
+---
+/**
+ * Project mosaic — Selected Work as an editorial grid (v1.7).
+ *
+ * v1.6 stacked four full-width showcase blocks: cover, thesis, description,
+ * reality pill, proof line, tags, two actions, status. Each block was ~900px
+ * tall, so Selected Work alone was 4124px — more than half the homepage — and
+ * the reader had to scroll a full screen per project.
+ *
+ * v1.7 lays the same four projects out as a 12-column mosaic:
+ *
+ *   row 1   ZhiShen · WenNian   7 cols   |  HyCell   5 cols
+ *   row 2   Morn                6 cols   |  BioPulse 6 cols
+ *
+ * The spans are the hierarchy: the flagship is largest, the research prototype
+ * is second, and the two active systems are peers. Four identical cards would
+ * have been the same problem in a smaller box.
+ *
+ * What each card is allowed to say (§23–24):
+ *
+ *   category · name · one line of type · the illustration · up to three
+ *   keywords · one reality status · one case link (plus the repository)
+ *
+ * What was removed: the capability chips, the summary and the description
+ * saying the same thing twice, the proof line, the full tag list, the second
+ * copy of the public-code fact, and the trailing status word. A homepage card
+ * identifies a project; the case study explains it.
+ */
+import { useT, type Lang } from '../i18n/ui';
+import { projectHref, type ProjectEntry } from '../lib/projects';
+import { getProjectEvidence } from '../data/evidence';
+import ProjectMosaicVisual from './ProjectMosaicVisual.astro';
+
+export interface Props {
+  projects: ProjectEntry[];
+  lang: Lang;
+}
+
+const { projects, lang } = Astro.props;
+const t = useT(lang);
+
+/** 12-column spans. Flagship 7, research prototype 5, the pair 6 each. */
+const SPAN = [7, 5, 6, 6];
+---
+
+<div class="mosaic">
+  {
+    projects.map((project, i) => {
+      const d = project.data;
+      const evidence = getProjectEvidence(d.slug);
+      const code = evidence
+        ? evidence.publicCode === 'open'
+          ? t('publiccode.open')
+          : t('publiccode.none')
+        : null;
+
+      return (
+        <article
+          class="mosaic-card"
+          data-mosaic-card
+          data-mosaic-slug={d.slug}
+          data-span={SPAN[i] ?? 6}
+        >
+          <p class="card-eyebrow mono">
+            <span class="card-index">{String(i + 1).padStart(2, '0')}</span>
+            <span>{d.category}</span>
+          </p>
+
+          <h3 class="card-name">
+            <a href={projectHref(lang, d.slug)}>{d.title}</a>
+          </h3>
+
+          {/* No subtitle here. §23 allows a name, one line of type, a visual, a
+              status, a link and up to three keywords — and BioPulse's subtitle
+              ("生命科学 Agent-native 工作台") is its type line reordered, which
+              is the double copy this round exists to remove. The dual-name
+              discipline still holds on the case study and on /projects. */}
+          <p class="card-type">{d.coverType}</p>
+
+          <ProjectMosaicVisual slug={d.slug} lang={lang} />
+
+          {d.tags.length > 0 && (
+            <ul class="card-keywords">
+              {d.tags.slice(0, 3).map((tag) => (
+                <li>{tag}</li>
+              ))}
+            </ul>
+          )}
+
+          <div class="card-foot">
+            {evidence && (
+              <p class="card-status mono">
+                <span class="card-status-head">{evidence.headline[lang]}</span>
+                <span class="card-status-sep" aria-hidden="true">
+                  ·
+                </span>
+                <span class="card-status-code">{code}</span>
+              </p>
+            )}
+
+            <div class="card-actions">
+              <a href={projectHref(lang, d.slug)} class="card-link">
+                {t('work.case')}
+                <span aria-hidden="true">→</span>
+              </a>
+              {d.repo && (
+                <a
+                  href={d.repo}
+                  class="card-repo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  GitHub
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )}
+            </div>
+          </div>
+        </article>
+      );
+    })
+  }
+</div>
+
+<style>
+  .mosaic {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  /* A hairline on the page canvas, no fill: the scientific canvas has to keep
+     running between and behind the cards, so a card is a frame rather than a
+     panel. No radius, no shadow, no coloured header. */
+  .mosaic-card {
+    grid-column: span 12;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: clamp(1.25rem, 2.5vw, 2rem);
+    border: 1px solid var(--line);
+    transition: border-color var(--dur-base) var(--ease);
+  }
+
+  .mosaic-card:hover {
+    border-color: var(--line-strong);
+  }
+
+  @media (min-width: 900px) {
+    .mosaic-card[data-span='5'] {
+      grid-column: span 5;
+    }
+    .mosaic-card[data-span='6'] {
+      grid-column: span 6;
+    }
+    .mosaic-card[data-span='7'] {
+      grid-column: span 7;
+    }
+  }
+
+  .card-eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+    color: var(--faint);
+  }
+
+  .card-index {
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .card-name {
+    margin-top: 0.75rem;
+    font-size: clamp(1.5rem, 2.6vw, 2.125rem);
+    line-height: 1.1;
+    letter-spacing: -0.028em;
+    font-weight: 500;
+  }
+
+  .card-name a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 6px;
+  }
+
+
+  .card-type {
+    margin-top: 0.75rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 34ch;
+  }
+
+  /* The illustration is the subject of the card, not a mark beside the words. */
+  .mosaic-card :global(.mosaic-visual) {
+    margin-top: clamp(1.25rem, 2.5vw, 1.75rem);
+  }
+
+  .card-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    margin-top: clamp(1rem, 2vw, 1.25rem);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    color: var(--faint);
+  }
+
+  .card-keywords li + li::before {
+    content: '· ';
+  }
+
+  /* The foot is pinned so a taller neighbour never leaves one card's status
+     floating in the middle of the row. */
+  .card-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-top: auto;
+    padding-top: clamp(1.25rem, 2.5vw, 1.75rem);
+  }
+
+  .card-status {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.4rem;
+  }
+
+  .card-status-head {
+    color: var(--ink);
+  }
+
+  .card-status-sep,
+  .card-status-code {
+    color: var(--faint);
+  }
+
+  .card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1.25rem;
+  }
+
+  .card-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    font-size: 0.9375rem;
+    color: var(--ink);
+  }
+
+  .card-repo {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--faint);
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .card-repo:hover {
+    color: var(--ink);
+  }
+
+  .card-link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+</style>

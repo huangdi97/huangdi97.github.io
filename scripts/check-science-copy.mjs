@@ -178,8 +178,40 @@ const FORMULA_MARKERS = [/ΔAGE/i, /Fθ/, /ẑ/, /Δx\s*=/, /dx\/dt/];
  */
 const CONCEPT_LABEL = /conceptual|概念模型|概念标注|概念图/i;
 
+/**
+ * Remove the decorative background canvas before looking for formulas.
+ *
+ * The global scientific canvas carries a handful of notations — dx/dt among
+ * them — behind every page, at 0.07 opacity, `aria-hidden`, with no claim
+ * attached to them. This rule is about formulas a page *presents*, so scanning
+ * the background would fail every route on the site for decoration it never
+ * asked anyone to read. Removing the canvas block keeps the rule as strict as
+ * it was for real content.
+ */
+function stripCanvas(html) {
+  const start = html.indexOf('<div class="global-science"');
+  if (start === -1) return html;
+
+  let depth = 0;
+  let i = start;
+  while (i < html.length) {
+    const open = html.indexOf('<div', i);
+    const close = html.indexOf('</div>', i);
+    if (close === -1) break;
+    if (open !== -1 && open < close) {
+      depth += 1;
+      i = open + 4;
+    } else {
+      depth -= 1;
+      i = close + 6;
+      if (depth === 0) return html.slice(0, start) + html.slice(i);
+    }
+  }
+  return html;
+}
+
 for (const file of walk(dist, ['.html'])) {
-  const text = readFileSync(file, 'utf8');
+  const text = stripCanvas(readFileSync(file, 'utf8'));
   const hasFormula = FORMULA_MARKERS.some((pattern) => pattern.test(text));
   if (!hasFormula) continue;
   checks += 1;

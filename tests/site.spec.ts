@@ -63,7 +63,7 @@ test.describe('homepage', () => {
 
   test('lists exactly four featured projects, in the confirmed order', async ({ page }) => {
     await visit(page, '/');
-    const cards = page.locator('article.showcase');
+    const cards = page.locator('[data-mosaic-card]');
     await expect(cards).toHaveCount(4);
 
     const titles = await cards.locator('h3 a').allInnerTexts();
@@ -77,33 +77,53 @@ test.describe('homepage', () => {
 
   test('selected work never features TaiYi or PDIG', async ({ page }) => {
     await visit(page, '/');
-    const showcase = page.locator('article.showcase');
-    await expect(showcase.getByText('TaiYi Lingjing')).toHaveCount(0);
-    await expect(showcase.getByRole('link', { name: /TaiYi/ })).toHaveCount(0);
+    const mosaic = page.locator('.mosaic');
+    await expect(mosaic.getByText('TaiYi Lingjing')).toHaveCount(0);
+    await expect(mosaic.getByRole('link', { name: /TaiYi/ })).toHaveCount(0);
     // PDIG keeps its full case study under /projects; the homepage carries four.
-    await expect(showcase.getByRole('link', { name: /PDIG/ })).toHaveCount(0);
+    await expect(mosaic.getByRole('link', { name: /PDIG/ })).toHaveCount(0);
   });
 
-  test('each featured project carries a proof line', async ({ page }) => {
+  /**
+   * v1.7 prototype: a homepage card identifies a project, it does not explain
+   * one. Each card carries a name, one line of type, a labelled illustration,
+   * one reality status and one case link — and none of the apparatus v1.6
+   * stacked on top of that.
+   */
+  test('each mosaic card identifies the project and nothing more', async ({ page }) => {
     await visit(page, '/');
-    const proofs = page.locator('article.showcase [data-proof]');
-    await expect(proofs).toHaveCount(4);
-    // A proof token is a checkable fact. Never a metric, never a percentage.
-    for (const banned of ['%', 'production-ready', 'enterprise', '95']) {
-      await expect(proofs.first(), `proof contains ${banned}`).not.toContainText(banned);
+    const cards = page.locator('[data-mosaic-card]');
+    await expect(cards).toHaveCount(4);
+
+    for (const slug of ['wennian', 'hycell', 'morn', 'biopulse']) {
+      const card = page.locator(`[data-mosaic-slug="${slug}"]`);
+      await expect(card).toHaveCount(1);
+      await expect(card.locator('.card-name')).toBeVisible();
+      await expect(card.locator('.card-type')).toBeVisible();
+      await expect(card.locator('.card-status')).toBeVisible();
+      await expect(card.locator('.card-link')).toBeVisible();
+
+      // The illustration carries meaning now, so it is a labelled image.
+      const visual = card.locator('[data-mosaic-visual] svg');
+      await expect(visual).toHaveAttribute('role', 'img');
+      await expect(visual).toHaveAttribute('aria-label', /.{12,}/);
+
+      // Removed in v1.7.
+      await expect(card.locator('[data-cover-caps]')).toHaveCount(0);
+      await expect(card.locator('[data-proof]')).toHaveCount(0);
+      await expect(card.locator('.tag')).toHaveCount(0);
     }
   });
 
   /**
-   * The v1.6 reduction, as a test. Every one of these blocks still exists on
-   * the site — it simply lives on the page that owns its question now. This is
-   * the assertion that stops the homepage quietly growing back.
+   * The v1.7 prototype, as a test. Four content areas; every block that left
+   * the homepage still exists on the site, and none of it may creep back.
    */
-  test('homepage is reduced to five content areas', async ({ page }) => {
+  test('homepage is reduced to four content areas', async ({ page }) => {
     await visit(page, '/');
 
-    // Hero · Selected Work · Math × Bio × AI · Research & Notes · About/Contact
-    await expect(page.locator('main > section')).toHaveCount(5);
+    // Hero · Selected Work · Math × Bio × AI · About/Contact
+    await expect(page.locator('main > section')).toHaveCount(4);
 
     // Removed from the homepage, relocated to a sub-page.
     await expect(page.locator('#artifacts')).toHaveCount(0); // → /projects
@@ -112,29 +132,78 @@ test.describe('homepage', () => {
     await expect(page.locator('ol.bt')).toHaveCount(0); // → /about
     await expect(page.locator('ol.rail')).toHaveCount(0); // → /about
     await expect(page.locator('aside.eq')).toHaveCount(0); // → /research
+
+    // Hidden for the prototype: the component and its data are untouched.
+    await expect(page.locator('.rn-list')).toHaveCount(0);
   });
 
-  test('homepage answers each question exactly once', async ({ page }) => {
+  test('the hero is words and canvas, with no system figure', async ({ page }) => {
     await visit(page, '/');
 
-    // "How do you read a problem?" — one heading, one signature figure, one
-    // state-transition expression, three questions.
-    const mathbio = page.locator('#mathbio');
-    await expect(mathbio).toBeVisible();
-    await expect(mathbio.getByRole('heading', { level: 2 })).toHaveCount(1);
-    await expect(mathbio.locator('svg.diagram[role="img"]')).toHaveCount(1);
-    await expect(mathbio.locator('math')).toHaveCount(1);
-    await expect(mathbio.locator('.mb-q')).toHaveCount(3);
+    const hero = page.locator('.hero');
+    await expect(hero.getByRole('heading', { level: 1 })).toContainText('HAO LEI');
+    await expect(hero.locator('.hero-sub')).toContainText('AI × Life Science × Agents');
+    await expect(hero.getByRole('link', { name: 'Explore Work' })).toBeVisible();
 
-    // "What are you thinking about now?" — three rows, no more.
-    const notes = page.locator('#notes');
-    await expect(notes).toBeVisible();
-    await expect(notes.locator('.rn-item')).toHaveCount(3);
+    // The bordered system diagram is gone from the homepage.
+    await expect(hero.locator('.hero-system')).toHaveCount(0);
+    await expect(hero.locator('.hero-field')).toHaveCount(0);
 
-    // "How do I find out more?" — no giant card, just the identity and links.
-    const contact = page.locator('#contact');
-    await expect(contact).toContainText('Hao Lei');
-    await expect(contact.locator('[data-contact-id]')).toHaveCount(4);
+    // The copy occupies the left half; the rest of the first screen is canvas.
+    const copy = await hero.locator('.hero-copy').boundingBox();
+    expect(copy?.width ?? 0).toBeLessThan(1440 * 0.55);
+
+    // 75–88vh, not a full screen.
+    const height = (await hero.boundingBox())?.height ?? 0;
+    expect(height).toBeGreaterThan(900 * 0.6);
+    expect(height).toBeLessThan(900 * 0.95);
+  });
+
+  test('the statement band is one breath, not a research section', async ({ page }) => {
+    await visit(page, '/');
+    const band = page.locator('#mathbio');
+    await expect(band).toBeVisible();
+
+    // The eyebrow carries the title; there is no heading and no figure.
+    await expect(band).toContainText('Mathematics × Biology × AI');
+    await expect(band.locator('svg')).toHaveCount(0);
+    await expect(band.locator('math')).toHaveCount(1);
+    await expect(band.locator('.mb-q')).toHaveCount(0);
+    await expect(band.getByRole('link', { name: /research directions/i })).toBeVisible();
+
+    const height = (await band.boundingBox())?.height ?? 0;
+    expect(height, 'statement band height').toBeGreaterThanOrEqual(260);
+    expect(height, 'statement band height').toBeLessThanOrEqual(460);
+  });
+
+  test('homepage contact band carries name, positioning line and contact links', async ({
+    page,
+  }) => {
+    await visit(page, '/');
+    const band = page.locator('#contact');
+
+    await expect(band).toContainText('About / Contact');
+    await expect(band).toContainText('Hao Lei');
+    await expect(band).toContainText(
+      'AI systems and agents, with a life-science and computational biology background.',
+    );
+
+    // Order is fixed by the shared contact data: Gmail → QQ → GitHub → Resume.
+    const ids = await band
+      .locator('[data-contact-id]')
+      .evaluateAll((nodes) => nodes.map((n) => (n as HTMLElement).dataset.contactId ?? ''));
+    expect(ids).toEqual(['gmail', 'qq', 'github', 'resume']);
+
+    await expect(band.locator('a[href^="mailto:"]')).toHaveCount(2);
+    await expect(band.locator('[data-contact-id="github"]')).toHaveAttribute(
+      'href',
+      'https://github.com/huangdi97',
+    );
+    await expect(band.locator('[data-contact-id="resume"]')).toHaveAttribute('href', '/resume/');
+
+    // No CTA card: the band is part of the page, not a surface laid over it.
+    const background = await band.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(background).toBe('rgba(0, 0, 0, 0)');
   });
 
   test('the background field is present on the homepage', async ({ page }) => {
@@ -190,40 +259,15 @@ test.describe('homepage', () => {
     await expect(page.locator('.state-badge[data-state="planned"]').first()).toBeVisible();
   });
 
-  test('homepage contact band carries name, positioning line and contact links', async ({
-    page,
-  }) => {
+
+  test('every project illustration is exposed as a labelled image', async ({ page }) => {
     await visit(page, '/');
-    const band = page.locator('#contact');
-
-    await expect(band).toContainText('About / Contact');
-    await expect(band).toContainText('Hao Lei');
-    await expect(band).toContainText(
-      'AI systems and agents, with a life-science and computational biology background.',
-    );
-
-    // Order is fixed by the shared contact data: Gmail → QQ → GitHub → Resume.
-    const ids = await band
-      .locator('[data-contact-id]')
-      .evaluateAll((nodes) => nodes.map((n) => (n as HTMLElement).dataset.contactId ?? ''));
-    expect(ids).toEqual(['gmail', 'qq', 'github', 'resume']);
-
-    await expect(band.locator('a[href^="mailto:"]')).toHaveCount(2);
-    await expect(band.locator('[data-contact-id="github"]')).toHaveAttribute(
-      'href',
-      'https://github.com/huangdi97',
-    );
-    await expect(band.locator('[data-contact-id="resume"]')).toHaveAttribute('href', '/resume/');
-
-    // No CTA card: the band is part of the page, not a surface laid over it.
-    const background = await band.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(background).toBe('rgba(0, 0, 0, 0)');
-  });
-
-  test('hero diagram is exposed as an image with a label', async ({ page }) => {
-    await visit(page, '/');
-    const diagram = page.locator('svg.diagram[role="img"]').first();
-    await expect(diagram).toHaveAttribute('aria-label', /.+/);
+    const visuals = page.locator('[data-mosaic-visual] svg[role="img"]');
+    await expect(visuals).toHaveCount(4);
+    const count = await visuals.count();
+    for (let i = 0; i < count; i += 1) {
+      await expect(visuals.nth(i)).toHaveAttribute('aria-label', /.{12,}/);
+    }
   });
 });
 
@@ -302,9 +346,16 @@ test.describe('evidence layer', () => {
 
   test('home page cards carry a reality status', async ({ page }) => {
     await visit(page, '/');
-    const pills = page.locator('.reality-pill');
-    expect(await pills.count()).toBeGreaterThanOrEqual(3);
-    await expect(pills.filter({ hasText: 'Open-source MVP' }).first()).toBeVisible();
+    /* v1.7: the mosaic states each project's reality once, in words, from the
+       evidence layer — no pill, no second code label, no trailing status word.
+       ZhiShen reads "Open-source MVP"; every card carries a headline. */
+    const statuses = page.locator('[data-mosaic-card] .card-status');
+    await expect(statuses).toHaveCount(4);
+    await expect(page.locator('[data-mosaic-slug="wennian"] .card-status')).toContainText(
+      'Open-source MVP',
+    );
+    // The public-code fact is stated once, beside the headline, not twice.
+    await expect(statuses.first()).toContainText('Public repository');
   });
 
   test('open source table shows checked-in license and update metadata on /projects', async ({

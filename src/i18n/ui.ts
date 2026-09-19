@@ -44,7 +44,7 @@ const en = {
   'work.eyebrow': 'Selected Work',
   'work.title': 'Selected Work',
   'work.lead':
-    'Five projects whose state you can check yourself — public repositories, real artifacts, honest labels. Nothing here is a rendered mockup.',
+    'Work whose state you can check yourself — public repositories, real artifacts, honest labels. Nothing here is a rendered mockup.',
   'work.all': 'View all projects',
   'work.case': 'View Case Study',
   'work.repo': 'Repository',
@@ -227,6 +227,8 @@ const en = {
      three short paragraphs and one figure, not a tour of every diagram. */
   'mbai.eyebrow': 'Mathematics × Biology × AI',
   'mbai.title': 'Living systems have state, change, noise and intervention.',
+  'mbai.statement':
+    'Living systems have state, change, noise and intervention. Mathematics supplies the structure. AI learns the parts that cannot be written down as an equation.',
   'mbai.body.1':
     'Biology supplies the observations. Mathematics supplies the structure that describes them: state, probability, dynamics and constraint.',
   'mbai.body.2':
@@ -315,7 +317,8 @@ const zh: Dict = {
 
   'work.eyebrow': '精选项目',
   'work.title': '精选项目',
-  'work.lead': '五个可以自己打开核查的项目——公开仓库、真实产物、如实标注。这里没有为不存在的产品绘制的界面假图。',
+  'work.lead':
+    '可以自己打开核查的项目——公开仓库、真实产物、如实标注。这里没有为不存在的产品绘制的界面假图。',
   'work.all': '查看全部项目',
   'work.case': '查看案例',
   'work.repo': '代码仓库',
@@ -487,6 +490,8 @@ const zh: Dict = {
      「你如何理解一个问题」，所以是三段短文加一张主图，而不是图集巡览。 */
   'mbai.eyebrow': '数学 × 生物 × AI',
   'mbai.title': '生命系统具有状态、变化、噪声与干预。',
+  'mbai.statement':
+    '生命系统有状态、变化、噪声与干预。数学提供结构。AI 学习那些无法被完整写成方程的部分。',
   'mbai.body.1': '生物提供观测；数学提供描述它们的结构：状态、概率、动力学和约束。',
   'mbai.body.2': 'AI 帮助学习那些无法被完整写成方程的部分。',
   'mbai.body.3': '我经常把问题重新表达为同样的三个提问。',

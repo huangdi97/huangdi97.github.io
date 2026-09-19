@@ -1,22 +1,20 @@
 ---
 /**
- * Footer — theme-continuous (v1.6).
+ * Footer — theme-continuous, and (on the homepage) minimal (v1.7).
  *
- * Until v1.5 this was `<footer class="site-footer night">`, which forced the
- * inverted artifact palette onto the bottom of every page. On paper and white
- * that meant the document fell into a black block the moment you stopped
- * scrolling. The footer is not an evidence room: there is nothing here to
- * verify, so there is no reason for it to invert.
+ * v1.6 removed the forced `night` class that made every page end in a black
+ * block. v1.7 removes two more things from the foot of the page:
  *
- * It now reads the active theme like any other surface — transparent
- * background over the page canvas, a single hairline rule, and
- * `--ink` / `--muted` / `--faint` for text. Paper gets a warm-paper footer,
- * white gets a white one, night gets a night one, and the global scientific
- * canvas runs underneath all three without interruption.
+ *   1. the scientific coda (∂x/∂t · gene → pathway → phenotype · z(t+1)).
+ *      The global canvas already runs to the last line, so the coda was the
+ *      same idea said twice, in the one place the page should be quietest;
+ *   2. on the homepage, the contact row. The homepage already lists Gmail, QQ,
+ *      GitHub and Resume in its contact band, and repeating four addresses
+ *      inside one screen is not "more contact", it is noise.
  *
- * Kept deliberately small: the identity line, the contact row (required on
- * every route, because this is the only contact surface the inner pages have),
- * the two preferences, and the copyright. No three-column block, no CTA.
+ * Inner pages keep the contact row: the footer is the only contact surface
+ * /projects, /research and the case studies have, and it is the reason the
+ * identity gate can assert one fixed order everywhere.
  */
 import { useT, type Lang } from '../i18n/ui';
 import { SITE } from '../config/site';
@@ -26,27 +24,16 @@ import ContactLinks from './ContactLinks.astro';
 
 export interface Props {
   lang: Lang;
+  /** Homepage prototype: identity, preferences and copyright only. */
+  minimal?: boolean;
 }
 
-const { lang } = Astro.props;
+const { lang, minimal = false } = Astro.props;
 const t = useT(lang);
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer no-print mt-auto">
-  <!-- A scientific coda, not a block: the three motifs the page is about, at
-       0.02–0.04, sitting under the rule rather than behind a dark panel. -->
-  <svg class="footer-coda" viewBox="0 0 1200 40" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
-    <g class="sci-micro" fill="currentColor">
-      <text x="0" y="26" font-size="15">∂x/∂t</text>
-      <text x="560" y="26" font-size="15">gene → pathway → phenotype</text>
-      <text x="1130" y="26" font-size="15" text-anchor="end">z(t+1)</text>
-    </g>
-    <g class="sci-grid" fill="none" stroke="currentColor" stroke-width="1">
-      <line x1="0" y1="34" x2="1200" y2="34" />
-    </g>
-  </svg>
-
   <div class="shell footer-inner">
     <div class="footer-band">
       <div class="footer-identity">
@@ -61,8 +48,8 @@ const year = new Date().getFullYear();
       </div>
     </div>
 
-    <div class="footer-band footer-band-contact">
-      <ContactLinks lang={lang} variant="row" />
+    <div class:list={['footer-band', 'footer-band-contact', minimal && 'footer-band-solo']}>
+      {!minimal && <ContactLinks lang={lang} variant="row" />}
 
       <p class="footer-copy">
         © {year} Hao Lei — {t('footer.rights')}
@@ -81,16 +68,8 @@ const year = new Date().getFullYear();
     position: relative;
   }
 
-  .footer-coda {
-    display: block;
-    width: 100%;
-    height: auto;
-    margin-top: 1.75rem;
-    pointer-events: none;
-  }
-
   .footer-inner {
-    padding-block: 1.5rem 2.5rem;
+    padding-block: clamp(1.75rem, 3vw, 2.5rem);
   }
 
   .footer-band {
@@ -147,15 +126,20 @@ const year = new Date().getFullYear();
     font-variant-numeric: tabular-nums;
   }
 
+  /* Minimal footer: one rule, and the copyright alone on it. */
+  .footer-band-solo {
+    justify-content: flex-end;
+  }
+
   @media (max-width: 640px) {
-    /* A phone gets the identity, the preferences and the contact row — the
-       copyright line is the one thing that can wait. */
     .footer-copy {
       display: none;
     }
 
-    .footer-band-contact {
-      margin-top: 1.25rem;
+    /* The contact row is what makes the copyright droppable on a phone. When
+       there is no contact row, the copyright is the whole band. */
+    .footer-band-solo .footer-copy {
+      display: block;
     }
   }
 </style>

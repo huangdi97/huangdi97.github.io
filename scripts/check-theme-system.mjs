@@ -59,12 +59,15 @@ const REQUIRED_TOKENS = [
   'grain-opacity',
   'formula-opacity',
   'grid-opacity',
-  /* Global scientific canvas (v1.6). Four weights: large line art, notebook
-     marginalia, rules and ticks, and the single accent. */
-  'science-macro',
-  'science-micro',
+  /* Global scientific canvas (v1.7). Five weights — major contour, biological
+     network, notation, ticks, and the AI accent — plus the background-only
+     biological ink, which must never be a UI colour. */
+  'science-major',
+  'science-bio',
+  'science-formula',
   'science-grid',
   'science-accent',
+  'science-bio-ink',
 ];
 
 const problems = [];

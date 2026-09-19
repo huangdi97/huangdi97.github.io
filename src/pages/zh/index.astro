@@ -1,46 +1,40 @@
 ---
 /**
- * Homepage (Chinese) — v1.6: reduction.
+ * Homepage (Chinese) — v1.7-P0 visual prototype.
  *
- * v1.5 had twelve blocks. Hero, NOW, Selected Work, Selected Artifacts,
- * Background, Mathematical Biology, Equation, Research, How I Work, Open
- * Source, Lab Notes, About/Contact. Read top to bottom it answered "who are
- * you" five times and "what have you built" twice, and it had stopped being a
- * personal scientific portfolio and become a table of contents for the whole
- * site.
+ * NOT A RELEASE. Paper only, /zh only, awaiting owner visual approval.
  *
- * v1.6 keeps six, and every one of them answers a different question:
+ * v1.6 fixed the page's length (15138px → 7279px) and its footer, but the page
+ * still read as a research document rather than somebody's work:
  *
- *   Hero                    who are you?
- *   Selected Work           what have you built?
- *   Mathematics × Biology × AI   how do you read a problem?
- *   Research & Notes        what are you thinking about now?
- *   About / Contact         how do I find out more?
- *   Footer                  — continuity, not a section
+ *   · the hero was a text column beside a bordered system diagram, with the
+ *     global scientific canvas behind both — three visual languages in the
+ *     first screen;
+ *   · the background was eight independent captioned plates;
+ *   · Selected Work was four full-width blocks of ~900px each, more than half
+ *     the page;
+ *   · Mathematics × Biology × AI was a research section with a figure and three
+ *     numbered questions;
+ *   · Research & Notes added a fourth block the prototype does not need in
+ *     order to answer the question being asked.
  *
- * Everything removed from this page still exists — it was relocated, not
- * deleted. See the v1.6 report for the full move list; the short version:
+ * v1.7-P0 changes exactly four things: the hero, Selected Work, the scientific
+ * canvas, and the spacing around them. Four content areas, in this order:
  *
- *   NowStrip              → /projects
- *   SelectedArtifacts     → /projects  (it is an evidence room, and evidence
- *                                       belongs beside the case studies)
- *   BackgroundTimeline    → /about
- *   ProcessRail           → /about     (already there as the approach timeline)
- *   Open Source table     → /projects
- *   Full research list    → /research
- *   Lab Notes log         → /research
- *   EquationNote          → /research, and fused once into Math × Bio × AI
+ *   Hero                       the name, one line, one action row — and the
+ *                              scientific canvas doing the visual work
+ *   Selected Work              a 2 × 2 editorial mosaic
+ *   Mathematics × Biology × AI  a statement band, one breath long
+ *   About / Contact            the close, with no card
  *
- * The scientific background is no longer per-section: BaseLayout mounts one
- * GlobalScientificCanvas behind the whole document, so the field runs from the
- * first line to the footer without a single opaque block interrupting it.
+ * Research & Notes is hidden for the prototype; the component and its data are
+ * untouched. White, Night, mobile and every other route are deliberately out of
+ * scope — see V1_7_P0_VISUAL_PROTOTYPE_REPORT.md.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
-import ProjectShowcase from '../../components/ProjectShowcase.astro';
-import HeroSystem from '../../components/HeroSystem.astro';
+import ProjectMosaic from '../../components/ProjectMosaic.astro';
 import MathematicsBiologyAI from '../../components/MathematicsBiologyAI.astro';
-import ResearchNotesPreview from '../../components/ResearchNotesPreview.astro';
 import ContactLinks from '../../components/ContactLinks.astro';
 import { SITE } from '../../config/site';
 import { useT, localizedPath } from '../../i18n/ui';
@@ -80,40 +74,29 @@ const websiteLd = {
   ogImage="/og/home.png"
   type="profile"
   jsonLd={[personLd, websiteLd]}
+  minimalFooter={true}
 >
-  <!-- ───────────────────────────── 首屏 / HERO ────────────────────────── -->
+  <!-- ───────────────────────────── 首屏 / HERO ──────────────────────────
+       No figure, no panel, no border. The right half of the first screen
+       belongs to the scientific canvas, which is the hero's second half rather
+       than a decoration behind it. -->
   <section class="shell hero">
-    <div class="hero-grid">
-      <div class="hero-copy">
-        <p class="eyebrow">{t('hero.eyebrow')}</p>
-        <h1 class="display hero-title">{t('hero.title')}</h1>
-        <p class="hero-sub">{t('hero.subtitle')}</p>
-        <p class="hero-statement">{t('hero.statement')}</p>
-        <p class="lead hero-support">{t('hero.support')}</p>
+    <div class="hero-copy">
+      <p class="eyebrow">{t('hero.eyebrow')}</p>
+      <h1 class="display hero-title">{t('hero.title')}</h1>
+      <p class="hero-sub">{t('hero.subtitle')}</p>
+      <p class="hero-statement">{t('hero.statement')}</p>
+      <p class="lead hero-support">{t('hero.support')}</p>
 
-        <div class="hero-actions">
-          <a href={projectsHref(lang)} class="btn btn-primary">{t('hero.cta.work')}</a>
-          <a href={SITE.github} class="btn btn-outline" target="_blank" rel="noopener noreferrer">
-            {t('hero.cta.github')}
-          </a>
-          <a href={localizedPath(lang, '/resume')} class="btn btn-outline">
-            {t('hero.cta.resume')}
-          </a>
-        </div>
+      <div class="hero-actions">
+        <a href={projectsHref(lang)} class="btn btn-primary">{t('hero.cta.work')}</a>
+        <a href={SITE.github} class="btn btn-outline" target="_blank" rel="noopener noreferrer">
+          {t('hero.cta.github')}
+        </a>
+        <a href={localizedPath(lang, '/resume')} class="btn btn-outline">
+          {t('hero.cta.resume')}
+        </a>
       </div>
-
-      <div class="hero-figure">
-        <div class="hero-field field-grid">
-          <HeroSystem label={t('a11y.heroField')} />
-        </div>
-      </div>
-    </div>
-
-    <div class="hero-capabilities">
-      <p class="mono">{t('hero.capabilities')}</p>
-      <ul>
-        {SITE.focusAreas.map((area) => <li>{area.zh}</li>)}
-      </ul>
     </div>
   </section>
 
@@ -127,16 +110,11 @@ const websiteLd = {
       linkLabel={t('work.all')}
     />
 
-    <div class="showcase-list">
-      {featured.map((project, i) => <ProjectShowcase project={project} lang={lang} index={i} />)}
-    </div>
+    <ProjectMosaic projects={featured} lang={lang} />
   </section>
 
   <!-- ─────────────────── 数学 × 生物 × AI / MATHEMATICS × BIOLOGY × AI ─── -->
   <MathematicsBiologyAI lang={lang} />
-
-  <!-- ───────────────────── 研究与札记 / RESEARCH & NOTES ──────────────── -->
-  <ResearchNotesPreview lang={lang} />
 
   <!-- ───────────────────── 关于 / 联系 / ABOUT & CONTACT ──────────────── -->
   <section class="shell section-tight" id="contact">
@@ -159,30 +137,34 @@ const websiteLd = {
 </BaseLayout>
 
 <style>
+  /* 82vh, not 100vh: the first screen should hand the eye on to the work rather
+     than insisting on filling itself. The copy sits in the left 46%; the rest
+     belongs to the canvas. */
   .hero {
-    padding-top: clamp(2.5rem, 6vw, 5rem);
-    padding-bottom: clamp(2.5rem, 5vw, 4rem);
-  }
-
-  .hero-grid {
-    display: grid;
-    gap: 2.5rem;
+    min-height: 82vh;
+    display: flex;
     align-items: center;
+    padding-block: clamp(2.5rem, 6vh, 5rem);
   }
 
-  @media (min-width: 900px) {
-    .hero-grid {
-      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-      gap: 4rem;
+  .hero-copy {
+    width: min(100%, 46%);
+    max-width: 38rem;
+  }
+
+  @media (max-width: 900px) {
+    .hero-copy {
+      width: 100%;
+      max-width: 34rem;
     }
   }
 
   .hero-title {
-    margin-top: 1.25rem;
+    margin-top: 1rem;
   }
 
   .hero-sub {
-    margin-top: 1rem;
+    margin-top: 0.875rem;
     font-family: var(--font-mono);
     font-size: clamp(0.8125rem, 1.4vw, 0.9375rem);
     letter-spacing: 0.08em;
@@ -190,71 +172,27 @@ const websiteLd = {
   }
 
   .hero-statement {
-    margin-top: 1.75rem;
+    margin-top: 1.5rem;
     font-size: clamp(1.25rem, 2.4vw, 1.75rem);
     line-height: 1.38;
     letter-spacing: -0.02em;
-    max-width: 26ch;
+    max-width: 24ch;
   }
 
   .hero-support {
-    margin-top: 1.25rem;
-    max-width: 44ch;
+    margin-top: 1.125rem;
+    max-width: 42ch;
   }
 
   .hero-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: 2.25rem;
+    margin-top: 2rem;
   }
 
-  .hero-figure {
-    display: none;
-  }
-
-  .hero-field {
-    padding: clamp(0.75rem, 2vw, 1.5rem);
-    border: 1px solid var(--line);
-    border-radius: 3px;
-  }
-
-  @media (min-width: 900px) {
-    .hero-figure {
-      display: block;
-    }
-  }
-
-  .hero-capabilities {
-    margin-top: clamp(2.5rem, 5vw, 4rem);
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--line);
-  }
-
-  .hero-capabilities ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 2.5rem;
-    list-style: none;
-    margin: 0.75rem 0 0;
-    padding: 0;
-  }
-
-  .hero-capabilities li {
-    font-size: 0.9375rem;
-    color: var(--muted);
-  }
-
-  .showcase-list {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(3rem, 7vw, 6rem);
-    margin-top: clamp(2.5rem, 5vw, 4.5rem);
-  }
-
-  /* No surface, no border, no card: the closing band is part of the page, and
-     a large white box here would cut the scientific canvas in half — which is
-     the same mistake the old footer made in black. */
+  /* No surface, no border, no card: the closing band is part of the page, and a
+     large box here would cut the scientific canvas in half. */
   .contact-band {
     display: grid;
     gap: 2rem;

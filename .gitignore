@@ -37,6 +37,7 @@ _*.mjs
 
 # Workspace agent data
 .workbuddy/
+.workbuddy-ai/
 
 # OS junk
 .DS_Store

@@ -39,9 +39,13 @@ const problems = [];
 const notes = [];
 let checks = 0;
 /** The four canvas opacity tokens, checked against a floor and a ceiling. */
-const SCIENCE_TOKENS = ['science-macro', 'science-micro', 'science-grid', 'science-accent'];
-/** How much lower notation is inked than large line art, read from the CSS. */
-let notationFactor = 0;
+const SCIENCE_TOKENS = [
+  'science-major',
+  'science-bio',
+  'science-formula',
+  'science-grid',
+  'science-accent',
+];
 
 function fail(message) {
   problems.push(message);
@@ -69,8 +73,11 @@ const FORMULA_WORDS = /\b(?:argmin|argmax|softmax|log-likelihood)\b/i;
 const COVER = join(src, 'components', 'ProjectCover.astro');
 const SCIENCE = join(src, 'components', 'ProjectScientificVisual.astro');
 const CANVAS = join(src, 'components', 'GlobalScientificCanvas.astro');
-const MACRO = join(src, 'components', 'MacroScienceLayer.astro');
-const MICRO = join(src, 'components', 'MicroNotebookLayer.astro');
+const HERO_C = join(src, 'components', 'HeroComposition.astro');
+const MID_C = join(src, 'components', 'MidComposition.astro');
+const LOWER_C = join(src, 'components', 'LowerComposition.astro');
+const MOSAIC = join(src, 'components', 'ProjectMosaic.astro');
+const MOSAIC_VISUAL = join(src, 'components', 'ProjectMosaicVisual.astro');
 const CARD = join(src, 'components', 'ProjectCard.astro');
 const SHOWCASE = join(src, 'components', 'ProjectShowcase.astro');
 
@@ -78,8 +85,11 @@ for (const [name, path] of [
   ['ProjectCover.astro', COVER],
   ['ProjectScientificVisual.astro', SCIENCE],
   ['GlobalScientificCanvas.astro', CANVAS],
-  ['MacroScienceLayer.astro', MACRO],
-  ['MicroNotebookLayer.astro', MICRO],
+  ['HeroComposition.astro', HERO_C],
+  ['MidComposition.astro', MID_C],
+  ['LowerComposition.astro', LOWER_C],
+  ['ProjectMosaic.astro', MOSAIC],
+  ['ProjectMosaicVisual.astro', MOSAIC_VISUAL],
 ]) {
   checks += 1;
   if (!existsSync(path)) fail(`${name} is missing — the three visual types must stay separate`);
@@ -139,8 +149,9 @@ for (const page of caseStudyPages) {
 
 const canvasFiles = [
   ['GlobalScientificCanvas.astro', CANVAS],
-  ['MacroScienceLayer.astro', MACRO],
-  ['MicroNotebookLayer.astro', MICRO],
+  ['HeroComposition.astro', HERO_C],
+  ['MidComposition.astro', MID_C],
+  ['LowerComposition.astro', LOWER_C],
 ];
 
 for (const [name, path] of canvasFiles) {
@@ -174,41 +185,63 @@ if (existsSync(CANVAS)) {
   if (!/data-global-scientific-canvas/.test(canvas)) {
     fail('GlobalScientificCanvas.astro must carry data-global-scientific-canvas');
   }
+  /* v1.7: three compositions, not a set of independent plates. */
   checks += 1;
-  if (!/MacroScienceLayer/.test(canvas) || !/MicroNotebookLayer/.test(canvas)) {
-    fail('GlobalScientificCanvas.astro must compose the macro and micro layers');
+  if (
+    !/HeroComposition/.test(canvas) ||
+    !/MidComposition/.test(canvas) ||
+    !/LowerComposition/.test(canvas)
+  ) {
+    fail('GlobalScientificCanvas.astro must compose the hero, mid and lower compositions');
   }
 }
 
-if (existsSync(MACRO)) {
-  const macro = readFileSync(MACRO, 'utf8');
+/* All three sciences must appear across the compositions, and the drawings must
+   not name themselves. A captioned motif is the v1.6 failure mode: the field
+   read as a slide deck rather than as a picture. */
+const compositionSources = [HERO_C, MID_C, LOWER_C]
+  .filter((p) => existsSync(p))
+  .map((p) => readFileSync(p, 'utf8'));
 
-  /* The whole point of v1.6: mathematics AND biology AND AI, at once. A field
-     made only of formulas is the failure mode this check exists for. */
-  const kinds = new Set([...macro.matchAll(/data-sci-kind="(math|biology|ai)"/g)].map((m) => m[1]));
+if (compositionSources.length > 0) {
+  const joined = compositionSources.join('\n');
+  const kinds = new Set([...joined.matchAll(/data-sci-kind="(math|biology|ai)"/g)].map((m) => m[1]));
   for (const kind of ['math', 'biology', 'ai']) {
     checks += 1;
     if (!kinds.has(kind)) {
-      fail(`MacroScienceLayer.astro has no "${kind}" motif — the field must carry all three`);
+      fail(`the canvas has no "${kind}" motif — the field must carry all three`);
     }
   }
 
   checks += 1;
-  if (!/data-sci-mobile='drop'|data-sci-mobile="drop"/.test(macro)) {
-    fail('macro plaques must declare data-sci-mobile so a phone gets fewer, larger motifs');
-  }
-  checks += 1;
-  if (!/@media \(prefers-reduced-motion: reduce\)/.test(macro)) {
-    fail('the macro drift must be declared off under prefers-reduced-motion');
+  if (!/data-sci-mobile='drop'|data-sci-mobile="drop"/.test(joined)) {
+    fail('canvas marks must declare data-sci-mobile so a phone gets fewer of them');
   }
 
-  /* Biology may never be only a formula, and AI may never be a robot head.
-     Comments are stripped first: this file *says* "AI is never a robot, a
-     brain or a circuit head", and that sentence must not trip the check. */
-  const macroCode = macro.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '');
+  /* No captions in the background. These are the exact strings v1.6 shipped,
+     and they are still named in the comments of the files that replaced it —
+     so comments are stripped before the check. */
+  const BANNED_CAPTIONS = [
+    'CELL STATE LANDSCAPE',
+    'AGENT GRAPH',
+    'state space',
+    'posterior · likelihood',
+    'cells × genes',
+    'ten nodes',
+    'expression is measured',
+  ];
+  const compositionCode = joined.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '');
+  for (const caption of BANNED_CAPTIONS) {
+    checks += 1;
+    if (compositionCode.includes(caption)) {
+      fail(`the canvas carries the caption "${caption}" — a background must not label itself`);
+    }
+  }
+
+  /* Biology may never be only a formula, and AI may never be a robot head. */
   checks += 1;
-  if (/robot|circuit head|\bbrain\b/i.test(macroCode)) {
-    fail('MacroScienceLayer.astro uses a robot / brain / circuit-head shorthand for AI');
+  if (/robot|circuit head|\bbrain\b/i.test(compositionCode)) {
+    fail('the canvas uses a robot / brain / circuit-head shorthand for AI');
   }
 }
 
@@ -226,21 +259,24 @@ const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : '';
  */
 const BUDGET = {
   paper: {
-    'science-macro': [0.08, 0.14],
-    'science-micro': [0.02, 0.05],
-    'science-grid': [0.02, 0.04],
-    'science-accent': [0.05, 0.12],
+    'science-major': [0.1, 0.15],
+    'science-bio': [0.07, 0.11],
+    'science-formula': [0.045, 0.075],
+    'science-grid': [0.018, 0.035],
+    'science-accent': [0.07, 0.11],
   },
   white: {
-    'science-macro': [0.06, 0.11],
-    'science-micro': [0.015, 0.04],
-    'science-grid': [0.015, 0.04],
-    'science-accent': [0.04, 0.1],
+    'science-major': [0.07, 0.13],
+    'science-bio': [0.05, 0.1],
+    'science-formula': [0.035, 0.07],
+    'science-grid': [0.015, 0.035],
+    'science-accent': [0.05, 0.1],
   },
   night: {
-    'science-macro': [0.1, 0.18],
-    'science-micro': [0.035, 0.07],
-    'science-grid': [0.03, 0.06],
+    'science-major': [0.1, 0.2],
+    'science-bio': [0.07, 0.15],
+    'science-formula': [0.05, 0.1],
+    'science-grid': [0.025, 0.06],
     'science-accent': [0.08, 0.16],
   },
 };
@@ -274,21 +310,29 @@ for (const [theme, tokens] of Object.entries(BUDGET)) {
 }
 
 /* Notation must stay a step quieter than the composition around it: if a
-   formula is inked at the same weight as a 600px trajectory, the page reads as
-   a maths wallpaper. */
-const notationMatch = /\.sci-notation\s*\{[^}]*opacity:\s*calc\(var\(--science-macro\)\s*\*\s*([0-9.]+)\)/.exec(
-  css,
-);
+   formula is inked at the same weight as a 1400px trajectory, the page reads as
+   a maths wallpaper. v1.7 replaced the derived factor with an explicit
+   --science-formula token, so the check is now that the token exists and sits
+   below the major weight. */
+const formulaTokens = SCIENCE_TOKENS.includes('science-formula');
 checks += 1;
-if (!notationMatch) {
-  fail('global.css must ink .sci-notation at calc(var(--science-macro) * factor)');
-} else {
-  notationFactor = Number(notationMatch[1]);
+if (!formulaTokens) {
+  fail('global.css must define --science-formula so notation has its own weight');
+}
+for (const theme of ['paper', 'white', 'night']) {
+  const start = css.indexOf(`[data-theme='${theme}'] {`);
+  if (start === -1) continue;
+  const slice = css.slice(start, css.indexOf('}', start));
+  const major = Number(/--science-major:\s*([0-9.]+)/.exec(slice)?.[1] ?? 0);
+  const formula = Number(/--science-formula:\s*([0-9.]+)/.exec(slice)?.[1] ?? 0);
+  const grid = Number(/--science-grid:\s*([0-9.]+)/.exec(slice)?.[1] ?? 0);
   checks += 1;
-  if (notationFactor > 0.7) {
-    fail(`notation factor is ${notationFactor} — it must stay at or below 0.7 of the macro layer`);
-  } else {
-    notes.push(`notation inked at ${notationFactor} × macro`);
+  if (!(formula < major)) {
+    fail(`[${theme}] notation (${formula}) is not quieter than the major weight (${major})`);
+  }
+  checks += 1;
+  if (!(grid < formula)) {
+    fail(`[${theme}] ticks (${grid}) are not quieter than notation (${formula})`);
   }
 }
 
@@ -305,6 +349,43 @@ for (const [name, path] of canvasFiles) {
       fail(`${name} hard-codes an opacity (${value}) — it must read a --science-* token`);
     }
   }
+}
+
+/* The canvas wrapper must be document-level and inert. `position: absolute`
+   rather than `fixed` is the difference between "a very large sheet of paper"
+   and "a wallpaper". */
+const canvasRule = /\.global-science\s*\{[^}]*\}/.exec(css);
+checks += 1;
+if (!canvasRule) {
+  fail('global.css has no .global-science rule');
+} else {
+  checks += 1;
+  if (!/position:\s*absolute/.test(canvasRule[0])) {
+    fail('.global-science must be document-level (position: absolute), not viewport-fixed');
+  }
+  checks += 1;
+  if (!/pointer-events:\s*none/.test(canvasRule[0])) {
+    fail('.global-science must set pointer-events: none');
+  }
+  checks += 1;
+  if (!/z-index:\s*-1/.test(canvasRule[0])) {
+    fail('.global-science must sit behind content (z-index: -1)');
+  }
+  checks += 1;
+  if (!/overflow:\s*hidden/.test(canvasRule[0])) {
+    fail('.global-science must crop its off-page drawings (overflow: hidden)');
+  }
+}
+
+/* The one motion in the field is declared once, in global.css, next to the
+   `.sci-drift` class it disables. */
+checks += 1;
+if (
+  !/@media \(prefers-reduced-motion: reduce\)[\s\S]{0,300}?\.sci-drift[\s\S]{0,150}?animation:\s*none/.test(
+    css,
+  )
+) {
+  fail('global.css must switch .sci-drift off under prefers-reduced-motion');
 }
 
 /* -------------------------------------------------------------------------- */
@@ -426,7 +507,7 @@ for (const file of projectFiles) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 4. Built pages — a cover explains itself, and the ambient layer is inert    */
+/* 4. Built pages — the mosaic identifies, the canvas is inert and captionless */
 /* -------------------------------------------------------------------------- */
 
 const HOME_PAGES = ['dist/index.html', 'dist/zh/index.html'];
@@ -440,51 +521,75 @@ for (const rel of HOME_PAGES) {
   }
   const html = readFileSync(path, 'utf8');
 
-  /* ---- covers ---- */
-  const chunks = html.split(/<article class="showcase/).slice(1);
+  /* ---- the mosaic: four cards, identification only ---- */
+  const cards = html.split(/<article class="mosaic-card"/).slice(1);
   checks += 1;
-  if (chunks.length < 3) fail(`${rel} renders ${chunks.length} featured covers, expected at least 3`);
+  if (cards.length !== 4) {
+    fail(`${rel} renders ${cards.length} mosaic cards — the homepage features four`);
+  }
 
-  chunks.forEach((chunk, i) => {
-    const start = chunk.indexOf('data-cover ');
-    const end = chunk.indexOf('class="showcase-body"');
-    const region = start === -1 ? '' : chunk.slice(start, end === -1 ? chunk.length : end);
-    const label = `${rel} cover #${i + 1}`;
+  cards.forEach((chunk, i) => {
+    const region = chunk.slice(0, chunk.indexOf('</article>'));
+    const label = `${rel} mosaic card #${i + 1}`;
 
+    /* Present: a name, one line of type, a labelled illustration, one status,
+       one case link. */
     checks += 1;
-    if (!region) {
-      fail(`${label} is missing a ProjectCover`);
-      return;
+    if (!/<h3[^>]*class="card-name"[\s\S]*?<\/h3>/.test(region)) fail(`${label} has no name`);
+    checks += 1;
+    if (!/class="card-type"/.test(region)) fail(`${label} has no one-line type`);
+    checks += 1;
+    if (!/data-mosaic-visual=/.test(region)) fail(`${label} has no illustration`);
+    checks += 1;
+    if (!/class="card-status/.test(region)) fail(`${label} has no reality status`);
+    checks += 1;
+    if (!/class="card-link"/.test(region)) fail(`${label} has no case link`);
+
+    /* The illustration must be a labelled image, not an unlabelled decoration:
+       it carries the project's meaning now, so it has to be readable. */
+    const svg = /<svg[^>]*data-astro-cid[\s\S]*?<\/svg>/.exec(region)?.[0] ?? '';
+    checks += 1;
+    if (!/role="img"/.test(svg)) fail(`${label} illustration is not exposed as an image`);
+    checks += 1;
+    if (!/aria-label="[^"]{12,}"/.test(svg)) {
+      fail(`${label} illustration has no descriptive label`);
     }
 
+    /* Removed in v1.7: the chips, the proof line and the tag pills. A homepage
+       card identifies a project; the case study explains it. */
     checks += 1;
-    if (!/data-cover-title/.test(region)) fail(`${label} has no title`);
+    if (/data-cover-caps/.test(region)) fail(`${label} still lists capability chips`);
     checks += 1;
-    if (!/data-cover-type/.test(region)) fail(`${label} has no type line`);
+    if (/data-proof/.test(region)) fail(`${label} still carries a proof line`);
     checks += 1;
-    if (!/data-cover-desc/.test(region)) fail(`${label} has no description`);
-    checks += 1;
-    if (!/data-cover-status/.test(region)) fail(`${label} has no reality line`);
-
-    const capsBlock = /data-cover-caps[\s\S]*?<\/ul>/.exec(region)?.[0] ?? '';
-    const capItems = (capsBlock.match(/<li/g) ?? []).length;
-    checks += 1;
-    if (capItems < 3) fail(`${label} lists ${capItems} capabilities, expected at least 3`);
-
+    if (/class="tag"/.test(region)) fail(`${label} still carries tag pills`);
     checks += 1;
     if (/<math|mathml/i.test(region)) fail(`${label} renders MathML`);
 
-    const glyphs = region.match(MATH_GLYPHS) ?? [];
+    /* Text budget (§58): the card's *body* — the one-line type, the brand
+       subtitle and up to three keywords — stays short. The name, the category
+       eyebrow and the reality status are identification, not body copy, so they
+       are measured separately and not counted here. */
+    const bodyOf = (cls) =>
+      [...region.matchAll(new RegExp(`class="${cls}[^"]*"[^>]*>([\\s\\S]*?)</(?:p|ul|div)>`, 'g'))]
+        .map((m) =>
+          m[1]
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim(),
+        )
+        .join(' ');
+    const words = [bodyOf('card-type'), bodyOf('card-sub'), bodyOf('card-keywords')]
+      .filter(Boolean)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const budget = rel.includes('zh') ? 60 : 130;
     checks += 1;
-    if (glyphs.length > 12) {
-      fail(`${label} carries ${glyphs.length} formula glyphs — the cap is 12`);
-    }
-
-    /* The words have to be HTML text, not paths inside the SVG. */
-    const text = region.replace(/<svg[\s\S]*?<\/svg>/g, '');
-    checks += 1;
-    if ((text.match(/[A-Za-z一-鿿]/g) ?? []).length < 40) {
-      fail(`${label} would still be an SVG with almost no words beside it`);
+    if (words.length > budget) {
+      fail(`${label} carries ${words.length} characters of body copy — the budget is ${budget}`);
+    } else {
+      notes.push(`${rel} card #${i + 1}: ${words.length} chars of body copy`);
     }
   });
 
@@ -541,6 +646,25 @@ for (const rel of HOME_PAGES) {
   checks += 1;
   if (/class="oss-list"/.test(html)) {
     fail(`${rel} still renders the open-source table — it moved to /projects`);
+  }
+
+  /* v1.7 prototype: four content areas and no more. Research & Notes is hidden
+     for this round, and the hero no longer carries a bordered system figure. */
+  const sections = (html.match(/<section class="shell[^"]*"/g) ?? []).length;
+  checks += 1;
+  if (sections > 4) {
+    fail(`${rel} renders ${sections} content areas — the prototype keeps four`);
+  } else {
+    notes.push(`${rel}: ${sections} content areas`);
+  }
+
+  checks += 1;
+  if (html.includes('class="hero-system"')) {
+    fail(`${rel} still renders the hero system figure — the canvas is the hero's right half`);
+  }
+  checks += 1;
+  if (html.includes('class="rn-list"')) {
+    fail(`${rel} still renders Research & Notes — hidden for the v1.7 prototype`);
   }
 }
 

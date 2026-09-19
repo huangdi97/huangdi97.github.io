@@ -106,15 +106,21 @@ test.describe('privacy', () => {
 });
 
 test.describe('contact identity', () => {
-  const SURFACES: Array<[string, string]> = [
-    ['footer', 'footer.site-footer'],
-    ['about', 'main'],
-    ['resume', 'main'],
+  /**
+   * Every surface that shows contact identity reads the same array, in the same
+   * order. v1.7 made the *homepage* footer minimal, so the footer surface is
+   * verified on an inner route — which is exactly where the footer is a page's
+   * only contact surface, and therefore the case that matters.
+   */
+  const SURFACES: Array<[string, string, string]> = [
+    ['footer', 'footer.site-footer', '/projects/'],
+    ['about', 'main', '/about/'],
+    ['resume', 'main', '/resume/'],
   ];
 
-  for (const [label, scope] of SURFACES) {
+  for (const [label, scope, route] of SURFACES) {
     test(`${label} exposes both addresses in a fixed order`, async ({ page }) => {
-      await visit(page, label === 'footer' ? '/' : `/${label}/`);
+      await visit(page, route);
       const root = page.locator(scope).first();
 
       const ids = await root.locator('[data-contact-id]').evaluateAll((nodes) =>

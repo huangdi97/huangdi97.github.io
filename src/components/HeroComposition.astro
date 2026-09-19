@@ -1,0 +1,106 @@
+---
+/**
+ * Hero composition — the first movement of the global scientific canvas (v1.7).
+ *
+ * v1.6 put eight independent plaques on the page: a Bayes plate, a labelled
+ * "CELL STATE LANDSCAPE" plate, a gene→pathway plate, a matrix plate, an
+ * "AGENT GRAPH" plate and so on. Read together they were a set of teaching
+ * diagrams pinned to a wall, not a picture. This replaces them.
+ *
+ * One continuous drawing, with three sciences that are actually connected:
+ *
+ *   biology      a large state landscape — four contour levels, off-centre,
+ *                running off the right edge of the page
+ *   mathematics  two notations at the top-left, and one long trajectory that
+ *                enters from off-canvas left and climbs into the landscape
+ *   AI           the trajectory does not stop at the target: past the landscape
+ *                it resolves into nodes and edges. The graph grows out of the
+ *                biology rather than sitting next to it
+ *
+ * There are no captions. The v1.6 layer labelled its own motifs — "CELL STATE
+ * LANDSCAPE", "posterior · likelihood · prior", "ten nodes · typed hand-offs" —
+ * which made the background read as a slide deck. A background is not a
+ * lecture: the drawing has to carry the idea without naming it.
+ *
+ * Ink is weighted, not uniform (§17): major contours and the trajectory at
+ * --science-major, secondary biological structure at --science-bio, notation at
+ * --science-formula, ticks at --science-grid, the AI cobalt at
+ * --science-accent. Biology carries its own desaturated moss ink, which is
+ * background-only and never a UI colour.
+ */
+---
+
+<div
+  class="sci-composition"
+  data-sci-composition="hero"
+  style="--sci-top:0;--sci-left:0;--sci-right:0;--sci-w:100%;--sci-h:96vh"
+>
+  <svg
+    viewBox="0 0 1600 1000"
+    preserveAspectRatio="xMidYMid slice"
+    focusable="false"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <!-- ── mathematics: two notations, faint, above the title ───────────── -->
+    <g class="sci-formula" data-sci-kind="math" fill="currentColor" stroke="none" data-sci-mobile="keep">
+      <text x="58" y="150" font-size="27">P(H | D)</text>
+      <text x="58" y="196" font-size="22" data-sci-mobile="drop">dx/dt</text>
+    </g>
+
+    <!-- ── mathematics: one measured rule, the only tick in the hero ────── -->
+    <g
+      class="sci-grid"
+      data-sci-mobile="drop"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.2"
+    >
+      <line x1="58" y1="240" x2="196" y2="240" />
+      {[0, 1, 2, 3, 4].map((i) => <line x1={58 + i * 34} y1="240" x2={58 + i * 34} y2="247" />)}
+    </g>
+
+    <!-- ── biology: the state landscape, running off the right edge ─────── -->
+    <g data-sci-kind="biology" fill="none" stroke="var(--science-bio-ink)" data-sci-mobile="keep">
+      <ellipse class="sci-bio" cx="1150" cy="500" rx="424" ry="268" stroke-width="1.6" stroke-dasharray="11 14" />
+      <ellipse class="sci-bio" cx="1150" cy="500" rx="302" ry="190" stroke-width="1.6" stroke-dasharray="11 14" />
+      <ellipse class="sci-major" cx="1150" cy="500" rx="178" ry="112" stroke-width="2.2" />
+      <ellipse class="sci-major" cx="1150" cy="500" rx="82" ry="52" stroke-width="2.4" />
+    </g>
+
+    <!-- ── dynamics: one trajectory, from off-canvas left into the basin ── -->
+    <path
+      class="sci-major sci-drift"
+      data-sci-mobile="keep"
+      d="M-60,690 C 120,690 200,742 340,720 C 500,696 560,560 720,540 C 880,520 940,600 1090,556 C 1180,530 1230,620 1340,752"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.6"
+      stroke-linecap="round"
+    />
+
+    <!-- ── biology: the states the trajectory passes through ────────────── -->
+    <g class="sci-bio" data-sci-kind="biology" fill="var(--science-bio-ink)" stroke="none" data-sci-mobile="keep">
+      <circle cx="720" cy="540" r="7" />
+      <circle cx="1090" cy="556" r="9" />
+    </g>
+
+    <!-- ── biology: the target state, at the centre of the basin ────────── -->
+    <g class="sci-major" fill="currentColor" stroke="none" data-sci-mobile="keep">
+      <circle cx="1150" cy="500" r="6" />
+    </g>
+
+    <!-- ── AI: the same line resolves into a graph, inside the frame ────── -->
+    <g class="sci-accent" data-sci-kind="ai" fill="none" stroke="var(--accent)" stroke-width="1.9" data-sci-mobile="keep">
+      <line x1="1340" y1="752" x2="1440" y2="676" stroke-dasharray="6 8" />
+      <line x1="1440" y1="676" x2="1508" y2="790" stroke-dasharray="6 8" />
+      <line x1="1508" y1="790" x2="1576" y2="706" stroke-dasharray="6 8" />
+      <line x1="1340" y1="752" x2="1508" y2="790" />
+    </g>
+    <g class="sci-accent" data-sci-kind="ai" fill="var(--accent)" stroke="none" data-sci-mobile="keep">
+      <circle cx="1340" cy="752" r="11" />
+      <circle cx="1440" cy="676" r="10" />
+      <circle cx="1508" cy="790" r="9" />
+      <circle cx="1576" cy="706" r="10" />
+    </g>
+  </svg>
+</div>

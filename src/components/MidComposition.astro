@@ -1,0 +1,154 @@
+---
+/**
+ * Mid composition — the second movement (v1.7).
+ *
+ * It sits behind the project mosaic and the Mathematics × Biology × AI band, and
+ * it draws one idea: a measured biological object becoming a computational one.
+ *
+ *   left    an expression matrix fragment — measured, gridded, biological
+ *   middle  the same cells dispersing: squares become points, the grid stops
+ *           holding, opacity falls away
+ *   right   the points gather again as a small latent / agent graph in cobalt
+ *
+ * No titles, no axis labels, no captions. The transformation is the content.
+ * Two notations only — `X` beside the matrix, `zₜ₊₁` beside the graph — which is
+ * the whole permitted text budget for this movement.
+ */
+
+/** Deterministic pseudo-random — the same drawing on every build. */
+const rnd = (i: number) => {
+  const v = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+  return v - Math.floor(v);
+};
+
+/* ── the measured object: a 9 × 6 expression fragment ────────────────────── */
+const COLS = 9;
+const ROWS = 6;
+const CELL = 34;
+const MX = 64;
+const MY = 96;
+
+const MATRIX = Array.from({ length: COLS * ROWS }, (_, k) => {
+  const v = rnd(k * 1.73 + 5);
+  const o = v > 0.9 ? 0.9 : v > 0.79 ? 0.55 : v > 0.7 ? 0.3 : v > 0.63 ? 0.15 : 0;
+  return {
+    x: MX + (k % COLS) * CELL,
+    y: MY + Math.floor(k / COLS) * CELL,
+    o,
+  };
+}).filter((c) => c.o > 0);
+
+/* ── the same object losing its grid ─────────────────────────────────────── */
+/* Each cell keeps its index but drifts right and down, and the square becomes
+   a point: the further it travels, the rounder and fainter it gets. */
+const DRIFT = Array.from({ length: 34 }, (_, k) => {
+  const src = MATRIX[k % MATRIX.length];
+  const t = rnd(k * 3.11 + 41);
+  const spread = 150 + k * 11;
+  return {
+    cx: +(src.x + 250 + spread * t).toFixed(1),
+    cy: +(src.y + (rnd(k * 5.7 + 13) - 0.35) * 190).toFixed(1),
+    r: +(3.4 + t * 2.6).toFixed(2),
+    o: +(0.22 + t * 0.5).toFixed(2),
+  };
+});
+
+/* ── what it becomes: a small latent / agent graph ──────────────────────── */
+const NODES: Array<[number, number]> = [
+  [1052, 232],
+  [1178, 176],
+  [1290, 258],
+  [1180, 336],
+  [1318, 388],
+  [1404, 286],
+];
+const EDGES: Array<[number, number]> = [
+  [0, 1],
+  [0, 3],
+  [1, 2],
+  [2, 3],
+  [2, 5],
+  [3, 4],
+  [4, 5],
+];
+---
+
+<div
+  class="sci-composition"
+  data-sci-composition="mid"
+  style="--sci-top:66%;--sci-left:0;--sci-right:0;--sci-w:100%;--sci-h:min(28vw,430px)"
+>
+  <svg
+    viewBox="0 0 1460 520"
+    preserveAspectRatio="xMidYMid slice"
+    focusable="false"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <!-- ── biology: the measured object ─────────────────────────────────── -->
+    <g class="sci-bio" data-sci-kind="biology" fill="var(--science-bio-ink)" stroke="none" data-sci-mobile="keep">
+      {MATRIX.map((c) => <rect x={c.x} y={c.y} width="28" height="28" fill-opacity={c.o} />)}
+    </g>
+    <g
+      class="sci-bio"
+      data-sci-kind="biology"
+      fill="none"
+      stroke="var(--science-bio-ink)"
+      stroke-width="2"
+      data-sci-mobile="drop"
+    >
+      <path d="M50,74 L38,74 L38,290 L50,290" />
+      <path d="M370,74 L382,74 L382,290 L370,290" />
+    </g>
+
+    <!-- ── biology: the grid stops holding ─────────────────────────────── -->
+    <g class="sci-bio" data-sci-kind="biology" fill="var(--science-bio-ink)" stroke="none">
+      {DRIFT.map((d) => <circle cx={d.cx} cy={d.cy} r={d.r} fill-opacity={d.o} />)}
+    </g>
+
+    <!-- ── the line the whole movement travels along ───────────────────── -->
+    <path
+      class="sci-major"
+      data-sci-mobile="drop"
+      d="M40,300 C 300,300 420,214 640,222 C 860,230 940,286 1060,262"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.2"
+      stroke-linecap="round"
+    />
+
+    <!-- ── AI: the points gather again as a graph ──────────────────────── -->
+    <g
+      class="sci-accent"
+      data-sci-kind="ai"
+      data-sci-mobile="drop"
+      fill="none"
+      stroke="var(--accent)"
+      stroke-width="1.6"
+    >
+      {EDGES.map(([a, b]) => (
+        <line
+          x1={NODES[a][0]}
+          y1={NODES[a][1]}
+          x2={NODES[b][0]}
+          y2={NODES[b][1]}
+          stroke-dasharray="6 8"
+        />
+      ))}
+    </g>
+    <g
+      class="sci-accent"
+      data-sci-kind="ai"
+      data-sci-mobile="drop"
+      fill="var(--accent)"
+      stroke="none"
+    >
+      {NODES.map(([x, y], i) => <circle cx={x} cy={y} r={i % 3 === 0 ? 9 : 6.5} />)}
+    </g>
+
+    <!-- ── the entire text budget for this movement: two symbols ───────── -->
+    <g class="sci-formula" data-sci-kind="math" fill="currentColor" stroke="none" data-sci-mobile="keep">
+      <text x="46" y="52" font-size="22">X</text>
+      <text x="1060" y="452" font-size="20" data-sci-mobile="drop">zₜ₊₁</text>
+    </g>
+  </svg>
+</div>

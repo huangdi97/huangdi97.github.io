@@ -65,23 +65,33 @@
     --formula-opacity: 0.06;
     --grid-opacity: 0.05;
 
-    /* Global scientific canvas (v1.6) — the page-wide mathematics / biology /
-       AI field. Four dials, one per mark weight, so a grid line and a
-       600px trajectory are never inked the same:
+    /* Global scientific canvas (v1.7) — the page-wide mathematics / biology /
+       AI field, now composed as three large drawings rather than a set of
+       separate plates. Five dials, one per mark weight:
 
-         macro   large line art     0.08–0.14
-         micro   notebook marginalia 0.02–0.05
-         grid    rules and ticks     0.02–0.04
-         accent  the single blue     0.05–0.12
+         major    major contour / long trajectory   0.10–0.15
+         bio      secondary biological network      0.07–0.11
+         formula  notation                          0.045–0.075
+         grid     rules and micro ticks             0.018–0.035
+         accent   the AI cobalt                     0.07–0.11
 
-       The v1.4 ambient layer sat at 0.025–0.055 and read as nothing; these
-       values are deliberately set where a visitor notices the science without
-       having to look for it. Notation is inked at 0.62 × macro (≈0.074), so a
-       formula never shouts louder than the composition around it. */
-    --science-macro: 0.12;
-    --science-micro: 0.045;
-    --science-grid: 0.035;
-    --science-accent: 0.09;
+       Not every mark is raised together. The v1.6 layer inked everything at one
+       macro weight, which is why the drawings read as plates pinned to the page
+       instead of one picture with depth. Biology carries its own ink so the
+       field is not a single grey; it is background-only and never a UI colour.
+
+       Paper sits at the top of every range on purpose: it is the only theme
+       under review this round, and the prototype brief asks for the most
+       comfortable version of it rather than the safest. */
+    --science-major: 0.15;
+    --science-bio: 0.11;
+    --science-formula: 0.07;
+    --science-grid: 0.03;
+    --science-accent: 0.11;
+
+    /* Background-only. A desaturated moss, not a theme colour: it never appears
+       on a button, a link or a border. */
+    --science-bio-ink: #547265;
   }
 
   [data-theme='white'] {
@@ -126,10 +136,12 @@
 
     /* Flat white shows ink fastest, so every dial sits a step lower than
        paper while staying inside the same visible band. */
-    --science-macro: 0.1;
-    --science-micro: 0.035;
-    --science-grid: 0.028;
+    --science-major: 0.11;
+    --science-bio: 0.075;
+    --science-formula: 0.05;
+    --science-grid: 0.022;
     --science-accent: 0.075;
+    --science-bio-ink: #5a766b;
   }
 
   [data-theme='night'] {
@@ -175,12 +187,14 @@
     --grid-opacity: 0.05;
 
     /* A dark canvas absorbs ink, so the field has to be inked harder to read
-       at all. Night is the one theme where the macro layer is allowed past
-       0.14. */
-    --science-macro: 0.16;
-    --science-micro: 0.06;
-    --science-grid: 0.05;
+       at all. Not part of this round's review — Paper is the prototype — but
+       it must not break. */
+    --science-major: 0.17;
+    --science-bio: 0.12;
+    --science-formula: 0.08;
+    --science-grid: 0.04;
     --science-accent: 0.13;
+    --science-bio-ink: #8fae9f;
   }
 
   :root {
@@ -196,15 +210,15 @@
     --gutter: 1.5rem;
     --header-h: 68px;
 
-    /* Scientific canvas — placement defaults for a macro plaque. Each plaque
-       overrides these inline, so a plaque declares only where it sits and how
-       wide it is. Declared here rather than left implicit so that every custom
-       property referenced anywhere in this file has exactly one home. */
+    /* Scientific canvas — placement defaults for a composition. Each
+       composition declares only where it sits and how tall it is; the three of
+       them share one set of names so the canvas reads as one drawing with three
+       movements rather than three unrelated plates. */
     --sci-top: 0%;
     --sci-left: auto;
     --sci-right: auto;
-    --sci-w: 480px;
-    --sci-max-w: 92vw;
+    --sci-w: 100%;
+    --sci-h: 60vh;
 
     /* Motion */
     --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
@@ -746,8 +760,8 @@
   /* Host for the page-level GlobalScientificCanvas. It is an absolutely
      positioned child of body (which is `position: relative`), so it spans the
      full document and scrolls with it. `z-index: -1` keeps it above the body
-     background and below every word; `overflow: hidden` crops the macro
-     plaques that deliberately run off the page edge. */
+     background and below every word; `overflow: hidden` crops the compositions
+     that deliberately run off the page edge. */
   .global-science {
     position: absolute;
     inset: 0;
@@ -756,39 +770,38 @@
     z-index: -1;
   }
 
-  /* A macro plaque: one large scientific composition, placed by percentage of
-     document height so the field redistributes itself as the page grows or
-     shrinks. Widths are capped in vw as well as px so a 700px drawing cannot
-     force horizontal scroll on a phone. */
-  .sci-plaque {
+  /* A composition: one movement of the drawing, placed by percentage of
+     document height so it stays attached to the part of the page it belongs to.
+     The SVG fills the box with `slice`, so a composition is always cropped by
+     its own frame the way an editorial illustration is cropped by a page. */
+  .sci-composition {
     position: absolute;
     top: var(--sci-top);
     left: var(--sci-left);
     right: var(--sci-right);
     width: var(--sci-w);
-    max-width: var(--sci-max-w);
-    height: auto;
+    height: var(--sci-h);
+    overflow: hidden;
   }
 
-  .sci-plaque svg {
+  .sci-composition svg {
     display: block;
     width: 100%;
-    height: auto;
-    overflow: visible;
+    height: 100%;
   }
 
-  /* Four weights, one token each — a grid line and a 600px trajectory are
-     never inked the same, and no opacity is hard-coded in a component. */
-  .sci-stroke {
-    opacity: var(--science-macro);
+  /* Five weights, one token each. A tick and a 1400px trajectory are never
+     inked the same, and no opacity is hard-coded in a component. */
+  .sci-major {
+    opacity: var(--science-major);
   }
 
-  .sci-notation {
-    opacity: calc(var(--science-macro) * 0.62);
+  .sci-bio {
+    opacity: var(--science-bio);
   }
 
-  .sci-micro {
-    opacity: var(--science-micro);
+  .sci-formula {
+    opacity: var(--science-formula);
   }
 
   .sci-grid {
@@ -801,8 +814,7 @@
 
   /* Notation is set in the mono face everywhere on this site; the background
      field is no exception, or it reads as a different document. */
-  .sci-notation text,
-  .sci-micro text {
+  .sci-formula text {
     font-family: var(--font-mono);
   }
 
@@ -820,11 +832,9 @@
     }
   }
 
-  /* A phone is not a compressed desktop: the macro plaques are re-placed, not
-     shrunk. Which plaques move, and where to, is decided in
-     MacroScienceLayer.astro — next to the composition it is changing — rather
-     than through a second set of global placement tokens. Roughly half the
-     marks stay, which lands the field at top 2 / middle 1 / bottom 1. */
+  /* A phone is not a compressed desktop. The compositions are re-framed rather
+     than shrunk, and individual marks declare themselves droppable. Full mobile
+     adaptation is deliberately out of scope for this prototype. */
   @media (max-width: 640px) {
     .global-science [data-sci-mobile='drop'] {
       display: none;

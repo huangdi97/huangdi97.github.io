@@ -20,16 +20,25 @@ import { test, expect, type Page } from '@playwright/test';
 import { visit } from './helpers';
 
 const HOMES = ['/', '/zh/'] as const;
+const PROJECTS = ['/projects/', '/zh/projects/'] as const;
 
 /** Notation that used to end up on project covers. */
 const MATH_GLYPHS = /[∈∝Σ∫∇∂√≈≤≥θλσΩΔαβγπℝⁿˣᵖₜ₊₁₂₃₀₄₅₆₇₈₉]/g;
 
 function covers(page: Page) {
-  return page.locator('article.showcase [data-cover]');
+  return page.locator('article[data-groups] [data-cover]');
 }
 
-test.describe('featured project covers', () => {
-  for (const home of HOMES) {
+/**
+ * The words-first cover contract.
+ *
+ * v1.7 moved the homepage off covers: Selected Work is now a mosaic of large
+ * illustrations with identification-only text, so the "a cover explains itself
+ * in words" rule is checked where covers still render — the /projects grid.
+ * The rule itself is unchanged, and it still has to hold.
+ */
+test.describe('project covers on /projects', () => {
+  for (const home of PROJECTS) {
     test(`${home} every cover names, explains and dates the project`, async ({ page }) => {
       await visit(page, home);
       const all = covers(page);
@@ -79,7 +88,7 @@ test.describe('featured project covers', () => {
     test(`${home} covers carry no MathML and almost no notation`, async ({ page }) => {
       await visit(page, home);
 
-      await expect(page.locator('article.showcase [data-cover] math')).toHaveCount(0);
+      await expect(page.locator('article[data-groups] [data-cover] math')).toHaveCount(0);
 
       const all = covers(page);
       const count = await all.count();
@@ -151,7 +160,7 @@ test.describe('global scientific canvas', () => {
       }
     });
 
-    test(`${home} inks the field inside the v1.6 band`, async ({ page }) => {
+    test(`${home} inks the field inside the v1.7 band`, async ({ page }) => {
       await visit(page, home);
 
       const weights = await page.evaluate(() => {
@@ -160,33 +169,68 @@ test.describe('global scientific canvas', () => {
           return el ? Number(getComputedStyle(el as HTMLElement).opacity) : null;
         };
         return {
-          macro: read('sci-stroke'),
-          notation: read('sci-notation'),
-          micro: read('sci-micro'),
+          major: read('sci-major'),
+          bio: read('sci-bio'),
+          formula: read('sci-formula'),
           grid: read('sci-grid'),
+          accent: read('sci-accent'),
         };
       });
 
-      expect(weights.macro, 'macro layer').not.toBeNull();
-      expect(weights.notation, 'notation layer').not.toBeNull();
-      expect(weights.micro, 'micro layer').not.toBeNull();
-      expect(weights.grid, 'grid layer').not.toBeNull();
+      expect(weights.major, 'major contour').not.toBeNull();
+      expect(weights.bio, 'biological network').not.toBeNull();
+      expect(weights.formula, 'notation').not.toBeNull();
+      expect(weights.grid, 'ticks').not.toBeNull();
+      expect(weights.accent, 'AI accent').not.toBeNull();
 
-      /* Paper, the default theme. The floors are the v1.6 decision: the v1.4
-         ambient layer lived at 0.025–0.055 and was invisible, so "faint enough
-         to be safe" is now a failure, not a virtue. */
-      expect(weights.macro as number).toBeGreaterThanOrEqual(0.08);
-      expect(weights.macro as number).toBeLessThanOrEqual(0.14);
-      expect(weights.notation as number).toBeGreaterThanOrEqual(0.05);
-      expect(weights.notation as number).toBeLessThanOrEqual(0.09);
-      expect(weights.micro as number).toBeGreaterThanOrEqual(0.02);
-      expect(weights.micro as number).toBeLessThanOrEqual(0.05);
-      expect(weights.grid as number).toBeGreaterThanOrEqual(0.02);
-      expect(weights.grid as number).toBeLessThanOrEqual(0.04);
+      /* Paper, the default theme. The floors are the decision that carried over
+         from v1.6: the v1.4 layer lived at 0.025–0.055 and was invisible, so
+         "faint enough to be safe" is a failure, not a virtue. */
+      expect(weights.major as number).toBeGreaterThanOrEqual(0.1);
+      expect(weights.major as number).toBeLessThanOrEqual(0.15);
+      expect(weights.bio as number).toBeGreaterThanOrEqual(0.07);
+      expect(weights.bio as number).toBeLessThanOrEqual(0.11);
+      expect(weights.formula as number).toBeGreaterThanOrEqual(0.045);
+      expect(weights.formula as number).toBeLessThanOrEqual(0.075);
+      expect(weights.grid as number).toBeGreaterThanOrEqual(0.018);
+      expect(weights.grid as number).toBeLessThanOrEqual(0.035);
+      expect(weights.accent as number).toBeGreaterThanOrEqual(0.07);
+      expect(weights.accent as number).toBeLessThanOrEqual(0.11);
 
-      // Hierarchy: a formula never out-shouts the composition around it.
-      expect(weights.notation as number).toBeLessThan(weights.macro as number);
-      expect(weights.grid as number).toBeLessThan(weights.micro as number);
+      // Hierarchy: a formula never out-shouts the drawing around it.
+      expect(weights.formula as number).toBeLessThan(weights.major as number);
+      expect(weights.grid as number).toBeLessThan(weights.formula as number);
+      expect(weights.bio as number).toBeLessThan(weights.major as number);
+    });
+
+    test(`${home} the canvas never labels itself`, async ({ page }) => {
+      await visit(page, home);
+
+      // v1.6 captioned its motifs; the field read as a slide deck. A background
+      // carries the idea by drawing it.
+      const canvasText = await page
+        .locator('[data-global-scientific-canvas]')
+        .innerText()
+        .catch(() => '');
+      for (const caption of [
+        'CELL STATE LANDSCAPE',
+        'AGENT GRAPH',
+        'state space',
+        'posterior',
+        'cells × genes',
+      ]) {
+        expect(canvasText, `background caption: ${caption}`).not.toContain(caption);
+      }
+
+      // Only bare notation is allowed, and very little of it. SVG <text> has no
+      // innerText, so the content is read directly.
+      const notation = await page
+        .locator('.global-science .sci-formula text')
+        .evaluateAll((nodes) => nodes.map((n) => (n.textContent ?? '').trim()));
+      expect(notation.length).toBeLessThanOrEqual(6);
+      for (const item of notation) {
+        expect(item.length, `background notation "${item}"`).toBeLessThanOrEqual(12);
+      }
     });
 
     test(`${home} a 390px screen gets fewer motifs, not a squashed desktop`, async ({ page }) => {
