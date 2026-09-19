@@ -26,8 +26,11 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <!-- ── the curve, the one heavy mark left at the foot of the page ──── -->
+    <!-- This is the movement's mathematics, and it is a *form*: it survives the
+         0.29 scale a phone applies, which the notation beside it does not. -->
     <path
       class="sci-major"
+      data-sci-kind="math"
       data-sci-mobile="keep"
       d="M72,308 C 196,308 232,116 348,116 C 464,116 500,308 624,308"
       fill="none"
@@ -86,9 +89,26 @@
     </g>
 
     <!-- ── the last two marks on the page ─────────────────────────────── -->
-    <g class="sci-formula" data-sci-kind="math" fill="currentColor" stroke="none">
+    <g
+      class="sci-formula"
+      data-sci-kind="math"
+      data-sci-mobile="drop"
+      fill="currentColor"
+      stroke="none"
+    >
       <text x="92" y="94" font-size="21">∇L</text>
-      <text x="628" y="352" font-size="18" data-sci-mobile="drop">p(x)</text>
+      <text x="628" y="352" font-size="18">p(x)</text>
     </g>
   </svg>
 </div>
+
+<style>
+  /* Same framing rule as the other two movements: the box takes the viewBox's
+     ratio (420 / 1460 = 28.8vw) so the curve keeps its shape at 390px. */
+  @media (max-width: 640px) {
+    .sci-composition[data-sci-composition='lower'] {
+      height: 28.8vw;
+      top: 82%;
+    }
+  }
+</style>

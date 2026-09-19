@@ -160,47 +160,81 @@ test.describe('global scientific canvas', () => {
       }
     });
 
-    test(`${home} inks the field inside the v1.7 band`, async ({ page }) => {
-      await visit(page, home);
+    test(`${home} inks the field inside the v1.7 band, on every theme`, async ({ page }) => {
+      /* Paper, White and Night are all reviewed as of P1. The bands below are the
+         same numbers the visual gate enforces in CSS; checking them again in a
+         browser catches a token that is defined but never applied. */
+      const BANDS: Record<string, Record<string, [number, number]>> = {
+        paper: {
+          major: [0.1, 0.15],
+          bio: [0.07, 0.11],
+          formula: [0.045, 0.075],
+          grid: [0.018, 0.035],
+          accent: [0.07, 0.11],
+        },
+        white: {
+          major: [0.07, 0.13],
+          bio: [0.05, 0.1],
+          formula: [0.035, 0.07],
+          grid: [0.015, 0.035],
+          accent: [0.05, 0.1],
+        },
+        night: {
+          major: [0.1, 0.2],
+          bio: [0.07, 0.15],
+          formula: [0.05, 0.1],
+          grid: [0.025, 0.06],
+          accent: [0.08, 0.16],
+        },
+      };
 
-      const weights = await page.evaluate(() => {
-        const read = (cls: string): number | null => {
-          const el = document.querySelector(`.global-science .${cls}`);
-          return el ? Number(getComputedStyle(el as HTMLElement).opacity) : null;
-        };
-        return {
-          major: read('sci-major'),
-          bio: read('sci-bio'),
-          formula: read('sci-formula'),
-          grid: read('sci-grid'),
-          accent: read('sci-accent'),
-        };
-      });
+      const CLASSES: Record<string, string> = {
+        major: 'sci-major',
+        bio: 'sci-bio',
+        formula: 'sci-formula',
+        grid: 'sci-grid',
+        accent: 'sci-accent',
+      };
 
-      expect(weights.major, 'major contour').not.toBeNull();
-      expect(weights.bio, 'biological network').not.toBeNull();
-      expect(weights.formula, 'notation').not.toBeNull();
-      expect(weights.grid, 'ticks').not.toBeNull();
-      expect(weights.accent, 'AI accent').not.toBeNull();
+      for (const theme of ['paper', 'white', 'night'] as const) {
+        await page.addInitScript((value) => {
+          try {
+            localStorage.setItem('haoleilab-theme', value);
+          } catch {
+            /* storage unavailable */
+          }
+        }, theme);
+        await visit(page, home);
+        await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
 
-      /* Paper, the default theme. The floors are the decision that carried over
-         from v1.6: the v1.4 layer lived at 0.025–0.055 and was invisible, so
-         "faint enough to be safe" is a failure, not a virtue. */
-      expect(weights.major as number).toBeGreaterThanOrEqual(0.1);
-      expect(weights.major as number).toBeLessThanOrEqual(0.15);
-      expect(weights.bio as number).toBeGreaterThanOrEqual(0.07);
-      expect(weights.bio as number).toBeLessThanOrEqual(0.11);
-      expect(weights.formula as number).toBeGreaterThanOrEqual(0.045);
-      expect(weights.formula as number).toBeLessThanOrEqual(0.075);
-      expect(weights.grid as number).toBeGreaterThanOrEqual(0.018);
-      expect(weights.grid as number).toBeLessThanOrEqual(0.035);
-      expect(weights.accent as number).toBeGreaterThanOrEqual(0.07);
-      expect(weights.accent as number).toBeLessThanOrEqual(0.11);
+        const weights = await page.evaluate((classes) => {
+          const out: Record<string, number | null> = {};
+          for (const [key, cls] of Object.entries(classes)) {
+            const el = document.querySelector(`.global-science .${cls}`);
+            out[key] = el ? Number(getComputedStyle(el as HTMLElement).opacity) : null;
+          }
+          return out;
+        }, CLASSES);
 
-      // Hierarchy: a formula never out-shouts the drawing around it.
-      expect(weights.formula as number).toBeLessThan(weights.major as number);
-      expect(weights.grid as number).toBeLessThan(weights.formula as number);
-      expect(weights.bio as number).toBeLessThan(weights.major as number);
+        for (const [key, [min, max]] of Object.entries(BANDS[theme])) {
+          const value = weights[key];
+          expect(value, `${theme} ${key} exists`).not.toBeNull();
+          expect(value as number, `${theme} ${key} floor`).toBeGreaterThanOrEqual(min);
+          expect(value as number, `${theme} ${key} ceiling`).toBeLessThanOrEqual(max);
+        }
+
+        // Hierarchy holds on every theme: notation under the drawing, ticks
+        // under the notation, biology under the major weight.
+        expect(weights.formula as number, `${theme} notation < major`).toBeLessThan(
+          weights.major as number,
+        );
+        expect(weights.grid as number, `${theme} ticks < notation`).toBeLessThan(
+          weights.formula as number,
+        );
+        expect(weights.bio as number, `${theme} biology < major`).toBeLessThan(
+          weights.major as number,
+        );
+      }
     });
 
     test(`${home} the canvas never labels itself`, async ({ page }) => {

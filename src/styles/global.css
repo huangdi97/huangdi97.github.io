@@ -134,14 +134,15 @@
     --formula-opacity: 0.05;
     --grid-opacity: 0.045;
 
-    /* Flat white shows ink fastest, so every dial sits a step lower than
-       paper while staying inside the same visible band. */
-    --science-major: 0.11;
-    --science-bio: 0.075;
-    --science-formula: 0.05;
-    --science-grid: 0.022;
-    --science-accent: 0.075;
-    --science-bio-ink: #5a766b;
+    /* Flat white shows ink fastest, so the dials sit below paper — but only
+       just. The first pass sat far enough below that white read as *emptier*
+       than paper rather than as cleaner, and the moss lost its hue entirely. */
+    --science-major: 0.13;
+    --science-bio: 0.095;
+    --science-formula: 0.06;
+    --science-grid: 0.026;
+    --science-accent: 0.09;
+    --science-bio-ink: #54756a;
   }
 
   [data-theme='night'] {

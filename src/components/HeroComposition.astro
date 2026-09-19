@@ -42,9 +42,19 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <!-- ── mathematics: two notations, faint, above the title ───────────── -->
-    <g class="sci-formula" data-sci-kind="math" fill="currentColor" stroke="none" data-sci-mobile="keep">
+    <!-- Dropped on a phone. At 390px the whole composition renders at 0.24
+         scale, which puts 27px notation at 6px — not a formula, a smudge. The
+         mathematics still reads on a phone as a form: the trajectory here and
+         the probability curve in the lower movement. -->
+    <g
+      class="sci-formula"
+      data-sci-kind="math"
+      data-sci-mobile="drop"
+      fill="currentColor"
+      stroke="none"
+    >
       <text x="58" y="150" font-size="27">P(H | D)</text>
-      <text x="58" y="196" font-size="22" data-sci-mobile="drop">dx/dt</text>
+      <text x="58" y="196" font-size="22">dx/dt</text>
     </g>
 
     <!-- ── mathematics: one measured rule, the only tick in the hero ────── -->
@@ -104,3 +114,23 @@
     </g>
   </svg>
 </div>
+
+<style>
+  /* A phone is not a cropped desktop.
+   *
+   * The box is 96vh tall, so `slice` scales the 1600 × 1000 drawing to fill the
+   * height and crops the *sides*. On a 390px screen that left only the middle
+   * ~480 units visible — the notation at x 58 and the entire AI graph at
+   * x 1340–1576 were off-canvas, and the field read as biology only.
+   *
+   * Below 640px the box takes the drawing's own aspect ratio (1000 / 1600 =
+   * 62.5vw) and sits in the hero's lower whitespace, so the whole composition is
+   * visible: notation, landscape, trajectory and graph. Nothing is cropped and
+   * nothing is squashed — the same drawing, framed for the screen it is on. */
+  @media (max-width: 640px) {
+    .sci-composition[data-sci-composition='hero'] {
+      top: 15%;
+      height: 62.5vw;
+    }
+  }
+</style>

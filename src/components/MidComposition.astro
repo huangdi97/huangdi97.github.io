@@ -2,8 +2,8 @@
 /**
  * Mid composition — the second movement (v1.7).
  *
- * It sits behind the project mosaic and the Mathematics × Biology × AI band, and
- * it draws one idea: a measured biological object becoming a computational one.
+ * It sits behind the second row of the project mosaic, and it draws one idea: a
+ * measured biological object becoming a computational one.
  *
  *   left    an expression matrix fragment — measured, gridded, biological
  *   middle  the same cells dispersing: squares become points, the grid stops
@@ -13,6 +13,12 @@
  * No titles, no axis labels, no captions. The transformation is the content.
  * Two notations only — `X` beside the matrix, `zₜ₊₁` beside the graph — which is
  * the whole permitted text budget for this movement.
+ *
+ * Placement is measured rather than guessed: at 55% of the document the whole
+ * drawing lands inside the second row's *illustration* band (≈2054–2446px at
+ * 1440), so the canvas crosses drawings instead of the keyword and status lines
+ * underneath them. `npm run qa:mosaic` prints the block positions this was set
+ * against.
  */
 
 /** Deterministic pseudo-random — the same drawing on every build. */
@@ -76,7 +82,7 @@ const EDGES: Array<[number, number]> = [
 <div
   class="sci-composition"
   data-sci-composition="mid"
-  style="--sci-top:66%;--sci-left:0;--sci-right:0;--sci-w:100%;--sci-h:min(28vw,430px)"
+  style="--sci-top:55%;--sci-left:0;--sci-right:0;--sci-w:100%;--sci-h:min(28vw,430px)"
 >
   <svg
     viewBox="0 0 1460 520"
@@ -146,9 +152,28 @@ const EDGES: Array<[number, number]> = [
     </g>
 
     <!-- ── the entire text budget for this movement: two symbols ───────── -->
-    <g class="sci-formula" data-sci-kind="math" fill="currentColor" stroke="none" data-sci-mobile="keep">
+    <!-- Both dropped on a phone, for the same reason as the hero's notation:
+         0.27 scale turns 22px into 6px. -->
+    <g
+      class="sci-formula"
+      data-sci-kind="math"
+      data-sci-mobile="drop"
+      fill="currentColor"
+      stroke="none"
+    >
       <text x="46" y="52" font-size="22">X</text>
-      <text x="1060" y="452" font-size="20" data-sci-mobile="drop">zₜ₊₁</text>
+      <text x="1060" y="452" font-size="20">zₜ₊₁</text>
     </g>
   </svg>
 </div>
+
+<style>
+  /* Full drawing on a phone, not a horizontal crop of the desktop. The box
+     takes the viewBox's own ratio (520 / 1460 = 35.6vw) so the matrix, the
+     dispersal and the graph are all present at 390px. */
+  @media (max-width: 640px) {
+    .sci-composition[data-sci-composition='mid'] {
+      height: 35.6vw;
+    }
+  }
+</style>
