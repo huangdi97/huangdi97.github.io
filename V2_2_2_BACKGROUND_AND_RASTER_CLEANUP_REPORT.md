@@ -241,9 +241,21 @@ rungs match `dist` byte-for-byte (39,634 / 156,264 / 108,188 / 134,096); the six
 URLs that must not resolve all return **404**; and the homepage carries no
 `global-scientific-canvas` and no `entry-intro`.
 
+### Post-release check
+
+The README was edited in this round, and **no gate scans it** — it cannot fail
+CI and so does not surface its own staleness. It was audited against source
+afterwards. **Zero drift:** the token table lists no removed token; the seven
+variant densities (1 / 0.85 / 1.4 / 0.78 / 0.5 / 0.62 / 0) match
+`ScientificEditorialBackground.astro`; `--ebg-mobile` is 0.7 below 900 px; the
+five `check-*.mjs` and the six gates are as described; and all 34 tree entries
+resolve. It is Prettier-clean.
+
 ### Terminal state
 
-`RELEASED`. `main` = `897cbbf`, working tree clean.
+`RELEASED`. The round shipped as `897cbbf` (code, CI `35511950421`) and was
+recorded in `feffbb4` (CI `35512601586`); both are on `main`. Working tree
+clean, nothing pending.
 
 > A note on reading the live checks: this round the proxy truncated
 > `hero-1440.webp`, the `/research/` page, the stylesheet, and several `HEAD`
