@@ -65,11 +65,13 @@ const placement = ART_PLACEMENT[name] ?? { position: '50% 50%', ratio: '4 / 3' }
 const isHero = name === 'hero';
 
 /* §48: the hero is the LCP element and must not be deferred; the four project
-   images sit below the fold and must be. The /research and /about accents are
-   still the largest thing on their page above the fold, so they stay eager. */
+   images sit below the fold and must be. v2.2.2 takes the /research and /about
+   accents off the critical path too: both pages are read as text first and the
+   accent is decoration, so it now loads lazily with no priority hint, and
+   neither page preloads it any more. The hero is the only eager drawing left. */
 const isPageAccent = name === 'research' || name === 'about';
-const loading = isHero || isPageAccent ? 'eager' : 'lazy';
-const fetchpriority = isHero || isPageAccent ? 'high' : 'auto';
+const loading = isHero ? 'eager' : 'lazy';
+const fetchpriority = isHero ? 'high' : 'auto';
 
 /* §18/§19: the four project drawings stop being the row's subject this round.
    They keep their place and their meaning, but the frame is feathered on all

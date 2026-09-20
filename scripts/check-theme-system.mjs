@@ -56,7 +56,6 @@ const REQUIRED_TOKENS = [
   'dg-dot',
   'dg-grid',
   'diagram-line',
-  'grain-opacity',
   'formula-opacity',
   'grid-opacity',
   /* Global scientific canvas (v1.7). Five weights — major contour, biological

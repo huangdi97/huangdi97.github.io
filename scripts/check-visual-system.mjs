@@ -1015,12 +1015,15 @@ for (const rel of ['dist/about/index.html', 'dist/zh/about/index.html']) {
  * about order and about how much is asked for at once — a byte count on its own
  * would not have caught it.
  *
- *   · at most one drawing per page is eager, and it is the LCP image;
+ *   · the hero is the only eager drawing on the site. v2.2.2 took /research and
+ *     /about off the critical path, so the two home pages are the only routes
+ *     that load a drawing eagerly;
  *   · every other drawing is `loading="lazy"`;
  *   · every drawing declares an intrinsic size, or the row reflows (§43);
  *   · every drawing carries a `srcset`, so a phone never asks for the 1440px
  *     file (§22–§23);
- *   · exactly one preload, on the page whose LCP image it names (§25);
+ *   · at most one preload, and only on a page that paints a drawing eagerly —
+ *     the two home pages, naming their hero (§25);
  *   · the eager payload stays inside §61/§62's 250 KB.
  */
 const LOADING_PAGES = [
@@ -1028,10 +1031,10 @@ const LOADING_PAGES = [
   ['dist/zh/index.html', 1],
   ['dist/projects/index.html', 0],
   ['dist/zh/projects/index.html', 0],
-  ['dist/research/index.html', 1],
-  ['dist/zh/research/index.html', 1],
-  ['dist/about/index.html', 1],
-  ['dist/zh/about/index.html', 1],
+  ['dist/research/index.html', 0],
+  ['dist/zh/research/index.html', 0],
+  ['dist/about/index.html', 0],
+  ['dist/zh/about/index.html', 0],
   ['dist/resume/index.html', 0],
   ['dist/zh/resume/index.html', 0],
 ];

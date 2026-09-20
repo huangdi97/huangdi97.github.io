@@ -356,7 +356,11 @@ glow cannot do that, whatever the page length.
 
 It contains **no JavaScript, no animation and no motion**, is `aria-hidden` with
 `pointer-events: none` and nothing focusable, and is deterministic — no `Math.random`, no time.
-It makes exactly one request: the 6.5 KB texture.
+It makes exactly one request: the 6.5 KB texture, and that is the page's **only** grain. Until
+v2.2.2 `body` also painted an inline-SVG `feTurbulence` grain on the paper theme, so paper
+carried two textures at once; that rule, the `--grain` token it read and the already-dead
+`--grain-opacity` token are all gone, and `check-theme-system.mjs` no longer requires the
+latter.
 
 `BaseLayout`'s `backgroundMode` prop selects one of seven variants — `home` (1) / `projects`
 (0.85) / `research` (1.4) / `about` (0.78) / `resume` (0.5) / `opensource` (0.62, declared and
@@ -389,10 +393,12 @@ than the old lossy 256×256 one it replaced.
 
 Each drawing ships as three WebP rungs — 640 / 960 / 1440 — with `srcset` and a
 layout-specific `sizes`, so a phone fetches the 640 rung and never the 1440 one. The ladder
-never upscales a source. Only a page's own largest-contentful drawing is eager; everything
-else is lazy, and a page emits at most one `<link rel="preload" as="image">`, and only where
-an eager drawing exists. Rungs a slot no longer references are pruned, because `public/` is
-copied into `dist/` verbatim — an unreferenced file there is a published file.
+never upscales a source. The **hero is the only eager drawing on the site** — it is the only
+largest-contentful one — and everything else is lazy. v2.2.2 took the `/research` and `/about`
+accents off the critical path too, since both pages are read as text first; a page emits at most
+one `<link rel="preload" as="image">`, and only where an eager drawing exists. Rungs a slot no
+longer references are pruned, because `public/` is copied into `dist/` verbatim — an
+unreferenced file there is a published file.
 
 The drawings are enhancements rather than the page's structure: the hero and the project rows
 are feathered into the paper with nested masks, and every page is complete and readable with

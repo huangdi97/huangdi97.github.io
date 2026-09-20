@@ -61,7 +61,6 @@
     --diagram-line: rgba(20, 20, 18, 0.42);
 
     /* Texture */
-    --grain-opacity: 1;
     --formula-opacity: 0.06;
     --grid-opacity: 0.05;
 
@@ -180,7 +179,6 @@
     --dg-grid: rgba(0, 0, 0, 0.045);
     --diagram-line: rgba(0, 0, 0, 0.42);
 
-    --grain-opacity: 0;
     --formula-opacity: 0.05;
     --grid-opacity: 0.045;
 
@@ -262,7 +260,6 @@
     --dg-grid: rgba(236, 236, 231, 0.05);
     --diagram-line: rgba(236, 236, 231, 0.5);
 
-    --grain-opacity: 0;
     --formula-opacity: 0.09;
     --grid-opacity: 0.05;
 
@@ -351,9 +348,6 @@
     --dur-fast: 150ms;
     --dur-base: 260ms;
     --dur-slow: 420ms;
-
-    /* Paper grain — a ~0.4 KB inline SVG, never a network request. */
-    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.032'/%3E%3C/svg%3E");
   }
 
   * {
@@ -373,8 +367,6 @@
        initial containing block and stop after the first screen. */
     position: relative;
     background-color: var(--canvas);
-    background-image: var(--grain);
-    background-repeat: repeat;
     color: var(--ink);
     font-family: var(--font-sans);
     font-size: 1rem;
@@ -384,12 +376,6 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     overflow-x: hidden;
-  }
-
-  /* Grain is a paper-only texture; the other two themes stay perfectly flat. */
-  [data-theme='white'] body,
-  [data-theme='night'] body {
-    background-image: none;
   }
 
   /* Never allow a stray element to create horizontal scroll. */
