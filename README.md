@@ -8,10 +8,10 @@ Personal brand · Technical portfolio · Research portfolio · Recruiting landin
 
 ## Live site
 
-| | |
-| --- | --- |
-| Custom domain (canonical) | <https://haoleilab.com> |
-| GitHub Pages | <https://huangdi97.github.io> (301 → custom domain) |
+|                           |                                                     |
+| ------------------------- | --------------------------------------------------- |
+| Custom domain (canonical) | <https://haoleilab.com>                             |
+| GitHub Pages              | <https://huangdi97.github.io> (301 → custom domain) |
 
 English is the default language. Simplified Chinese is served under `/zh`.
 
@@ -22,15 +22,15 @@ English is the default language. Simplified Chinese is served under `/zh`.
 
 ## Tech stack
 
-| Layer | Choice | Reason |
-| --- | --- | --- |
-| Framework | [Astro](https://astro.build) 5 | Ships zero JS by default; static-first |
-| Language | TypeScript (strict) | Type-safe frontmatter and page props |
-| Styling | Tailwind CSS 3 + CSS custom-property tokens | One token layer, no runtime cost |
-| Content | Astro Content Collections (Markdown) | Schema-validated project entries |
-| Search / sitemap | `@astrojs/sitemap` | Build-time only |
-| Tests | Playwright | Real browser checks against a real build |
-| CI/CD | GitHub Actions → GitHub Pages | Official `configure-pages` / `deploy-pages` flow |
+| Layer            | Choice                                      | Reason                                           |
+| ---------------- | ------------------------------------------- | ------------------------------------------------ |
+| Framework        | [Astro](https://astro.build) 5              | Ships zero JS by default; static-first           |
+| Language         | TypeScript (strict)                         | Type-safe frontmatter and page props             |
+| Styling          | Tailwind CSS 3 + CSS custom-property tokens | One token layer, no runtime cost                 |
+| Content          | Astro Content Collections (Markdown)        | Schema-validated project entries                 |
+| Search / sitemap | `@astrojs/sitemap`                          | Build-time only                                  |
+| Tests            | Playwright                                  | Real browser checks against a real build         |
+| CI/CD            | GitHub Actions → GitHub Pages               | Official `configure-pages` / `deploy-pages` flow |
 
 No backend. No database. No CMS. No third-party analytics. No trackers.
 
@@ -52,23 +52,23 @@ npm run dev          # http://localhost:4321
 
 ### Scripts
 
-| Script | What it does |
-| --- | --- |
-| `npm run dev` | Dev server with HMR |
-| `npm run build` | `assets` → `texture` → `astro build`, into `dist/` |
-| `npm run preview` | Serve the production build locally |
-| `npm run lint` | ESLint over `.ts` / `.astro` |
-| `npm run typecheck` | `astro check` (strict TypeScript diagnostics) |
-| `npm run format` | Prettier write |
-| `npm run check` | `lint` → `typecheck` → `build` |
-| `npm run assets` | Regenerate OG images and icons from SVG |
-| `npm run texture` | Regenerate the paper texture → `public/texture/paper.webp` |
-| `npm run artwork:v2` | Homepage artwork → three WebP rungs per slot + size manifest |
-| `npm run artwork:pages` | Inner-page bands → three WebP rungs per slot + size manifest |
-| `npm run artwork:preview` | Render an `object-fit: cover` crop without a full build |
-| `npm run qa:v22` | 30 acceptance frames + `measurements.json` into `.qa-screens/` |
-| `npm run verify` | Link + asset verification over `dist/` |
-| `npm run test` | Playwright browser tests against `dist/` |
+| Script                    | What it does                                                   |
+| ------------------------- | -------------------------------------------------------------- |
+| `npm run dev`             | Dev server with HMR                                            |
+| `npm run build`           | `assets` → `texture` → `astro build`, into `dist/`             |
+| `npm run preview`         | Serve the production build locally                             |
+| `npm run lint`            | ESLint over `.ts` / `.astro`                                   |
+| `npm run typecheck`       | `astro check` (strict TypeScript diagnostics)                  |
+| `npm run format`          | Prettier write                                                 |
+| `npm run check`           | `lint` → `typecheck` → `build`                                 |
+| `npm run assets`          | Regenerate OG images and icons from SVG                        |
+| `npm run texture`         | Regenerate the paper texture → `public/texture/paper.webp`     |
+| `npm run artwork:v2`      | Homepage artwork → three WebP rungs per slot + size manifest   |
+| `npm run artwork:pages`   | Inner-page bands → three WebP rungs per slot + size manifest   |
+| `npm run artwork:preview` | Render an `object-fit: cover` crop without a full build        |
+| `npm run qa:v22`          | 30 acceptance frames + `measurements.json` into `.qa-screens/` |
+| `npm run verify`          | Link + asset verification over `dist/`                         |
+| `npm run test`            | Playwright browser tests against `dist/`                       |
 
 The five remaining gates — `theme`, `artifacts`, `science`, `visual`, `identity` — are
 listed under [Quality assurance](#quality-assurance).
@@ -134,15 +134,15 @@ fixed lattice — so re-running it yields a byte-identical file, and
 
 ### Routes
 
-| Route | zh counterpart |
-| --- | --- |
-| `/` | `/zh/` |
-| `/projects` | `/zh/projects` |
+| Route                                                                        | zh counterpart        |
+| ---------------------------------------------------------------------------- | --------------------- |
+| `/`                                                                          | `/zh/`                |
+| `/projects`                                                                  | `/zh/projects`        |
 | `/projects/wennian` · `hycell` · `taiyi-lingjing` · `pet-ai-health` · `pdig` | `/zh/projects/<slug>` |
-| `/research` | `/zh/research` |
-| `/about` | `/zh/about` |
-| `/resume` | `/zh/resume` |
-| `/404` | `/zh/404` |
+| `/research`                                                                  | `/zh/research`        |
+| `/about`                                                                     | `/zh/about`           |
+| `/resume`                                                                    | `/zh/resume`          |
+| `/404`                                                                       | `/zh/404`             |
 
 ---
 
@@ -156,23 +156,24 @@ Create one Markdown file **per language**, sharing the same `slug`:
 
 ```markdown
 ---
-title: "Project Name"
-slug: "project-name"
+title: 'Project Name'
+slug: 'project-name'
 year: 2026
-status: "Active"
-category: "AI Health"
-summary: "One sentence, no adjectives that cost nothing."
-description: "Two sentences used for SEO + card body."
-tags: ["Aging clock", "Agents", "Digital twin"]
+status: 'Active'
+category: 'AI Health'
+summary: 'One sentence, no adjectives that cost nothing.'
+description: 'Two sentences used for SEO + card body.'
+tags: ['Aging clock', 'Agents', 'Digital twin']
 featured: true
 order: 1
-role: "Design & implementation"
-repo: "https://github.com/huangdi97/example"   # omit if not public
-demo: ""                                        # omit if none
-cover: ""                                       # omit to use generated visual
+role: 'Design & implementation'
+repo: 'https://github.com/huangdi97/example' # omit if not public
+demo: '' # omit if none
+cover: '' # omit to use generated visual
 ---
 
 ## Overview
+
 …
 ```
 
@@ -196,8 +197,8 @@ languages, and must never be described with implementation language.
 
 ### Case studies vs. README
 
-A case study answers *why this project exists, what it does about it, and how it is built*.
-A repository README answers *how to run it*. They are deliberately different documents —
+A case study answers _why this project exists, what it does about it, and how it is built_.
+A repository README answers _how to run it_. They are deliberately different documents —
 do not paste one into the other.
 
 ---
@@ -243,10 +244,10 @@ In **Settings → Pages → Source**, select **GitHub Pages** (not "Deploy from 
 `public/CNAME` already contains `haoleilab.com`, so GitHub Pages serves it directly.
 Point the domain at GitHub with:
 
-| Record | Type | Value |
-| --- | --- | --- |
-| `haoleilab.com` | `A` | `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` |
-| `www` | `CNAME` | `huangdi97.github.io` |
+| Record          | Type    | Value                                                                      |
+| --------------- | ------- | -------------------------------------------------------------------------- |
+| `haoleilab.com` | `A`     | `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` |
+| `www`           | `CNAME` | `huangdi97.github.io`                                                      |
 
 Then enable **Enforce HTTPS** in the Pages settings once the certificate is issued.
 Any future domain only requires editing `public/CNAME` — no code changes.
@@ -258,15 +259,15 @@ Any future domain only requires editing `public/CNAME` — no code changes.
 `npm run lint`, `npm run typecheck` and `npm run build` come first, then six gates, then
 the browser suite. All of them are blocking in CI, in this order.
 
-| Gate | Command | What it owns |
-| --- | --- | --- |
-| Verify | `npm run verify` | Dead links, missing assets, both locales present |
-| Theme | `npm run theme` | Three themes; every colour a token; contrast ratios |
-| Artifacts | `npm run artifacts` | Project evidence rendered, never raw |
-| Science | `npm run science` | No overclaims; conceptual notation labelled |
-| Visual | `npm run visual` | The background contract and the raster loading policy |
-| Identity | `npm run identity` | No private contact data; PDF text and metadata |
-| Browser tests | `npm run test` | Playwright — desktop 1440×900 + Pixel 5 |
+| Gate          | Command             | What it owns                                          |
+| ------------- | ------------------- | ----------------------------------------------------- |
+| Verify        | `npm run verify`    | Dead links, missing assets, both locales present      |
+| Theme         | `npm run theme`     | Three themes; every colour a token; contrast ratios   |
+| Artifacts     | `npm run artifacts` | Project evidence rendered, never raw                  |
+| Science       | `npm run science`   | No overclaims; conceptual notation labelled           |
+| Visual        | `npm run visual`    | The background contract and the raster loading policy |
+| Identity      | `npm run identity`  | No private contact data; PDF text and metadata        |
+| Browser tests | `npm run test`      | Playwright — desktop 1440×900 + Pixel 5               |
 
 `scripts/verify-build.mjs` walks every generated HTML file, resolves internal links
 against built routes, checks local asset references exist, and confirms each case
@@ -300,15 +301,15 @@ surface — every colour is read from a custom property. Three themes are suppor
 by `[data-theme]` on the document element and applied by an inline bootstrap script before
 the first paint, so there is no flash of the wrong theme:
 
-| Token | Paper | White | Night | Use |
-| --- | --- | --- | --- | --- |
-| `--canvas` | `#f0eee8` | `#ffffff` | `#111210` | Page background |
-| `--surface` | `#f6f4ee` | `#f7f7f4` | `#161715` | Raised surfaces |
-| `--ink` | `#151515` | `#111111` | `#ecece7` | Primary text |
-| `--muted` | `#5a564e` | `#5f5f5a` | `#a09f98` | Secondary text |
-| `--faint` | `#6e685f` | `#757570` | `#8a8a83` | Tertiary text |
-| `--line` | `rgba(20,20,18,.1)` | `rgba(0,0,0,.1)` | `rgba(255,255,255,.1)` | Borders |
-| `--accent` | `#2e56f2` | `#2e56f2` | `#6e8bff` | Sparse — links, one focal element |
+| Token       | Paper               | White            | Night                  | Use                               |
+| ----------- | ------------------- | ---------------- | ---------------------- | --------------------------------- |
+| `--canvas`  | `#f0eee8`           | `#ffffff`        | `#111210`              | Page background                   |
+| `--surface` | `#f6f4ee`           | `#f7f7f4`        | `#161715`              | Raised surfaces                   |
+| `--ink`     | `#151515`           | `#111111`        | `#ecece7`              | Primary text                      |
+| `--muted`   | `#5a564e`           | `#5f5f5a`        | `#a09f98`              | Secondary text                    |
+| `--faint`   | `#6e685f`           | `#757570`        | `#8a8a83`              | Tertiary text                     |
+| `--line`    | `rgba(20,20,18,.1)` | `rgba(0,0,0,.1)` | `rgba(255,255,255,.1)` | Borders                           |
+| `--accent`  | `#2e56f2`           | `#2e56f2`        | `#6e8bff`              | Sparse — links, one focal element |
 
 The accent is cobalt; the background's biological marks add one muted green (`--bg-bio-ink`).
 No other hue is introduced anywhere. `scripts/check-theme-system.mjs` enforces the contrast
@@ -323,11 +324,11 @@ under `prefers-reduced-motion`.
 Every page sits on a three-layer background, mounted once by `BaseLayout` behind the whole
 document (`src/components/visual/ScientificEditorialBackground.astro`):
 
-| Layer | What it is |
-| --- | --- |
-| Wash | Four very low-alpha radial gradients, all read from `--bg-*` tokens |
-| Texture | One 256×256 alpha-only WebP tile, repeated — alpha-only, so Night inverts it rather than shipping a second file |
-| Marks | At most five inline-SVG fragments: notation, a probability curve, a neural fragment, cell contours, a 5×5 matrix, half a helix |
+| Layer   | What it is                                                                                                                     |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Wash    | Four very low-alpha radial gradients, all read from `--bg-*` tokens                                                            |
+| Texture | One 256×256 alpha-only WebP tile, repeated — alpha-only, so Night inverts it rather than shipping a second file                |
+| Marks   | At most five inline-SVG fragments: notation, a probability curve, a neural fragment, cell contours, a 5×5 matrix, half a helix |
 
 It contains **no JavaScript, no animation and no motion**, is `aria-hidden` with
 `pointer-events: none` and nothing focusable, and is deterministic — no `Math.random`, no
