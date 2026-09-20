@@ -43,6 +43,8 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
   ogImage="/og/about.png"
   type="profile"
   jsonLd={profileLd}
+  backgroundMode="about"
+  preloadArtwork="about"
 >
   <article class="shell section">
     <header class="about-head">
@@ -111,8 +113,13 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
     max-width: 28ch;
   }
 
+  /* §30: the same downgrade as /research — the desk is an environment, not the
+     page's largest object. Capped and right-aligned; ratio and position
+     untouched, so the crop is identical and only the size changed. */
   .about-band {
     margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
+    max-width: 56rem;
+    margin-left: auto;
   }
 
   .about-intro {

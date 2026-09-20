@@ -48,6 +48,8 @@ const zhPath = '/zh/research/';
   enPath={enPath}
   zhPath={zhPath}
   ogImage="/og/research.png"
+  backgroundMode="research"
+  preloadArtwork="research"
 >
   <section class="shell section">
     <SectionHeading
@@ -90,8 +92,20 @@ const zhPath = '/zh/research/';
 </BaseLayout>
 
 <style>
+  /* §28: the page artwork stops being a banner the page has to be read around.
+     It is capped at 56rem and pushed to the right edge of the column, so the
+     left margin it gives up is paper the background system can use — which is
+     the whole point of §13's sparse composition.
+
+     Only the width changes. The frame keeps its 8:5 ratio and its 100% object
+     position, so the visible *fraction* of the source is untouched: `cover` on
+     a fixed-ratio frame always shows 1.6/2 = 80% of a 2:1 source, at any
+     rendered size. Nothing about the crop needed re-verifying because nothing
+     about the crop changed — the drawing is simply smaller. */
   .research-band {
     margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
+    max-width: 56rem;
+    margin-left: auto;
   }
 
   .research-body {

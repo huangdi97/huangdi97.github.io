@@ -27,7 +27,7 @@
 import { useT, type Lang } from '../i18n/ui';
 import { projectHref, type ProjectEntry as Entry } from '../lib/projects';
 import { projectStatus } from '../lib/projectStatus';
-import { ARTWORK_LABELS, ART_ALT } from '../data/artwork';
+import { ARTWORK_LABELS, ART_ALT, ENTRY_SIZES } from '../data/artwork';
 import Artwork, { type ArtworkName } from './Artwork.astro';
 
 export interface Props {
@@ -52,7 +52,12 @@ const artwork = ARTWORK_LABELS[d.slug] ? (d.slug as ArtworkName) : null;
   {
     artwork && (
       <div class="entry-art">
-        <Artwork name={artwork} label={ARTWORK_LABELS[artwork][lang]} alt={ART_ALT[artwork]?.[lang]} />
+        <Artwork
+          name={artwork}
+          label={ARTWORK_LABELS[artwork][lang]}
+          alt={ART_ALT[artwork]?.[lang]}
+          sizes={ENTRY_SIZES}
+        />
       </div>
     )
   }

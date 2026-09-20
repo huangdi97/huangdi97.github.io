@@ -321,15 +321,15 @@ test.describe('homepage', () => {
   });
 
   /**
-   * v2.0 (§9): the homepage does not mount the page-wide canvas. Its visual
-   * work is carried by one hero artwork and four project drawings, and the
-   * inner pages keep the canvas — which `cover.spec.ts` verifies.
+   * v2.2 (§33–§34): the homepage mounts the editorial background, and still
+   * does not mount the v1.7 page-wide canvas — which is retired site-wide now,
+   * not just here. Its visual work is the background plus one hero artwork and
+   * four project drawings.
    */
-  test('the homepage carries its own drawings instead of the page-wide canvas', async ({
-    page,
-  }) => {
+  test('the homepage carries its own drawings and the editorial background', async ({ page }) => {
     await visit(page, '/');
     await expect(page.locator('[data-global-scientific-canvas]')).toHaveCount(0);
+    await expect(page.locator('[data-editorial-background]')).toHaveCount(1);
 
     const drawings = page.locator(ARTWORK_SELECTOR);
     await expect(drawings).toHaveCount(5);

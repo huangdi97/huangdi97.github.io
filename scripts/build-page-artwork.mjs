@@ -36,12 +36,14 @@ import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
 import sharp from 'sharp';
+import { kb, pruneStale, writeLadder } from './lib/artwork-ladder.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'public', 'images', 'site', 'v2', 'pages');
 const SOURCE_DIR = join(ROOT, '.artwork-source', 'site', 'v2', 'pages');
 const SVG_DIR = join(ROOT, 'src', 'assets', 'pages');
 const MANIFEST = join(ROOT, 'src', 'data', 'page-artwork.generated.json');
+const URL_BASE = '/images/site/v2/pages';
 
 /** Both bands are 2:1, which is the frame `ART_PLACEMENT` reserves. */
 const WIDTH = 1600;
@@ -376,6 +378,7 @@ function ownerSource(slot) {
 }
 
 const images = {};
+const keep = new Set();
 mkdirSync(OUT_DIR, { recursive: true });
 mkdirSync(SVG_DIR, { recursive: true });
 
@@ -386,27 +389,53 @@ for (const slot of SLOTS) {
   writeFileSync(svgPath, svg);
   console.log(`svg    src/assets/pages/${slot.name}.svg`);
 
-  const out = join(OUT_DIR, `${slot.name}.webp`);
-  let pipeline;
+  let source;
+  let target;
 
   if (owner) {
-    pipeline = sharp(owner).resize({ width: WIDTH, withoutEnlargement: true });
-    console.log(`source ${owner.replace(ROOT, '.')} (owner asset)`);
+    const meta = await sharp(owner).metadata();
+    target = Math.min(WIDTH, meta.width ?? WIDTH);
+    source = sharp(owner);
+    console.log(`source ${owner.replace(ROOT, '.')} (owner asset, ${meta.width}px)`);
   } else {
     const png = new Resvg(svg, { fitTo: { mode: 'width', value: WIDTH } }).render().asPng();
-    pipeline = sharp(png);
+    target = WIDTH;
+    source = sharp(png);
     console.log(`source src/assets/pages/${slot.name}.svg (authored vector)`);
   }
 
-  const info = await pipeline.webp({ quality: 88, effort: 6 }).toFile(out);
+  /* §79: the same three-rung ladder the homepage uses. The band renders at most
+     896 CSS px, so the 1440 rung covers it at 1.6× and the 1600px file the
+     v2.1 pipeline wrote was a rung no screen could resolve. */
+  const variants = await writeLadder({
+    source,
+    target,
+    dir: OUT_DIR,
+    name: slot.name,
+    urlBase: URL_BASE,
+    quality: 88,
+  });
+  for (const v of variants) keep.add(`${slot.name}-${v.w}.webp`);
+
+  const largest = variants[variants.length - 1];
+  const height = Math.round((largest.w * HEIGHT) / WIDTH);
   images[slot.name] = {
-    src: `/images/site/v2/pages/${slot.name}.webp`,
-    width: info.width,
-    height: info.height,
-    bytes: info.size,
+    src: largest.src,
+    width: largest.w,
+    height,
+    bytes: largest.bytes,
+    variants,
   };
-  console.log(`write  public/images/site/v2/pages/${slot.name}.webp — ${info.width}×${info.height}, ${(info.size / 1024).toFixed(0)} KB`);
+
+  const ladder = variants.map((v) => `${v.w}:${kb(v.bytes)}`).join(' ');
+  console.log(
+    `write  ${URL_BASE}/${slot.name}-*.webp — up to ${largest.w}×${height}, ${ladder}`,
+  );
 }
+
+const stale = pruneStale(OUT_DIR, keep);
+for (const file of stale) console.log(`· removed stale ${file}`);
+
 
 writeFileSync(
   MANIFEST,

@@ -5,7 +5,11 @@ import Seo from '../components/Seo.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ThemeInit from '../components/ThemeInit.astro';
-import GlobalScientificCanvas from '../components/GlobalScientificCanvas.astro';
+import ScientificEditorialBackground, {
+  type BackgroundMode,
+} from '../components/visual/ScientificEditorialBackground.astro';
+import { ART_SIZES } from '../data/artwork';
+import { artworkAsset, largestOf, srcsetFor, type ArtworkSlot } from '../lib/artworkAsset';
 
 export interface Props {
   title: string;
@@ -30,17 +34,36 @@ export interface Props {
    */
   minimalFooter?: boolean;
   /**
-   * Whether to mount the page-level scientific canvas behind the document.
+   * How much atmosphere this page gets (v2.2 §33–§34).
    *
-   * The homepage sets this to false in v2.0 (§9). The canvas was doing the
-   * homepage's visual work in v1.7 — a page-wide field of contour, formula and
-   * node marks — and that is exactly the "one hairline language everywhere"
-   * problem the reset exists to fix. The homepage now has one strong visual
-   * (the hero artwork), four project drawings, and clean paper between them.
+   * Replaces the v1.7 `canvas` boolean. That flag could only say on or off, and
+   * "off" was the homepage's answer — which is exactly the state the owner
+   * reported as broken, because with the canvas off and the artwork still
+   * loading there was nothing behind the words at all. A mode says *how much*
+   * instead, and every page now has some.
    *
-   * Inner pages keep the canvas: it is their atmosphere and nothing replaces it.
+   *   default   homepage, /projects and case studies
+   *   research  the richest mode — /research
+   *   about     quieter, notebook-leaning — /about
+   *   resume    notation only — /resume
+   *   minimal   wash and texture, no marks — 404
    */
-  canvas?: boolean;
+  backgroundMode?: BackgroundMode;
+  /**
+   * The slot whose raster file is this page's LCP image, if any (§25).
+   *
+   * Only ever set to the one image that actually paints above the fold: the
+   * homepage hero, and the /research and /about bands. Preloading anything
+   * below the fold would spend bandwidth on a file the browser is going to
+   * discover on its own — and the brief is explicit that the whole site must
+   * not preload its artwork.
+   *
+   * The descriptor list and `sizes` come from the same data `Artwork.astro`
+   * uses, so the preload and the `<img>` cannot disagree. A preload whose
+   * candidate list differs from the image's by one descriptor makes the browser
+   * fetch the picture twice, which is worse than not preloading.
+   */
+  preloadArtwork?: ArtworkSlot;
 }
 
 const {
@@ -57,11 +80,19 @@ const {
   noindex = false,
   mainClass,
   minimalFooter = false,
-  canvas = true,
+  backgroundMode = 'default',
+  preloadArtwork,
 } = Astro.props;
 
 const t = useT(lang);
 const htmlLang = lang === 'zh' ? 'zh-Hans' : 'en';
+
+/* Resolved once, here, and used for both the preload and nothing else — the
+   `<img>` builds its own list from the same helpers. */
+const preloadAsset = preloadArtwork ? artworkAsset(preloadArtwork) : null;
+const preloadSrcset = preloadAsset ? srcsetFor(preloadAsset.variants) : undefined;
+const preloadHref = preloadAsset ? (largestOf(preloadAsset.variants)?.src ?? preloadAsset.src) : null;
+const preloadSizes = preloadArtwork ? ART_SIZES[preloadArtwork] : undefined;
 ---
 
 <!doctype html>
@@ -78,6 +109,24 @@ const htmlLang = lang === 'zh' ? 'zh-Hans' : 'en';
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- §25: the page's own LCP image and nothing else. When the slot has a
+         responsive set, the preload carries the same descriptors and the same
+         `sizes` the `<img>` will, so the browser commits to one candidate
+         instead of starting a second fetch when it reaches the markup. -->
+    {
+      preloadHref && (
+        <link
+          rel="preload"
+          as="image"
+          href={preloadHref}
+          imagesrcset={preloadSrcset}
+          imagesizes={preloadSrcset ? preloadSizes : undefined}
+          type="image/webp"
+          fetchpriority="high"
+        />
+      )
+    }
 
     <Seo
       title={title}
@@ -100,12 +149,16 @@ const htmlLang = lang === 'zh' ? 'zh-Hans' : 'en';
   </head>
 
   <body class="flex min-h-screen flex-col">
-    <!-- Atmosphere for the whole document: mathematics, biology and AI behind
-         every section. Absolute, document-level, inert and decorative — it
-         scrolls with the page and is hidden from assistive technology.
-         The homepage opts out in v2.0: its visual work is carried by the hero
-         artwork and the four project drawings instead (§9). -->
-    {canvas && <GlobalScientificCanvas />}
+    <!-- Atmosphere for the whole document: a gradient paper, a small tiling
+         grain, and a few scientific fragments. Absolute, document-level, inert
+         and decorative — it scrolls with the page and is hidden from assistive
+         technology.
+
+         v2.2 (§33–§34) mounts it on every route, the homepage included. The
+         v1.7 canvas it replaces was mounted *except* on the homepage, which is
+         how the owner ended up looking at a page whose only visual was a raster
+         file that had not arrived yet. -->
+    <ScientificEditorialBackground mode={backgroundMode} />
 
     <a href="#main" class="skip-link">{t('nav.skip')}</a>
 

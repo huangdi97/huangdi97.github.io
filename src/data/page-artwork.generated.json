@@ -3,16 +3,50 @@
   "note": "Generated. Intrinsic size for the /research and /about bands; do not edit by hand.",
   "images": {
     "research": {
-      "src": "/images/site/v2/pages/research.webp",
-      "width": 1600,
-      "height": 800,
-      "bytes": 131166
+      "src": "/images/site/v2/pages/research-1440.webp",
+      "width": 1440,
+      "height": 720,
+      "bytes": 108188,
+      "variants": [
+        {
+          "w": 640,
+          "src": "/images/site/v2/pages/research-640.webp",
+          "bytes": 23324
+        },
+        {
+          "w": 960,
+          "src": "/images/site/v2/pages/research-960.webp",
+          "bytes": 50288
+        },
+        {
+          "w": 1440,
+          "src": "/images/site/v2/pages/research-1440.webp",
+          "bytes": 108188
+        }
+      ]
     },
     "about": {
-      "src": "/images/site/v2/pages/about.webp",
-      "width": 1600,
-      "height": 800,
-      "bytes": 160246
+      "src": "/images/site/v2/pages/about-1440.webp",
+      "width": 1440,
+      "height": 720,
+      "bytes": 134096,
+      "variants": [
+        {
+          "w": 640,
+          "src": "/images/site/v2/pages/about-640.webp",
+          "bytes": 30622
+        },
+        {
+          "w": 960,
+          "src": "/images/site/v2/pages/about-960.webp",
+          "bytes": 64928
+        },
+        {
+          "w": 1440,
+          "src": "/images/site/v2/pages/about-1440.webp",
+          "bytes": 134096
+        }
+      ]
     }
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Visual system gate (v2.1).
+ * Visual system gate (v2.2).
  *
  * The split this gate exists to hold is the one v1.4 broke: a project drawing
  * must not double as a mathematics poster. Four types are kept apart, and none
@@ -9,16 +9,23 @@
  *      One frame for every page drawing: the homepage hero and its four project
  *      rows, and the /research and /about bands. The drawing carries meaning, so
  *      it is always a labelled image — never silent decoration — and it carries
- *      no notation of its own. In v2.1 it also replaced the words-first project
- *      cover, which is why §10–§14 could put real images back on /projects.
+ *      no notation of its own. v2.2 demotes it from "the page's subject" to "an
+ *      enhancement", which is why the loading policy in section 5 is now part of
+ *      the gate rather than a performance note.
  *   2. CONCEPTUAL SCIENCE VISUAL — ProjectScientificVisual.astro
  *      Case-study only. This is the one place a formula may be the subject.
- *   3. GLOBAL SCIENTIFIC CANVAS  — GlobalScientificCanvas.astro
- *      page atmosphere, mounted once in BaseLayout behind the inner pages.
- *      aria-hidden, pointer-events:none, no canvas, no WebGL, no image, no
- *      network request, inside the theme's opacity budget — and required to
- *      carry mathematics, biology AND AI motifs at once, so the field can never
- *      quietly collapse into "just formulas".
+ *   3. EDITORIAL BACKGROUND  — components/visual/ScientificEditorialBackground.astro
+ *      page atmosphere, mounted once in BaseLayout behind every route. A
+ *      gradient wash, one small tiling texture and at most five inline SVG
+ *      fragments. aria-hidden, pointer-events:none, no JavaScript, no animation,
+ *      deterministic, inside the theme's opacity budget — and required to carry
+ *      mathematics, biology AND AI fragments, so the field can never quietly
+ *      collapse into "just formulas".
+ *
+ *      v2.2 replaced the v1.7 GlobalScientificCanvas with this. The canvas is
+ *      retired rather than deleted (§1 forbids returning to it; §50 forbids
+ *      deleting authored work), and the first thing this gate now checks is that
+ *      nothing imports or mounts it.
  *   4. THE PUBLIC SURFACE        — the pages themselves.
  *      §10–§14 turn /projects into a curated directory, §22–§28 turn /research
  *      into a page of questions and §29–§33 turn /about into an introduction.
@@ -32,7 +39,7 @@
  */
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, basename, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -42,13 +49,23 @@ const contentRoot = join(src, 'content', 'projects');
 const problems = [];
 const notes = [];
 let checks = 0;
-/** The four canvas opacity tokens, checked against a floor and a ceiling. */
-const SCIENCE_TOKENS = [
-  'science-major',
-  'science-bio',
-  'science-formula',
-  'science-grid',
-  'science-accent',
+/**
+ * Captions the background is forbidden to carry.
+ *
+ * These are the exact strings v1.6 shipped, and they are quoted verbatim in the
+ * documentation of the files that replaced them — which is why every check that
+ * uses this list strips comments first. §11 allows symbols and abstract traces
+ * in the background and nothing else; a captioned motif turns the field into a
+ * slide deck, which is the failure both v1.7 and v2.2 exist to avoid.
+ */
+const BANNED_CAPTIONS = [
+  'CELL STATE LANDSCAPE',
+  'AGENT GRAPH',
+  'state space',
+  'posterior · likelihood',
+  'cells × genes',
+  'ten nodes',
+  'expression is measured',
 ];
 
 function fail(message) {
@@ -141,153 +158,253 @@ for (const page of caseStudyPages) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 1. Global scientific canvas discipline                                     */
+/* 1. The editorial background system (v2.2)                                  */
 /* -------------------------------------------------------------------------- */
 
-const canvasFiles = [
-  ['GlobalScientificCanvas.astro', CANVAS],
-  ['HeroComposition.astro', HERO_C],
-  ['MidComposition.astro', MID_C],
-  ['LowerComposition.astro', LOWER_C],
+/**
+ * The v1.7 GlobalScientificCanvas is retired, and this section is what keeps it
+ * retired.
+ *
+ * It is not deleted. It is the record of a route the owner explicitly asked the
+ * site not to return to (§1), and removing roughly a thousand lines of authored
+ * drawing is a bigger decision than this round was handed — §50's rule about
+ * not deleting source applies to the drawings the same way it applies to the
+ * owner's rasters. What *is* enforced is that it is off: nothing under `src/`
+ * imports it, and no built page mounts it. If either check ever goes green
+ * again, the site has quietly gone back to the route §1 forbids.
+ */
+const RETIRED = [
+  ['GlobalScientificCanvas', CANVAS],
+  ['HeroComposition', HERO_C],
+  ['MidComposition', MID_C],
+  ['LowerComposition', LOWER_C],
 ];
 
-for (const [name, path] of canvasFiles) {
-  if (!existsSync(path)) continue;
-  const source = readFileSync(path, 'utf8');
+const srcFiles = walk(src, ['.astro', '.ts', '.mjs']);
+const retiredPaths = new Set(RETIRED.map(([, path]) => path));
 
-  /* Comments say "no WebGL" on purpose; only the code can actually use it. */
+for (const [name] of RETIRED) {
+  checks += 1;
+  const importers = srcFiles.filter(
+    (file) =>
+      !retiredPaths.has(file) &&
+      new RegExp(`from\\s+['"][^'"]*${name}(?:\\.astro)?['"]`).test(readFileSync(file, 'utf8')),
+  );
+  if (importers.length) {
+    fail(
+      `${name} is imported by ${importers.map((f) => relative(root, f)).join(', ')} — ` +
+        'the v1.7 canvas is retired (§1) and must stay unmounted',
+    );
+  }
+}
+
+const BACKGROUND = join(src, 'components', 'visual', 'ScientificEditorialBackground.astro');
+
+checks += 1;
+if (!existsSync(BACKGROUND)) {
+  fail('ScientificEditorialBackground.astro is missing — v2.2 mounts it on every route');
+} else {
+  const source = readFileSync(BACKGROUND, 'utf8');
   const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '');
 
+  /* §66: the background is HTML + CSS + inline SVG, and nothing else. */
   for (const [label, pattern] of [
-    ['canvas', /<canvas|getContext\(/i],
-    ['WebGL', /webgl|three\.js/i],
-    ['an external image', /https?:\/\/[^"'\s)]+\.(?:png|jpe?g|svg|webp|gif)/i],
-    ['a CSS background image', /background-image\s*:\s*url\((?!data:)/i],
-    ['an <img> element', /<img\b/i],
-    ['a network fetch', /\bfetch\(|XMLHttpRequest|importScripts/],
+    ['a <script> element', /<script\b/i],
+    ['a client directive', /client:(?:load|idle|visible|only|media)/],
+    ['an inline event handler', /\son[a-z]+\s*=/i],
+    ['a network fetch', /\bfetch\(|XMLHttpRequest/],
+    ['a <canvas> element', /<canvas\b|getContext\(/i],
+    ['a raster request other than the texture', /background-image\s*:\s*url\((?!['"]?\/texture\/)/i],
   ]) {
     checks += 1;
-    if (pattern.test(code)) fail(`${name} uses ${label} — it must be inline SVG only`);
-  }
-}
-
-if (existsSync(CANVAS)) {
-  const canvas = readFileSync(CANVAS, 'utf8');
-
-  checks += 1;
-  if (!/aria-hidden="true"/.test(canvas)) {
-    fail('GlobalScientificCanvas.astro must render aria-hidden="true"');
-  }
-  checks += 1;
-  if (!/data-global-scientific-canvas/.test(canvas)) {
-    fail('GlobalScientificCanvas.astro must carry data-global-scientific-canvas');
-  }
-  /* v1.7: three compositions, not a set of independent plates. */
-  checks += 1;
-  if (
-    !/HeroComposition/.test(canvas) ||
-    !/MidComposition/.test(canvas) ||
-    !/LowerComposition/.test(canvas)
-  ) {
-    fail('GlobalScientificCanvas.astro must compose the hero, mid and lower compositions');
-  }
-}
-
-/* All three sciences must appear across the compositions, and the drawings must
-   not name themselves. A captioned motif is the v1.6 failure mode: the field
-   read as a slide deck rather than as a picture. */
-const compositionSources = [HERO_C, MID_C, LOWER_C]
-  .filter((p) => existsSync(p))
-  .map((p) => readFileSync(p, 'utf8'));
-
-if (compositionSources.length > 0) {
-  const joined = compositionSources.join('\n');
-  const kinds = new Set([...joined.matchAll(/data-sci-kind="(math|biology|ai)"/g)].map((m) => m[1]));
-  for (const kind of ['math', 'biology', 'ai']) {
-    checks += 1;
-    if (!kinds.has(kind)) {
-      fail(`the canvas has no "${kind}" motif — the field must carry all three`);
+    if (pattern.test(code)) {
+      fail(`the editorial background uses ${label} — it must be HTML + CSS + inline SVG`);
     }
   }
 
+  /* §38: no animation, no transition, no scroll effect. The file's argument for
+     having no reduced-motion block is only honest while this holds. */
   checks += 1;
-  if (!/data-sci-mobile='drop'|data-sci-mobile="drop"/.test(joined)) {
-    fail('canvas marks must declare data-sci-mobile so a phone gets fewer of them');
+  if (/@keyframes|\banimation\s*:|\btransition\s*:/.test(code)) {
+    fail('the editorial background declares motion — §38 asks for none');
   }
 
-  /* No captions in the background. These are the exact strings v1.6 shipped,
-     and they are still named in the comments of the files that replaced it —
-     so comments are stripped before the check. */
-  const BANNED_CAPTIONS = [
-    'CELL STATE LANDSCAPE',
-    'AGENT GRAPH',
-    'state space',
-    'posterior · likelihood',
-    'cells × genes',
-    'ten nodes',
-    'expression is measured',
-  ];
-  const compositionCode = joined.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '');
+  /* §57: inert, and absent from the accessibility tree. */
+  checks += 1;
+  if (!/data-editorial-background/.test(source)) {
+    fail('the editorial background must carry data-editorial-background');
+  }
+  checks += 1;
+  if (!/aria-hidden="true"/.test(source)) {
+    fail('the editorial background must render aria-hidden="true"');
+  }
+
+  /* §76: deterministic. A background that varies between renders cannot be
+     screenshotted, diffed or reviewed — and this round's whole acceptance
+     argument rests on screenshots. */
+  checks += 1;
+  if (/Math\.random|Date\.now|new Date\(/.test(code)) {
+    fail('the editorial background must be deterministic — no Math.random, no clock');
+  }
+
+  /* §11: it must never label itself. These are the exact strings v1.6 shipped;
+     comments are stripped first, because this file quotes several of them. */
   for (const caption of BANNED_CAPTIONS) {
     checks += 1;
-    if (compositionCode.includes(caption)) {
-      fail(`the canvas carries the caption "${caption}" — a background must not label itself`);
+    if (code.includes(caption)) {
+      fail(`the editorial background carries the caption "${caption}" — a background must not label itself`);
     }
   }
 
-  /* Biology may never be only a formula, and AI may never be a robot head. */
+  /* §10: AI is never a robot head, and biology is never only a formula. */
   checks += 1;
-  if (/robot|circuit head|\bbrain\b/i.test(compositionCode)) {
-    fail('the canvas uses a robot / brain / circuit-head shorthand for AI');
+  if (/robot|circuit head|\bbrain\b/i.test(code)) {
+    fail('the editorial background uses a robot / brain / circuit-head shorthand for AI');
+  }
+
+  /* §74: a handful of groups, and every group says which science it is. Six
+     fragments exist; no single page mounts more than five of them, which is the
+     check below the mode table. */
+  const groupNames = [...new Set([...code.matchAll(/data-bg-group="([a-z]+)"/g)].map((m) => m[1]))];
+  checks += 1;
+  if (groupNames.length < 3 || groupNames.length > 6) {
+    fail(
+      `the editorial background declares ${groupNames.length} mark group(s) — §74 allows three to six`,
+    );
+  } else {
+    notes.push(`background groups: ${groupNames.join(', ')}`);
+  }
+
+  const bgKinds = new Set([...code.matchAll(/data-bg-kind="(math|biology|ai)"/g)].map((m) => m[1]));
+  for (const kind of ['math', 'biology', 'ai']) {
+    checks += 1;
+    if (!bgKinds.has(kind)) fail(`the editorial background has no "${kind}" fragment`);
+  }
+
+  /* §34: five modes, each a documented density. A sixth mode added without a
+     matching entry in the page map would silently fall back to `default`. */
+  const groupsBlock = /const GROUPS[\s\S]*?\n\};/.exec(code)?.[0] ?? '';
+  checks += 1;
+  if (!groupsBlock) fail('the editorial background has no GROUPS map');
+  for (const mode of ['default', 'research', 'about', 'resume', 'minimal']) {
+    checks += 1;
+    if (!new RegExp(`\\b${mode}:`).test(groupsBlock)) {
+      fail(`the editorial background defines no "${mode}" mode`);
+    }
+  }
+  checks += 1;
+  if (!/minimal:\s*\[\]/.test(groupsBlock)) {
+    fail('the "minimal" mode must mount no marks — that is the whole of what it means');
+  }
+
+  /* §74's ceiling is per page, not per file: the library may hold six fragments
+     as long as no mode mounts more than five of them. */
+  const perMode = [...groupsBlock.matchAll(/\b[a-z]+:\s*\[([^\]]*)\]/g)].map((m) =>
+    m[1].split(',').map((s) => s.trim()).filter(Boolean),
+  );
+  for (const list of perMode) {
+    checks += 1;
+    if (list.length > 5) {
+      fail(`a background mode mounts ${list.length} fragments — §74 keeps a page to five at most`);
+    }
+  }
+
+  /* The host layer keeps the contract the canvas it replaced had to keep, for
+     the same reason: `absolute` rather than `fixed` is the difference between a
+     sheet of paper the page sits on and wallpaper the page slides over. */
+  const bgRule = /\.editorial-bg\s*\{[^}]*\}/.exec(source)?.[0] ?? '';
+  checks += 1;
+  if (!bgRule) {
+    fail('the editorial background has no .editorial-bg rule');
+  } else {
+    for (const [declaration, pattern, why] of [
+      ['position: absolute', /position:\s*absolute/, 'document-level, not viewport-fixed'],
+      ['pointer-events: none', /pointer-events:\s*none/, 'inert'],
+      ['z-index: -1', /z-index:\s*-1/, 'behind every word'],
+      ['overflow: hidden', /overflow:\s*hidden/, 'it crops the fragments that run off the page'],
+    ]) {
+      checks += 1;
+      if (!pattern.test(bgRule)) fail(`.editorial-bg must declare ${declaration} (${why})`);
+    }
+  }
+
+  /* No weight may be hard-coded. Every `opacity` in the file is a group weight
+     or a layer weight, and both have to come from a token so a theme can move
+     them together. Intra-group detail uses `stroke-opacity` / `fill-opacity`,
+     which are drawing properties rather than weights — hence the lookbehind,
+     which is what keeps `stroke-opacity` from being read as an `opacity`. */
+  for (const m of code.matchAll(/(?<![\w-])opacity\s*:\s*([^;]+);/g)) {
+    checks += 1;
+    const value = m[1].trim();
+    if (!/^(?:calc\()?var\(--(?:bg|ebg)-/.test(value)) {
+      fail(`the editorial background hard-codes an opacity (${value}) — it must read a --bg-* token`);
+    }
   }
 }
 
 /* -------------------------------------------------------------------------- */
-/* 2. Canvas opacity budget per theme                                         */
+/* 2. Background opacity budget per theme                                     */
 /* -------------------------------------------------------------------------- */
 
 const cssPath = join(src, 'styles', 'global.css');
 const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : '';
 
 /**
- * Floor AND ceiling per token, per theme. v1.6 raised both: the v1.4 numbers
- * were a "safe design" that nobody could see, which the owner rejected
- * outright. Too faint now fails this gate exactly like too loud does.
+ * Floor AND ceiling per token, per theme (§4, §12).
+ *
+ * Both ends are enforced, and the floors matter as much as the ceilings. The
+ * v1.4 canvas shipped at 2.5–5.5% and the owner could not see it at all; the
+ * v2.2 system exists precisely so that a page has something to look at before
+ * its artwork arrives. A background nobody can see would fail this round the
+ * same way an over-inked one would.
  */
-const BUDGET = {
+const BG_TOKENS = ['bg-texture', 'bg-mark', 'bg-graph', 'bg-bio', 'bg-grid'];
+
+const BG_BUDGET = {
   paper: {
-    'science-major': [0.1, 0.15],
-    'science-bio': [0.07, 0.11],
-    'science-formula': [0.045, 0.075],
-    'science-grid': [0.018, 0.035],
-    'science-accent': [0.07, 0.11],
+    'bg-texture': [0.02, 0.045],
+    'bg-mark': [0.025, 0.05],
+    'bg-graph': [0.03, 0.06],
+    'bg-bio': [0.03, 0.06],
+    'bg-grid': [0.02, 0.04],
   },
   white: {
-    'science-major': [0.07, 0.13],
-    'science-bio': [0.05, 0.1],
-    'science-formula': [0.035, 0.07],
-    'science-grid': [0.015, 0.035],
-    'science-accent': [0.05, 0.1],
+    'bg-texture': [0.015, 0.04],
+    'bg-mark': [0.02, 0.045],
+    'bg-graph': [0.02, 0.05],
+    'bg-bio': [0.02, 0.05],
+    'bg-grid': [0.015, 0.035],
   },
   night: {
-    'science-major': [0.1, 0.2],
-    'science-bio': [0.07, 0.15],
-    'science-formula': [0.05, 0.1],
-    'science-grid': [0.025, 0.06],
-    'science-accent': [0.08, 0.16],
+    'bg-texture': [0.03, 0.06],
+    'bg-mark': [0.04, 0.08],
+    'bg-graph': [0.04, 0.08],
+    'bg-bio': [0.04, 0.08],
+    'bg-grid': [0.03, 0.06],
   },
 };
 
-for (const [theme, tokens] of Object.entries(BUDGET)) {
+/** §4/§6: the wash alphas. Blue 0.04–0.08, green 0.03–0.06, on every theme. */
+const WASH_BUDGET = {
+  paper: { 'bg-blue': [0.04, 0.08], 'bg-green': [0.03, 0.06] },
+  white: { 'bg-blue': [0.03, 0.06], 'bg-green': [0.02, 0.05] },
+  night: { 'bg-blue': [0.05, 0.08], 'bg-green': [0.04, 0.06] },
+};
+
+const themeSlice = (theme) => {
   const start = css.indexOf(`[data-theme='${theme}'] {`);
+  return start === -1 ? null : css.slice(start, css.indexOf('}', start));
+};
+
+for (const [theme, tokens] of Object.entries(BG_BUDGET)) {
+  const slice = themeSlice(theme);
   checks += 1;
-  if (start === -1) {
+  if (!slice) {
     fail(`theme block [data-theme='${theme}'] not found`);
     continue;
   }
-  const slice = css.slice(start, css.indexOf('}', start));
 
-  for (const token of SCIENCE_TOKENS) {
+  for (const token of BG_TOKENS) {
     const [min, max] = tokens[token];
     const match = new RegExp(`--${token}:\\s*([0-9.]+)\\s*;`).exec(slice);
     checks += 1;
@@ -299,90 +416,42 @@ for (const [theme, tokens] of Object.entries(BUDGET)) {
     if (value > max + 1e-9) {
       fail(`[${theme}] --${token} is ${value} — above the ${max} ceiling`);
     } else if (value < min - 1e-9) {
-      fail(`[${theme}] --${token} is ${value} — below the ${min} floor (invisible background)`);
+      fail(`[${theme}] --${token} is ${value} — below the ${min} floor (an invisible background)`);
     } else {
       notes.push(`[${theme}] ${token}: ${value}`);
     }
   }
-}
 
-/* Notation must stay a step quieter than the composition around it: if a
-   formula is inked at the same weight as a 1400px trajectory, the page reads as
-   a maths wallpaper. v1.7 replaced the derived factor with an explicit
-   --science-formula token, so the check is now that the token exists and sits
-   below the major weight. */
-const formulaTokens = SCIENCE_TOKENS.includes('science-formula');
-checks += 1;
-if (!formulaTokens) {
-  fail('global.css must define --science-formula so notation has its own weight');
-}
-for (const theme of ['paper', 'white', 'night']) {
-  const start = css.indexOf(`[data-theme='${theme}'] {`);
-  if (start === -1) continue;
-  const slice = css.slice(start, css.indexOf('}', start));
-  const major = Number(/--science-major:\s*([0-9.]+)/.exec(slice)?.[1] ?? 0);
-  const formula = Number(/--science-formula:\s*([0-9.]+)/.exec(slice)?.[1] ?? 0);
-  const grid = Number(/--science-grid:\s*([0-9.]+)/.exec(slice)?.[1] ?? 0);
-  checks += 1;
-  if (!(formula < major)) {
-    fail(`[${theme}] notation (${formula}) is not quieter than the major weight (${major})`);
-  }
-  checks += 1;
-  if (!(grid < formula)) {
-    fail(`[${theme}] ticks (${grid}) are not quieter than notation (${formula})`);
-  }
-}
-
-/* No component may hard-code an alpha for the field. */
-for (const [name, path] of canvasFiles) {
-  if (!existsSync(path)) continue;
-  const code = readFileSync(path, 'utf8')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '');
-  for (const m of code.matchAll(/opacity:\s*([^;]+);/g)) {
+  for (const [token, [min, max]] of Object.entries(WASH_BUDGET[theme])) {
+    const match = new RegExp(`--${token}:\\s*rgba\\([^)]*?,\\s*([0-9.]+)\\s*\\)`).exec(slice);
     checks += 1;
-    const value = m[1].trim();
-    if (!/^var\(--science-|^calc\(var\(--science-/.test(value)) {
-      fail(`${name} hard-codes an opacity (${value}) — it must read a --science-* token`);
+    if (!match) {
+      fail(`[${theme}] does not define --${token} as an rgba() wash`);
+      continue;
+    }
+    const value = Number(match[1]);
+    if (value > max + 1e-9 || value < min - 1e-9) {
+      fail(`[${theme}] --${token} alpha is ${value} — outside the ${min}–${max} band`);
     }
   }
 }
 
-/* The canvas wrapper must be document-level and inert. `position: absolute`
-   rather than `fixed` is the difference between "a very large sheet of paper"
-   and "a wallpaper". */
-const canvasRule = /\.global-science\s*\{[^}]*\}/.exec(css);
-checks += 1;
-if (!canvasRule) {
-  fail('global.css has no .global-science rule');
-} else {
-  checks += 1;
-  if (!/position:\s*absolute/.test(canvasRule[0])) {
-    fail('.global-science must be document-level (position: absolute), not viewport-fixed');
-  }
-  checks += 1;
-  if (!/pointer-events:\s*none/.test(canvasRule[0])) {
-    fail('.global-science must set pointer-events: none');
-  }
-  checks += 1;
-  if (!/z-index:\s*-1/.test(canvasRule[0])) {
-    fail('.global-science must sit behind content (z-index: -1)');
-  }
-  checks += 1;
-  if (!/overflow:\s*hidden/.test(canvasRule[0])) {
-    fail('.global-science must crop its off-page drawings (overflow: hidden)');
-  }
-}
+/* Hierarchy, on every theme: ticks under notation, notation under the curves
+   and the network, and biology never louder than the loudest graph mark. A
+   background where everything is inked the same reads as a pattern, which is
+   the failure §75 names. */
+for (const theme of ['paper', 'white', 'night']) {
+  const slice = themeSlice(theme);
+  if (!slice) continue;
+  const read = (token) => Number(new RegExp(`--${token}:\\s*([0-9.]+)`).exec(slice)?.[1] ?? 0);
+  const [mark, graph, bio, grid] = [read('bg-mark'), read('bg-graph'), read('bg-bio'), read('bg-grid')];
 
-/* The one motion in the field is declared once, in global.css, next to the
-   `.sci-drift` class it disables. */
-checks += 1;
-if (
-  !/@media \(prefers-reduced-motion: reduce\)[\s\S]{0,300}?\.sci-drift[\s\S]{0,150}?animation:\s*none/.test(
-    css,
-  )
-) {
-  fail('global.css must switch .sci-drift off under prefers-reduced-motion');
+  checks += 1;
+  if (!(grid < mark)) fail(`[${theme}] ticks (${grid}) are not quieter than notation (${mark})`);
+  checks += 1;
+  if (!(mark < graph)) fail(`[${theme}] notation (${mark}) is not quieter than the graph marks (${graph})`);
+  checks += 1;
+  if (!(bio <= graph)) fail(`[${theme}] biology (${bio}) is louder than the graph marks (${graph})`);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -794,6 +863,145 @@ for (const rel of ['dist/about/index.html', 'dist/zh/about/index.html']) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* 5. The raster loading policy (§22–§25, §43, §61–§63)                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What the owner actually reported was "the images visibly load in".
+ *
+ * That is a loading-*order* complaint, not a file-size one, so these checks are
+ * about order and about how much is asked for at once — a byte count on its own
+ * would not have caught it.
+ *
+ *   · at most one drawing per page is eager, and it is the LCP image;
+ *   · every other drawing is `loading="lazy"`;
+ *   · every drawing declares an intrinsic size, or the row reflows (§43);
+ *   · every drawing carries a `srcset`, so a phone never asks for the 1440px
+ *     file (§22–§23);
+ *   · exactly one preload, on the page whose LCP image it names (§25);
+ *   · the eager payload stays inside §61/§62's 250 KB.
+ */
+const LOADING_PAGES = [
+  ['dist/index.html', 1],
+  ['dist/zh/index.html', 1],
+  ['dist/projects/index.html', 0],
+  ['dist/zh/projects/index.html', 0],
+  ['dist/research/index.html', 1],
+  ['dist/zh/research/index.html', 1],
+  ['dist/about/index.html', 1],
+  ['dist/zh/about/index.html', 1],
+  ['dist/resume/index.html', 0],
+  ['dist/zh/resume/index.html', 0],
+];
+
+const bytesAt = (url) => {
+  const file = join(root, 'dist', url.replace(/^\//, ''));
+  return existsSync(file) ? statSync(file).size : 0;
+};
+
+for (const [rel, expectedEager] of LOADING_PAGES) {
+  const path = join(root, rel);
+  checks += 1;
+  if (!existsSync(path)) {
+    fail(`${rel} is missing — run the build before this gate`);
+    continue;
+  }
+  const html = readFileSync(path, 'utf8');
+  const artImgs = [...html.matchAll(/<img[^>]*class="art-img"[^>]*>/g)].map((m) => m[0]);
+  const eager = artImgs.filter((tag) => /loading="eager"/.test(tag));
+
+  checks += 1;
+  if (eager.length !== expectedEager) {
+    fail(`${rel} loads ${eager.length} drawing(s) eagerly — expected ${expectedEager}`);
+  }
+
+  checks += 1;
+  const unhinted = artImgs.filter((tag) => !/loading="(?:eager|lazy)"/.test(tag));
+  if (unhinted.length) fail(`${rel} has ${unhinted.length} drawing(s) with no loading hint`);
+
+  checks += 1;
+  const unsized = artImgs.filter((tag) => !/width="\d+"/.test(tag) || !/height="\d+"/.test(tag));
+  if (unsized.length) fail(`${rel} has ${unsized.length} drawing(s) with no intrinsic size`);
+
+  checks += 1;
+  const srcsetless = artImgs.filter((tag) => !/srcset="/.test(tag));
+  if (srcsetless.length) {
+    fail(
+      `${rel} has ${srcsetless.length} drawing(s) with no srcset — a 390px phone would download the largest file`,
+    );
+  }
+
+  const preloads = [...html.matchAll(/<link[^>]*rel="preload"[^>]*>/g)].map((m) => m[0]).filter(
+    (tag) => /as="image"/.test(tag),
+  );
+  checks += 1;
+  if (preloads.length > 1) {
+    fail(`${rel} preloads ${preloads.length} images — §25 allows the LCP image only`);
+  }
+  checks += 1;
+  if (expectedEager > 0 && preloads.length === 0) {
+    fail(`${rel} paints a drawing above the fold but preloads nothing`);
+  }
+  checks += 1;
+  if (expectedEager === 0 && preloads.length > 0) {
+    fail(`${rel} preloads an image it does not paint above the fold`);
+  }
+
+  /* §61/§62, measured on the largest rung. That is the conservative bound on
+     purpose: which candidate the browser picks depends on the viewport, and a
+     budget that only holds at one width is not a budget. */
+  let eagerBytes = 0;
+  for (const tag of eager) {
+    const candidates = [
+      ...(/(?:^|\s)srcset="([^"]+)"/.exec(tag)?.[1] ?? '').matchAll(/(\S+)\s+(\d+)w/g),
+    ];
+    eagerBytes += candidates.length
+      ? Math.max(...candidates.map((m) => bytesAt(m[1])))
+      : bytesAt(/src="([^"]+)"/.exec(tag)?.[1] ?? '');
+  }
+
+  checks += 1;
+  if (eagerBytes > 250 * 1024) {
+    fail(
+      `${rel} asks ${(eagerBytes / 1024).toFixed(0)} KB of image above the fold — the budget is 250 KB`,
+    );
+  } else if (eagerBytes > 0) {
+    notes.push(`${rel}: ${(eagerBytes / 1024).toFixed(0)} KB eager, 1 drawing`);
+  }
+}
+
+/* §78/§79: no source artwork may be reachable.
+   `public/` is a passthrough directory — every byte in it is copied into
+   `dist/` and served — so a source file that lands there is a published URL
+   nothing references. v2.1 shipped twelve megabytes of them at
+   /images/home/v2/source/, which is the defect this check exists to keep shut. */
+const distImages = walk(join(root, 'dist'), ['.png', '.jpg', '.jpeg', '.webp', '.avif']);
+const leaked = distImages.filter((file) => /source/i.test(basename(file)));
+checks += 1;
+if (leaked.length) {
+  fail(
+    `${leaked.length} source artwork file(s) are published: ${leaked
+      .map((f) => relative(root, f))
+      .join(', ')}`,
+  );
+}
+
+/* §7/§63: the texture is one small shared file, not a paper ground. */
+const texturePath = join(root, 'public', 'texture', 'paper.webp');
+checks += 1;
+if (!existsSync(texturePath)) {
+  fail('public/texture/paper.webp is missing — the background texture layer needs it');
+} else {
+  const size = statSync(texturePath).size;
+  checks += 1;
+  if (size > 30 * 1024) {
+    fail(`the paper texture is ${(size / 1024).toFixed(1)} KB — §63 caps it at 30 KB`);
+  } else {
+    notes.push(`paper texture: ${(size / 1024).toFixed(1)} KB, ${distImages.length} published image(s)`);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 
 if (problems.length) {
   console.error('Visual gate FAILED:\n');
@@ -803,10 +1011,14 @@ if (problems.length) {
 }
 
 console.log(`Visual gate passed (${checks} checks).`);
-console.log('  • 4 visual types separated: artwork / conceptual science / global canvas / public surface');
+console.log('  • 4 visual types separated: artwork / conceptual science / editorial background / public surface');
 console.log(`  • ${projectFiles.length} project file(s), public fields checked against evidence`);
-console.log('  • canvas: inline SVG only, aria-hidden, pointer-events:none, math + biology + AI');
-console.log('  • canvas: opacity floors and ceilings held, notation kept a step quieter');
+console.log('  • background: inline SVG + CSS only, no JS, no animation, deterministic, math + biology + AI');
+console.log('  • background: 5 groups, 5 modes, opacity floors and ceilings held on all 3 themes');
+console.log('  • background: document-level, inert, behind every word, never labels itself');
+console.log('  • v1.7 canvas: retired — imported by nothing, mounted on no page');
+console.log('  • raster: one eager drawing per page, one preload, srcset everywhere, ≤ 250 KB eager');
+console.log('  • raster: no source artwork reachable, paper texture under 30 KB');
 console.log('  • homepage: five drawings (hero + four project rows), four stacked rows');
 console.log('  • homepage: no page-wide canvas, no cards, no index numbers, no pills');
 console.log('  • /projects: four illustrated entries, no filter bar, no words-first cover');

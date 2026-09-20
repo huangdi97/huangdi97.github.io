@@ -179,17 +179,26 @@ const FORMULA_MARKERS = [/ΔAGE/i, /Fθ/, /ẑ/, /Δx\s*=/, /dx\/dt/];
 const CONCEPT_LABEL = /conceptual|概念模型|概念标注|概念图/i;
 
 /**
- * Remove the decorative background canvas before looking for formulas.
+ * Remove the decorative background layer before looking for formulas.
  *
- * The global scientific canvas carries a handful of notations — dx/dt among
- * them — behind every page, at 0.07 opacity, `aria-hidden`, with no claim
+ * The editorial background (v2.2) carries a handful of notations — dx/dt among
+ * them — behind every page, at 0.045 opacity, `aria-hidden`, with no claim
  * attached to them. This rule is about formulas a page *presents*, so scanning
  * the background would fail every route on the site for decoration it never
- * asked anyone to read. Removing the canvas block keeps the rule as strict as
- * it was for real content.
+ * asked anyone to read. Removing the block keeps the rule as strict as it was
+ * for real content.
+ *
+ * v2.2 changed the selector, not the argument: the v1.7 canvas it used to strip
+ * is no longer mounted anywhere, and the layer that replaced it carries
+ * `data-editorial-background`.
  */
 function stripCanvas(html) {
-  const start = html.indexOf('<div class="global-science"');
+  const marker = 'data-editorial-background';
+  const markerAt = html.indexOf(marker);
+  if (markerAt === -1) return html;
+
+  // Walk back to the `<` that opens the element carrying the marker.
+  const start = html.lastIndexOf('<', markerAt);
   if (start === -1) return html;
 
   let depth = 0;

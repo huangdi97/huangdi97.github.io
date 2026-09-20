@@ -27,9 +27,8 @@
  * a radius, a shadow, an overlay, a blur or a glass layer (§7, §17, §29). The
  * image is meant to read as part of the page, not as a thumbnail placed on it.
  */
-import homeManifest from '../data/home-artwork.generated.json';
-import pageManifest from '../data/page-artwork.generated.json';
-import { ART_PLACEMENT } from '../data/artwork';
+import { ART_PLACEMENT, ART_SIZES } from '../data/artwork';
+import { artworkAsset, srcsetFor, type ArtworkSlot } from '../lib/artworkAsset';
 import heroSvg from '../assets/home/hero.svg?raw';
 import wennianSvg from '../assets/home/wennian.svg?raw';
 import hycellSvg from '../assets/home/hycell.svg?raw';
@@ -38,8 +37,8 @@ import biopulseSvg from '../assets/home/biopulse.svg?raw';
 import researchSvg from '../assets/pages/research.svg?raw';
 import aboutSvg from '../assets/pages/about.svg?raw';
 
-export type ArtworkName =
-  'hero' | 'wennian' | 'hycell' | 'morn' | 'biopulse' | 'research' | 'about';
+/** The slot names, owned by `lib/artworkAsset.ts` and re-exported for callers. */
+export type ArtworkName = ArtworkSlot;
 
 export interface Props {
   name: ArtworkName;
@@ -47,29 +46,20 @@ export interface Props {
   label: string;
   /** Short alternative text for the official raster asset (§50). Falls back to `label`. */
   alt?: string;
+  /**
+   * Override the frame's `sizes`. The default comes from `ART_SIZES`, which
+   * describes the *page's* layouts; a caller that puts the same drawing in a
+   * narrower hole — `/projects` does, in its two-column grid — passes its own
+   * so the browser is not asked to assume the widest one (§80–§82).
+   */
+  sizes?: string;
   /** Extra classes on the frame, for layout only. */
   class?: string;
 }
 
-const { name, label, alt, class: className } = Astro.props;
+const { name, label, alt, sizes: sizesProp, class: className } = Astro.props;
 
-interface ArtworkAsset {
-  src: string;
-  avif?: string;
-  width: number;
-  height: number;
-  bytes: number;
-}
-
-/* Both manifests are generated JSON, so their keys are inferred as `null` until
-   the optimizer runs. The cast is the honest description of the runtime
-   contract: a slot is either a filled asset record or absent. Merging them here
-   keeps one lookup in the component and one writer per pipeline. */
-const assets = {
-  ...((homeManifest.images ?? {}) as unknown as Record<string, ArtworkAsset | null>),
-  ...((pageManifest.images ?? {}) as unknown as Record<string, ArtworkAsset | null>),
-};
-const asset = assets[name] ?? null;
+const asset = artworkAsset(name);
 
 const placement = ART_PLACEMENT[name] ?? { position: '50% 50%', ratio: '4 / 3' };
 const isHero = name === 'hero';
@@ -80,6 +70,20 @@ const isHero = name === 'hero';
 const isPageHero = name === 'research' || name === 'about';
 const loading = isHero || isPageHero ? 'eager' : 'lazy';
 const fetchpriority = isHero || isPageHero ? 'high' : 'auto';
+
+/* §18/§19: the four project drawings stop being the row's subject this round.
+   They keep their place and their meaning, but the frame is feathered on all
+   four edges so the drawing arrives out of the paper instead of being a plate
+   pasted onto it — the same treatment the page bands already use, applied where
+   the owner asked for the artwork to "blend in" rather than lead. */
+const isBlend = !isHero && !isPageHero;
+
+/* The descriptor list and the `sizes` string both come from shared data, so the
+   `<img>` and the preload emitted by `BaseLayout` cannot disagree (§25). */
+const sizes = sizesProp ?? ART_SIZES[name];
+const srcset = srcsetFor(asset?.variants);
+const avifSrcset = srcsetFor(asset?.avifVariants);
+
 const ART: Record<ArtworkName, string> = {
   hero: heroSvg,
   wennian: wennianSvg,
@@ -103,6 +107,7 @@ const svg = ART[name].replace('<svg ', `<svg role="img" aria-label="${safeLabel}
     `art--${name}`,
     asset && 'art--raster',
     isPageHero && 'art--band',
+    isBlend && 'art--blend',
     className,
   ]}
   data-artwork={name}
@@ -112,10 +117,12 @@ const svg = ART[name].replace('<svg ', `<svg role="img" aria-label="${safeLabel}
   {
     asset ? (
       <picture>
-        {asset.avif && <source srcset={asset.avif} type="image/avif" />}
+        {avifSrcset && <source srcset={avifSrcset} sizes={sizes} type="image/avif" />}
         <img
           class="art-img"
           src={asset.src}
+          srcset={srcset}
+          sizes={srcset ? sizes : undefined}
           width={asset.width}
           height={asset.height}
           alt={alt ?? label}
@@ -197,8 +204,8 @@ const svg = ART[name].replace('<svg ', `<svg role="img" aria-label="${safeLabel}
       to right,
       transparent 0%,
       rgba(0, 0, 0, 0.22) 7%,
-      rgba(0, 0, 0, 0.68) 20%,
-      #000 38%,
+      rgba(0, 0, 0, 0.68) 22%,
+      #000 46%,
       #000 96.5%,
       transparent 100%
     );
@@ -206,11 +213,31 @@ const svg = ART[name].replace('<svg ', `<svg role="img" aria-label="${safeLabel}
       to right,
       transparent 0%,
       rgba(0, 0, 0, 0.22) 7%,
-      rgba(0, 0, 0, 0.68) 20%,
-      #000 38%,
+      rgba(0, 0, 0, 0.68) 22%,
+      #000 46%,
       #000 96.5%,
       transparent 100%
     );
+  }
+
+  /* §15: the hero is an enhancement now, not the page's load-bearing wall, so it
+     is allowed to sit a little larger and arrive out of the paper rather than
+     start at an edge. The enlargement is anchored rather than centred, and that
+     is the whole trick: `scale()` about the centre would push the right edge
+     1.75% past the frame, and the mask only starts fading at 96.5% — so the
+     picture would end on a hard cut through a half-opaque edge, which is the
+     exact defect the right-hand ramp exists to prevent.
+     `translateX(-3.5%) scale(1.035)` about the left origin moves the right edge
+     back to where it was and spends the extra 3.5% on the left, inside the zone
+     that is already at ~11% opacity. Net effect: the drawing reads 3.5% larger
+     and loses nothing anyone can see.
+     Desktop only — below 900px the left ramp is dropped (§45/§46), so there is
+     no invisible zone to spend and the same transform would crop real content. */
+  @media (min-width: 900px) {
+    .art--hero.art--raster .art-img {
+      transform-origin: 0 50%;
+      transform: translateX(-3.5%) scale(1.035);
+    }
   }
 
   /* The horizontal and vertical edges of the same picture, as a second mask on
@@ -227,6 +254,50 @@ const svg = ART[name].replace('<svg ', `<svg role="img" aria-label="${safeLabel}
       transparent 100%
     );
     mask-image: linear-gradient(to bottom, transparent 0%, #000 3%, #000 97%, transparent 100%);
+  }
+
+  /* §18/§19, §48/§49: the four project drawings stop being their row's subject.
+     They keep their place, their meaning and their label — what changes is that
+     the frame no longer presents them as a picture on the page. Feathered on
+     every edge, the drawing arrives out of the paper, which is what the owner
+     asked for when they said the images could "blend in" instead of leading.
+
+     Two nested directional masks, horizontal on the innermost element and
+     vertical on the wrapper, so the two multiply and no `mask-composite` is
+     needed. That is the hero's and the band's mechanism, reused rather than
+     reinvented.
+
+     The first attempt was a single `radial-gradient(118% 118% at 50% 50%, …)`,
+     on the theory that a radial falloff is edge-agnostic and so does not have
+     to commit to which edge is content. It was wrong, and the screenshot
+     showed it: with an ending shape at 118% of the box, the midpoint of the top
+     edge sits at 0.5/1.18 = 42% of the gradient's radius, well inside the
+     opaque stop at 58%. The radial was therefore only ever softening the four
+     corners — the edges, which are the thing that reads as "a plate pasted onto
+     the page", kept their hard line. The ramps below reach the edge midpoints,
+     which is where the defect actually is. */
+  .art--blend.art--raster .art-img,
+  .art--blend:not(.art--raster) .art-ink :global(svg) {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      #000 9%,
+      #000 91%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%);
+  }
+
+  .art--blend.art--raster picture,
+  .art--blend:not(.art--raster) .art-ink {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 8%,
+      #000 92%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
   }
 
   /* §23/§30: the /research and /about bands run the full content width, and the
@@ -271,6 +342,30 @@ const svg = ART[name].replace('<svg ', `<svg role="img" aria-label="${safeLabel}
       transparent 100%
     );
     mask-image: linear-gradient(to bottom, transparent 0%, #000 13%, #000 87%, transparent 100%);
+  }
+
+  /* §86: when the raster is blocked, the browser paints the `alt` text at the
+     top-left of the image box — which is the one corner where the horizontal and
+     vertical ramps multiply. Measured on the no-image homepage, that corner
+     leaves the leading glyphs at ~195 luminance against ~21 for full ink: a 60+
+     level washout, i.e. the fallback text is drawn *through* the fade and reads
+     as a ghost.
+     There is no placement that fixes it. The text is inline content in the img
+     box, so the only levers are `text-indent` and `line-height`; but the hero's
+     ramp is not opaque until 46% while its alt text is long enough to wrap, and
+     a wrapped line returns to x=0 — back inside the fade. Padding would move the
+     text but would also inset the picture and change the crop, which is tuned
+     per slot and is not this round's business.
+     So the text is made non-painting instead. This is a presentational change
+     only: the `alt` attribute stays on the element, so assistive technology is
+     unaffected — every gate and test asserts the attribute, not the pixels. And
+     a blocked frame then reads as clean paper, which is what "the drawing is an
+     enhancement" (§0) is supposed to look like; a half-erased sentence in the
+     corner is what it is not (§89 — no placeholder content). */
+  .art--hero.art--raster .art-img,
+  .art--blend.art--raster .art-img,
+  .art--band.art--raster .art-img {
+    color: transparent;
   }
 
   /* §44: Night is not this round's subject — it only has to not break. These are

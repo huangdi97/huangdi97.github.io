@@ -38,15 +38,17 @@
  * present the script reports that and exits 0 — a missing owner asset is a
  * known state, not a build failure.
  */
-import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { kb, pruneStale, writeLadder } from './lib/artwork-ladder.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ASSET_DIR = join(ROOT, 'public', 'images', 'home', 'v2');
 const SOURCE_DIR = join(ROOT, '.artwork-source', 'home', 'v2');
 const MANIFEST = join(ROOT, 'src', 'data', 'home-artwork.generated.json');
+const URL_BASE = '/images/home/v2';
 
 /** The five slots, in page order, with the width each one is allowed to land on. */
 const SLOTS = [
@@ -118,8 +120,6 @@ const stemOf = (base) => {
   return canonical.length ? canonical : stem;
 };
 
-const bytes = (n) => (n < 1024 * 1024 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1024 / 1024).toFixed(2)} MB`);
-
 function fail(message) {
   console.error(`\n  ✗ ${message}\n`);
   process.exit(1);
@@ -172,7 +172,12 @@ function assign(sources) {
 }
 
 async function run() {
-  const wantAvif = process.argv.includes('--avif');
+  /* No `--avif` flag any more. §46 makes AVIF optional and asks that the format
+     not complicate the engineering; the flag was never used and its output was
+     a single full-size file, which would have fought the srcset rather than
+     joined it. `Artwork.astro` still renders an AVIF `<source>` when a slot
+     carries `avifVariants`, so the capability is there for a round that wants
+     it — it just has to arrive as a ladder, like everything else. */
   mkdirSync(SOURCE_DIR, { recursive: true });
 
   const sources = readSources();
@@ -192,6 +197,7 @@ async function run() {
   const images = {};
   let written = 0;
   let total = 0;
+  const keep = new Set();
 
   for (const slot of SLOTS) {
     const source = taken.get(slot.name);
@@ -209,28 +215,30 @@ async function run() {
       );
     }
 
-    const pipeline = sharp(source.path).rotate().resize({ width: target, withoutEnlargement: true });
-    const out = join(ASSET_DIR, `${slot.name}.webp`);
-    await pipeline.clone().webp({ quality: slot.quality, effort: 6 }).toFile(out);
+    /* §21/§79: one ladder per slot, shared with the page pipeline. `rotate()`
+       first so an EXIF-oriented phone export is upright before it is resized. */
+    const variants = await writeLadder({
+      source: sharp(source.path).rotate(),
+      target,
+      dir: ASSET_DIR,
+      name: slot.name,
+      urlBase: URL_BASE,
+      quality: slot.quality,
+    });
+    for (const v of variants) keep.add(`${slot.name}-${v.w}.webp`);
 
-    const size = statSync(out).size;
-    total += size;
+    const largest = variants[variants.length - 1];
+    const size = largest.bytes;
+    total += variants.reduce((sum, v) => sum + v.bytes, 0);
     written += 1;
 
     const entry = {
-      src: `/images/home/v2/${slot.name}.webp`,
-      width: target,
-      height: Math.round((target * meta.height) / meta.width),
+      src: largest.src,
+      width: largest.w,
+      height: Math.round((largest.w * meta.height) / meta.width),
       bytes: size,
+      variants,
     };
-
-    if (wantAvif) {
-      const avif = join(ASSET_DIR, `${slot.name}.avif`);
-      await pipeline.clone().avif({ quality: 55, effort: 4 }).toFile(avif);
-      entry.avif = `/images/home/v2/${slot.name}.avif`;
-      entry.avifBytes = statSync(avif).size;
-      total += entry.avifBytes;
-    }
 
     images[slot.name] = entry;
 
@@ -239,10 +247,14 @@ async function run() {
     // and "an alias happened to catch it" are different states and only one of
     // them means the naming contract is being honoured.
     const via = source.via === 'alias' ? '  (via alias)' : '';
+    const ladder = variants.map((v) => `${v.w}:${kb(v.bytes)}`).join(' ');
     console.log(
-      `  ${flag} ${slot.name.padEnd(9)} ${String(target).padStart(5)}×${String(entry.height).padEnd(5)}  ${bytes(size).padStart(8)}  ${source.file}${via}`,
+      `  ${flag} ${slot.name.padEnd(9)} ${String(largest.w).padStart(5)}×${String(entry.height).padEnd(5)}  ${kb(size).padStart(8)}  ${ladder.padEnd(30)}  ${source.file}${via}`,
     );
   }
+
+  const stale = pruneStale(ASSET_DIR, keep);
+  for (const file of stale) console.log(`  · removed stale ${file}`);
 
   // The manifest is written even when only some slots landed, so a partial drop
   // integrates partially instead of not at all.
@@ -259,7 +271,7 @@ async function run() {
     )}\n`,
   );
 
-  console.log(`\n  ${written}/5 integrated · ${bytes(total)} total → ${MANIFEST.replace(ROOT, '.')}`);
+  console.log(`\n  ${written}/5 integrated · ${kb(total)} across all rungs → ${MANIFEST.replace(ROOT, '.')}`);
   console.log('  Re-run the screenshot QA; the per-image object-position still needs a human eye.\n');
 }
 

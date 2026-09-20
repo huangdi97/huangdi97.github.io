@@ -1,0 +1,565 @@
+---
+/**
+ * Scientific Editorial Background — the site's base visual (v2.2).
+ *
+ * Why this exists. v2.1 gave every page a large raster artwork and the site
+ * looked good *once the bytes arrived*. The owner's report from a real visit
+ * was the opposite of that: the images visibly "load in", and the page reads as
+ * a picture with some text under it. The brief's first principle (§0) is the
+ * inversion — **the page is good first, the image only adds**.
+ *
+ * So this component is the layer that is already there when nothing else is.
+ * It is one mount point behind the whole document, three layers deep:
+ *
+ *   wash     radial gradients — the paper is never a flat fill (§4–§6)
+ *   texture  one small tiling WebP, alpha-only, ~16 KB (§7–§8)
+ *   marks    a handful of inline SVG fragments (§9–§13)
+ *
+ * What it deliberately is *not*: the v1.7 GlobalScientificCanvas. That system
+ * composed three page-sized drawings with a stated quota of mathematics,
+ * biology and AI motifs per screen, and the result read as a research poster
+ * behind the text (§1 forbids returning to it). Here the budget is the other
+ * way round — at most five small groups, no diagram is ever complete, nothing
+ * is captioned, and every fragment is a *fragment*: half a helix, an arc of a
+ * cell, four nodes of a network. If a group could be read as a figure, it is
+ * wrong.
+ *
+ * Hard constraints this file holds (§35–§38, §57–§59, §66, §75–§76):
+ *
+ *   · no JavaScript, no animation, no transition, no scroll effect;
+ *   · `aria-hidden`, `pointer-events: none`, nothing focusable, nothing in the
+ *     accessibility tree;
+ *   · deterministic — no `Math.random`, no time, no per-render variation;
+ *   · opacity is read from the theme's `--bg-*` tokens and scaled per mode, so
+ *     no component ever hard-codes a weight;
+ *   · inline SVG only — no second image request beyond the texture.
+ *
+ * Placement follows §13's sparse composition rather than an even fill: one
+ * fragment near the top right, one down the left through the middle, one near
+ * the end on the right. The document-level percentages mean the fragments stay
+ * attached to the part of the page they belong to as it grows.
+ */
+export type BackgroundMode = 'default' | 'research' | 'about' | 'resume' | 'minimal';
+
+export interface Props {
+  /**
+   * How much atmosphere the page gets (§34). Density is the only thing a mode
+   * changes — never the palette, never the layout.
+   *
+   *   default   light mathematics + light biology      homepage, /projects
+   *   research  mathematics / neural / biology, richer /research
+   *   about     paper / notation / matrix, quieter     /about
+   *   resume    notation only, the least               /resume
+   *   minimal   wash and texture, no marks             ／404 and utility routes
+   */
+  mode?: BackgroundMode;
+}
+
+const { mode = 'default' } = Astro.props;
+
+/**
+ * Which fragments a mode mounts (§74). Five groups exist; no mode uses all
+ * five, and none uses fewer than one except `minimal`, which is the point.
+ */
+const GROUPS: Record<BackgroundMode, readonly string[]> = {
+  default: ['formula', 'curve', 'neural', 'cell'],
+  research: ['formula', 'curve', 'neural', 'cell', 'helix'],
+  about: ['formula', 'cell', 'matrix'],
+  resume: ['formula'],
+  minimal: [],
+};
+
+const groups = GROUPS[mode];
+const has = (group: string) => groups.includes(group);
+
+/* -------------------------------------------------------------------------- */
+/* Geometry. Computed here rather than hand-written so the rungs of the helix  */
+/* actually meet its strands and the matrix is actually a matrix. Deterministic*/
+/* by construction: the only inputs are the constants below.                   */
+/* -------------------------------------------------------------------------- */
+
+/** One strand of a helix fragment: a sine sampled into a polyline path. */
+function helixStrand(phase: number, count = 64): string {
+  const [left, width, mid, amplitude, cycles] = [14, 272, 104, 36, 1.35];
+  const points: string[] = [];
+  for (let i = 0; i <= count; i += 1) {
+    const t = i / count;
+    const x = left + t * width;
+    const y = mid + Math.sin(t * Math.PI * 2 * cycles + phase) * amplitude;
+    points.push(`${x.toFixed(1)} ${y.toFixed(1)}`);
+  }
+  return `M ${points.join(' L ')}`;
+}
+
+/** Rungs, each drawn between the two strands at the same parameter. */
+const helixRungs = Array.from({ length: 7 }, (_, i) => {
+  const t = (i + 0.5) / 7;
+  const x = 14 + t * 272;
+  const a = 104 + Math.sin(t * Math.PI * 2 * 1.35) * 36;
+  const b = 104 + Math.sin(t * Math.PI * 2 * 1.35 + Math.PI) * 36;
+  return { x: x.toFixed(1), y1: Math.min(a, b).toFixed(1), y2: Math.max(a, b).toFixed(1) };
+});
+
+/** A 5 × 5 matrix fragment. Five cells carry ink; the rest are only present. */
+const MATRIX_FILLED = new Set([1, 7, 12, 18, 21]);
+const matrixCells = Array.from({ length: 25 }, (_, i) => ({
+  x: 26 + (i % 5) * 44,
+  y: 26 + Math.floor(i / 5) * 44,
+  filled: MATRIX_FILLED.has(i),
+}));
+
+/**
+ * Neural fragment: three layers, ten nodes, seven edges.
+ *
+ * Seven rather than all thirty-six pairs, because §10 asks for a fragment and a
+ * fully connected graph is a diagram. The cobalt accent lands on two nodes and
+ * one edge only — the accent is the one colour that is allowed to be *noticed*,
+ * so it has to stay rare.
+ */
+const NEURAL_LAYERS = [
+  [44, [58, 158, 258]],
+  [200, [30, 118, 206, 292]],
+  [356, [70, 160, 250]],
+] as const;
+
+const NEURAL_EDGES: ReadonlyArray<readonly [number, number, number, number]> = [
+  [44, 58, 200, 30],
+  [44, 158, 200, 118],
+  [44, 258, 200, 206],
+  [200, 30, 356, 70],
+  [200, 118, 356, 160],
+  [200, 206, 356, 250],
+  [200, 292, 356, 250],
+];
+
+/** The two nodes and the one edge that carry the cobalt. */
+const NEURAL_ACCENT_NODES = new Set(['44:158', '356:160']);
+const NEURAL_ACCENT_EDGE = 4;
+---
+
+<div class="editorial-bg" data-editorial-background data-bg-mode={mode} aria-hidden="true">
+  <!-- Layer 1 — the paper is a gradient field, never a flat fill (§4–§6). -->
+  <div class="ebg-wash"></div>
+
+  <!-- Layer 2 — one 16 KB tile, repeated. Alpha-only: it can darken the paper
+       but never tint it, which is why Night inverts it instead of shipping a
+       second file. -->
+  <div class="ebg-texture"></div>
+
+  <!-- Layer 3 — fragments. Sparse by placement, not by count (§13). -->
+  <div class="ebg-marks">
+    {
+      has('formula') && (
+        <svg
+          class="ebg-group ebg-formula"
+          viewBox="0 0 420 300"
+          data-bg-group="formula"
+          data-bg-kind="math"
+        >
+          <text x="6" y="46" font-size="31">
+            ∇L
+          </text>
+          <text x="252" y="92" font-size="26">
+            p(x)
+          </text>
+          <text x="118" y="158" font-size="22">
+            dx/dt
+          </text>
+          <text x="300" y="222" font-size="29">
+            zₜ
+          </text>
+          <text x="28" y="256" font-size="35">
+            ∂
+          </text>
+          <text x="188" y="296" font-size="24">
+            Σ
+          </text>
+        </svg>
+      )
+    }
+
+    {
+      has('curve') && (
+        <svg
+          class="ebg-group ebg-curve"
+          viewBox="0 0 460 240"
+          data-bg-group="curve"
+          data-bg-kind="math"
+        >
+          <path class="ebg-curve-line" d="M 12 196 C 108 196, 132 42, 236 42 S 372 186, 448 196" />
+          <path class="ebg-curve-axis" d="M 12 216 H 448" />
+        </svg>
+      )
+    }
+
+    {
+      has('neural') && (
+        <svg
+          class="ebg-group ebg-neural"
+          viewBox="0 0 400 320"
+          data-bg-group="neural"
+          data-bg-kind="ai"
+        >
+          {NEURAL_EDGES.map(([x1, y1, x2, y2], i) => (
+            <line
+              class:list={['ebg-edge', i === NEURAL_ACCENT_EDGE && 'ebg-accent-stroke']}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+            />
+          ))}
+          {NEURAL_LAYERS.flatMap(([x, ys]) =>
+            ys.map((y) => (
+              <circle
+                class:list={[
+                  'ebg-node',
+                  NEURAL_ACCENT_NODES.has(`${x}:${y}`) && 'ebg-accent-fill',
+                ]}
+                cx={x}
+                cy={y}
+                r="6"
+              />
+            )),
+          )}
+        </svg>
+      )
+    }
+
+    {
+      has('cell') && (
+        <svg
+          class="ebg-group ebg-cell"
+          viewBox="0 0 360 280"
+          data-bg-group="cell"
+          data-bg-kind="biology"
+        >
+          {/* Three arcs, not a closed outline: a contour that closes is a cell
+              drawing, and §10 asks for a fragment of one. */}
+          <path class="ebg-contour" d="M 58 138 C 58 58, 148 18, 218 44" />
+          <path class="ebg-contour" d="M 248 68 C 318 108, 318 198, 238 238" />
+          <path class="ebg-contour" d="M 188 252 C 118 260, 60 214, 58 138" />
+          <ellipse class="ebg-nucleus" cx="156" cy="140" rx="27" ry="24" />
+        </svg>
+      )
+    }
+
+    {
+      has('matrix') && (
+        <svg
+          class="ebg-group ebg-matrix"
+          viewBox="0 0 240 240"
+          data-bg-group="matrix"
+          data-bg-kind="math"
+        >
+          {matrixCells.map((cell) => (
+            <circle
+              class:list={['ebg-cell-dot', cell.filled && 'ebg-cell-dot--filled']}
+              cx={cell.x}
+              cy={cell.y}
+              r={cell.filled ? 5 : 2.4}
+            />
+          ))}
+        </svg>
+      )
+    }
+
+    {
+      has('helix') && (
+        <svg
+          class="ebg-group ebg-helix"
+          viewBox="0 0 300 208"
+          data-bg-group="helix"
+          data-bg-kind="biology"
+        >
+          <path class="ebg-strand" d={helixStrand(0)} />
+          <path class="ebg-strand" d={helixStrand(Math.PI)} />
+          {helixRungs.map((rung) => (
+            <line class="ebg-rung" x1={rung.x} y1={rung.y1} x2={rung.x} y2={rung.y2} />
+          ))}
+        </svg>
+      )
+    }
+  </div>
+</div>
+
+<style>
+  /* ------------------------------------------------------------------------
+     The host layer.
+
+     Absolute, not fixed. The old canvas made this argument and it still holds:
+     a viewport-fixed layer stops being a sheet of paper the page sits on and
+     becomes wallpaper the page slides over. `z-index: -1` puts the whole system
+     above the body background and below every word. `overflow: hidden` crops
+     the fragments that deliberately run past the page edge.
+     ------------------------------------------------------------------------ */
+  .editorial-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+
+    /* Two independent dials, multiplied: one says how dense *this page* is, the
+       other how dense *this viewport* is. Keeping them separate is what stops
+       the phone rule from overwriting the page rule — an earlier version tried
+       to derive one from the other with a self-referencing `var()`, which
+       silently resolved to the fallback and gave every mode the same weight. */
+    --ebg-mobile: 1;
+  }
+
+  /* Density is per-mode; weight is per-theme. Nothing here hard-codes a value. */
+  .editorial-bg[data-bg-mode='default'] {
+    --ebg-scale: 1;
+    --ebg-wash-scale: 1;
+  }
+
+  .editorial-bg[data-bg-mode='research'] {
+    --ebg-scale: 1.18;
+    --ebg-wash-scale: 1.1;
+  }
+
+  .editorial-bg[data-bg-mode='about'] {
+    --ebg-scale: 0.94;
+    --ebg-wash-scale: 0.9;
+  }
+
+  .editorial-bg[data-bg-mode='resume'] {
+    --ebg-scale: 0.6;
+    --ebg-wash-scale: 0.62;
+  }
+
+  .editorial-bg[data-bg-mode='minimal'] {
+    --ebg-scale: 0;
+    --ebg-wash-scale: 0.5;
+  }
+
+  /* ── Layer 1 · wash ────────────────────────────────────────────────────── */
+
+  /* Four very low-alpha radials: a cool glow near the top right, a biological
+     one down the left, a second on the right near the end, and a warm grey
+     depth that keeps the far end of the page from being the same colour as the
+     top. §4 is explicit that no coloured patch may become visible; the stops
+     below are the reason none does — every one of them is fully transparent
+     well before the next gradient begins. */
+  .ebg-wash {
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(62% 26% at 80% 2%, var(--bg-blue), transparent 70%),
+      radial-gradient(50% 20% at 3% 27%, var(--bg-green), transparent 72%),
+      radial-gradient(56% 22% at 89% 63%, var(--bg-green), transparent 74%),
+      radial-gradient(86% 28% at 28% 101%, var(--bg-warm), transparent 78%);
+    opacity: var(--ebg-wash-scale);
+  }
+
+  /* ── Layer 2 · texture ─────────────────────────────────────────────────── */
+
+  .ebg-texture {
+    position: absolute;
+    inset: 0;
+    background-image: url('/texture/paper.webp');
+    background-repeat: repeat;
+    background-size: 256px 256px;
+    opacity: var(--bg-texture);
+  }
+
+  /* The tile is black-with-alpha, so on a dark canvas it would simply vanish.
+     Inverting flips the RGB and leaves the alpha alone, which turns the same
+     file into light grain — no second asset, no second request (§7). */
+  [data-theme='night'] .ebg-texture {
+    filter: invert(1);
+  }
+
+  /* ── Layer 3 · fragments ───────────────────────────────────────────────── */
+
+  .ebg-marks {
+    position: absolute;
+    inset: 0;
+  }
+
+  .ebg-group {
+    position: absolute;
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* §13: sparse composition. Top right, left through the middle, right near the
+     end — the three positions the brief names. Percentages are of the document,
+     so a longer page spreads the fragments instead of stacking them. */
+  .ebg-formula {
+    top: 5%;
+    right: 4%;
+    width: min(21rem, 30vw);
+  }
+
+  .ebg-curve {
+    top: 15%;
+    left: -2%;
+    width: min(25rem, 36vw);
+  }
+
+  .ebg-neural {
+    top: 40%;
+    left: 1%;
+    width: min(19rem, 27vw);
+  }
+
+  .ebg-cell {
+    top: 72%;
+    right: 2%;
+    width: min(21rem, 29vw);
+  }
+
+  .ebg-matrix {
+    top: 48%;
+    right: 5%;
+    width: min(13rem, 19vw);
+  }
+
+  .ebg-helix {
+    top: 86%;
+    left: 4%;
+    width: min(24rem, 34vw);
+  }
+
+  /* Weight, one token per group, scaled by the mode. Notation is the lightest
+     thing on the page and biology the heaviest, which is the same hierarchy the
+     artwork uses — the background is a quieter version of the site, not a
+     different one. */
+  .ebg-formula {
+    opacity: calc(var(--bg-mark) * var(--ebg-scale) * var(--ebg-mobile));
+  }
+
+  .ebg-curve,
+  .ebg-neural {
+    opacity: calc(var(--bg-graph) * var(--ebg-scale) * var(--ebg-mobile));
+  }
+
+  .ebg-cell,
+  .ebg-helix {
+    opacity: calc(var(--bg-bio) * var(--ebg-scale) * var(--ebg-mobile));
+  }
+
+  .ebg-matrix {
+    opacity: calc(var(--bg-grid) * var(--ebg-scale) * var(--ebg-mobile));
+  }
+
+  /* Notation is set in the mono face everywhere on this site, and a background
+     fragment is not the exception (§10). */
+  .ebg-formula text {
+    font-family: var(--font-mono);
+    fill: var(--bg-ink);
+  }
+
+  .ebg-curve-line {
+    fill: none;
+    stroke: var(--bg-ink);
+    stroke-width: 1.6;
+  }
+
+  .ebg-curve-axis {
+    fill: none;
+    stroke: var(--bg-ink);
+    stroke-width: 0.8;
+    /* `stroke-opacity` rather than `opacity`: this is a drawing property, not a
+       weight. Every `opacity` in this file is a theme dial, and the gate asserts
+       that none of them is hard-coded. */
+    stroke-opacity: 0.6;
+  }
+
+  .ebg-edge {
+    stroke: var(--bg-ink);
+    stroke-width: 1;
+  }
+
+  .ebg-node {
+    fill: var(--bg-ink);
+  }
+
+  /* The accent is the site's cobalt, never a new colour (§56). */
+  .ebg-accent-fill {
+    fill: var(--bg-accent);
+  }
+
+  .ebg-accent-stroke {
+    stroke: var(--bg-accent);
+  }
+
+  .ebg-contour {
+    fill: none;
+    stroke: var(--bg-bio-ink);
+    stroke-width: 1.5;
+  }
+
+  .ebg-nucleus {
+    fill: none;
+    stroke: var(--bg-bio-ink);
+    stroke-width: 1.1;
+    stroke-opacity: 0.8;
+  }
+
+  .ebg-strand {
+    fill: none;
+    stroke: var(--bg-bio-ink);
+    stroke-width: 1.5;
+  }
+
+  .ebg-rung {
+    stroke: var(--bg-bio-ink);
+    stroke-width: 1;
+    stroke-opacity: 0.85;
+  }
+
+  .ebg-cell-dot {
+    fill: none;
+    stroke: var(--bg-ink);
+    stroke-width: 0.9;
+  }
+
+  .ebg-cell-dot--filled {
+    fill: var(--bg-ink);
+    stroke: none;
+  }
+
+  /* §38/§59: a phone gets the same composition at a lower density rather than a
+     squashed desktop. The marks are the first thing that should give way when
+     the viewport is narrow, because the text needs the room more than the
+     atmosphere does. */
+  @media (max-width: 899px) {
+    .editorial-bg {
+      --ebg-mobile: 0.72;
+    }
+
+    /* Two groups are dropped outright rather than shrunk: the matrix and the
+       curve are wide marks, and at 390px they would sit under the body copy
+       instead of beside it. */
+    .ebg-curve,
+    .ebg-matrix,
+    .ebg-helix {
+      display: none;
+    }
+
+    .ebg-formula {
+      width: 12rem;
+      top: 4%;
+      right: 2%;
+    }
+
+    .ebg-neural {
+      width: 11rem;
+    }
+
+    .ebg-cell {
+      width: 12rem;
+    }
+  }
+
+  /* There is no `prefers-reduced-motion` block here on purpose, and that is a
+     deliberate departure from §58 rather than an omission. This system has no
+     animation, no transition and no scroll effect to suppress (§38), so a rule
+     here would be a no-op that only looks like compliance. The document-level
+     rule in `global.css` already neutralises any transition added anywhere on
+     the site, including inside this layer. */
+</style>

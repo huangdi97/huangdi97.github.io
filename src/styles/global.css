@@ -111,6 +111,32 @@
     --art-node: #151515;
     --art-wash: rgba(21, 21, 21, 0.05);
     --art-glow: rgba(46, 86, 242, 0.06);
+
+    /* Editorial background (v2.2) — the base layer, under everything.
+       §4 and §12 bound every one of these:
+         blue   0.04–0.08   the muted cobalt glow
+         green  0.03–0.06   the biological glow
+         warm   0.02–0.05   warm grey depth at the foot of the page
+         mark   0.025–0.05  notation
+         graph  0.03–0.06   curves and network fragments
+         bio    0.03–0.06   contours and a helix
+         grid   0.02–0.04   matrix fragments
+       Paper sits at the top of each band on purpose: it is the theme this round
+       was reviewed on, and the brief asks for the most comfortable version of
+       it rather than the safest. */
+    --bg-blue: rgba(46, 86, 242, 0.055);
+    --bg-green: rgba(84, 114, 101, 0.042);
+    --bg-warm: rgba(20, 20, 18, 0.035);
+    --bg-texture: 0.038;
+    --bg-mark: 0.045;
+    --bg-graph: 0.056;
+    --bg-bio: 0.052;
+    --bg-grid: 0.032;
+    /* Background-only inks. Neither is a UI colour and neither appears on a
+       link, a border or a button. */
+    --bg-ink: #151515;
+    --bg-accent: #2e56f2;
+    --bg-bio-ink: #547265;
   }
 
   [data-theme='white'] {
@@ -174,6 +200,22 @@
     --art-node: #111111;
     --art-wash: rgba(0, 0, 0, 0.045);
     --art-glow: rgba(46, 86, 242, 0.055);
+
+    /* Editorial background (v2.2). Flat white shows ink fastest, so every dial
+       sits below Paper — but only a step, for the same reason the canvas dials
+       do: pushed further, white stops reading as cleaner and starts reading as
+       emptier than the paper theme. */
+    --bg-blue: rgba(46, 86, 242, 0.04);
+    --bg-green: rgba(84, 117, 106, 0.03);
+    --bg-warm: rgba(0, 0, 0, 0.028);
+    --bg-texture: 0.03;
+    --bg-mark: 0.035;
+    --bg-graph: 0.04;
+    --bg-bio: 0.036;
+    --bg-grid: 0.026;
+    --bg-ink: #111111;
+    --bg-accent: #2e56f2;
+    --bg-bio-ink: #54756a;
   }
 
   [data-theme='night'] {
@@ -240,6 +282,22 @@
     --art-node: #ecece7;
     --art-wash: rgba(110, 139, 255, 0.07);
     --art-glow: rgba(110, 139, 255, 0.1);
+
+    /* Editorial background (v2.2). §6: deep warm graphite, a muted blue, a
+       desaturated green — no neon, no glow. §12 allows the marks a little more
+       here because a dark canvas absorbs ink, but they stay background: the
+       ceiling is 0.08 and the cobalt never becomes a light source. */
+    --bg-blue: rgba(110, 139, 255, 0.07);
+    --bg-green: rgba(143, 174, 159, 0.055);
+    --bg-warm: rgba(255, 255, 255, 0.03);
+    --bg-texture: 0.05;
+    --bg-mark: 0.07;
+    --bg-graph: 0.075;
+    --bg-bio: 0.07;
+    --bg-grid: 0.05;
+    --bg-ink: #ecece7;
+    --bg-accent: #6e8bff;
+    --bg-bio-ink: #8fae9f;
   }
 
   :root {
@@ -302,8 +360,8 @@
   }
 
   body {
-    /* The global scientific canvas is an absolutely positioned child that must
-       span the whole document, not one viewport. That requires body to be the
+    /* The editorial background is an absolutely positioned child that must span
+       the whole document, not one viewport. That requires body to be the
        containing block — without this the layer would resolve against the
        initial containing block and stop after the first screen. */
     position: relative;
@@ -1027,7 +1085,8 @@
   .reveal-trigger,
   .ambient,
   .canvas-field,
-  .global-science {
+  .global-science,
+  .editorial-bg {
     display: none !important;
   }
 

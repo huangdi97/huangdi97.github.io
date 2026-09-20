@@ -11,7 +11,8 @@
     "artwork": "node scripts/generate-home-artwork.mjs",
     "artwork:v2": "node scripts/optimize-home-images.mjs",
     "artwork:pages": "node scripts/build-page-artwork.mjs",
-    "build": "npm run assets && astro build",
+    "texture": "node scripts/build-paper-texture.mjs",
+    "build": "npm run assets && npm run texture && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint .",
@@ -34,6 +35,7 @@
     "qa:shot": "node scripts/qa-shot.mjs",
     "qa:v20p1": "node scripts/qa-v20p1-shots.mjs",
     "qa:v21": "node scripts/qa-v21-shots.mjs",
+    "qa:v22": "node scripts/qa-v22-shots.mjs",
     "qa:canvas": "node scripts/qa-canvas-report.mjs",
     "gate": "npm run lint && npm run typecheck && npm run build && npm run verify && npm run theme && npm run artifacts && npm run science && npm run visual && npm run identity && npm run test",
     "artwork:preview": "node scripts/preview-artwork-crops.mjs"

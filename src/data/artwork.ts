@@ -165,6 +165,44 @@ export const ART_PLACEMENT: Record<string, ArtworkPlacement> = {
 };
 
 /**
+ * How wide each frame actually is, at each breakpoint (§80–§82).
+ *
+ * Written per layout rather than as a blanket `100vw`, because the three
+ * layouts this site uses are genuinely different widths and the difference is
+ * large enough to change which file the browser downloads:
+ *
+ *   hero      one column of the hero grid — 1.08fr of 1.84fr of the shell,
+ *             measured at 632px on the widest breakpoint
+ *   row       the 59fr track of a featured row (homepage)
+ *   entry     one column of the two-column grid on /projects — about 46vw in
+ *             the middle band, which is *narrower* than a homepage row, so the
+ *             two share an asset but not a `sizes`
+ *   band      the /research and /about strip, now capped at 56rem
+ *
+ * The mobile branch is `calc(100vw - 3rem)` rather than `100vw`: the shell
+ * gutters are 1.5rem a side below 768px, and asking for the full viewport would
+ * make a 390px phone fetch the 960px file instead of the 640px one — which is
+ * exactly the waste §23 is about.
+ *
+ * These are layout facts, so they live next to `ART_PLACEMENT` and not in the
+ * image pipeline. The pipeline knows how wide the files are; only the page
+ * knows how wide the hole is.
+ */
+const ROW_SIZES = '(min-width: 1200px) 662px, (min-width: 900px) 59vw, calc(100vw - 3rem)';
+export const ENTRY_SIZES = '(min-width: 1200px) 540px, (min-width: 760px) 46vw, calc(100vw - 3rem)';
+export const BAND_SIZES = '(min-width: 900px) 896px, calc(100vw - 3rem)';
+
+export const ART_SIZES: Record<string, string> = {
+  hero: '(min-width: 1200px) 632px, (min-width: 900px) 52vw, calc(100vw - 3rem)',
+  wennian: ROW_SIZES,
+  hycell: ROW_SIZES,
+  morn: ROW_SIZES,
+  biopulse: ROW_SIZES,
+  research: BAND_SIZES,
+  about: BAND_SIZES,
+};
+
+/**
  * Short alternative text for the raster assets (§50).
  *
  * Deliberately not `ARTWORK_LABELS`: that map is a spoken description of the
