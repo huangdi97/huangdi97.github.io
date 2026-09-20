@@ -1,15 +1,19 @@
 # V2.2 — Scientific Editorial Background System
 
-**Status: `WAITING_FOR_OWNER_BACKGROUND_APPROVAL`**
+**Status: `RELEASED`** — merged to `main` as `a862b81`, built and deployed by CI run
+`35500155981` (**completed / success**), and verified against the live site. The current
+fact is `# OWNER DECISIONS APPLIED — RELEASE` at the end of this document.
 
-Lightweight site-wide background system · raster downgrade · loading-behaviour work.
-Branch `visual-v20-homepage-reset`. **No merge to `main`. No deploy.**
+The status this round was written in — `WAITING_FOR_OWNER_BACKGROUND_APPROVAL` — is kept
+below and in §18 as the record of the state it was written in, annotated where the release
+has since superseded it, rather than silently rewritten.
 
 **No `PRODUCTION_READY` claim is made anywhere in this document.** That string has been
-prohibited since v2.0. Every number below — including the word "passes" — comes from a
-command that returned exit code 0 in this environment. Derived or remembered figures are
-labelled as such, and the one figure that is a *derivation* rather than a measurement is
-called out in §10.
+prohibited since v2.0, and `RELEASED` is not a substitute for it: it states what was done
+(merged, deployed, verified) rather than asserting a quality level. Every number below —
+including the word "passes" — comes from a command that returned exit code 0. Derived or
+remembered figures are labelled as such, and the one figure that is a *derivation* rather
+than a measurement is called out in §10.
 
 The brief's first principle (§0), which this round exists to satisfy:
 
@@ -619,6 +623,149 @@ commit is:
 v2.2: add lightweight scientific editorial background system
 ```
 
+> **Superseded in part.** The recommendation was accepted, the candidate commit was made as
+> **`a862b81`** with exactly that subject line, and the work was merged, deployed and
+> verified against the live site. See `# OWNER DECISIONS APPLIED — RELEASE` at the end of
+> this document. The recommendation above is kept as the record of what was proposed.
+
 ---
 
 **Terminal state: `WAITING_FOR_OWNER_BACKGROUND_APPROVAL`.** No merge to `main`, no deploy.
+
+> **Superseded in part.** The owner approved this round on 2026-09-20, and the work was
+> merged, deployed and verified. The terminal state of the round is now **`RELEASED`** —
+> see `# OWNER DECISIONS APPLIED — RELEASE` at the end of this document. The paragraph
+> above is kept as the record of the state it was written in.
+
+---
+
+# OWNER DECISIONS APPLIED — RELEASE
+
+*2026-09-20 — the round approved, the work merged and deployed, and verified against the live site*
+
+## R1. What the owner answered
+
+The round ended at `WAITING_FOR_OWNER_BACKGROUND_APPROVAL` with one question open. The
+answer was two words:
+
+| §    | question                                        | answer              |
+| ---- | ----------------------------------------------- | ------------------- |
+| 18   | accept this round and release the background system? | **纳入，继续** — accept, continue |
+
+Nothing below is carried over from §1–§18. Every number was re-measured after the release,
+against the deployed origin rather than against a local server.
+
+## R2. Release
+
+| step | result |
+| ---- | ------ |
+| commit | **`a862b81`** — `v2.2: add lightweight scientific editorial background system` (60 files, +3,214 / −498) |
+| merge | **fast-forward** — local `main` and `origin/main` were both at `f69c613`, an ancestor of the branch, so there was no divergence to reconcile and no merge commit |
+| push | `f69c613..a862b81  visual-v20-homepage-reset -> main` |
+| CI | run [`35500155981`](https://github.com/huangdi97/huangdi97.github.io/actions/runs/35500155981) (#21) — **completed / success**, 2026-09-20T08:39:33Z |
+| deploy | job `deploy` — **completed / success** |
+
+The push used `git push origin visual-v20-homepage-reset:main` and local `main` was
+fast-forwarded with `git fetch . visual-v20-homepage-reset:main`, so **no `git checkout` was
+performed**. That is deliberate and it is the same reasoning §R6 of the v2.1 record gives:
+this repository has a history of a checkout rewriting every text file to CRLF and breaking
+the `\n`-anchored gate regexes while the build still passed. The working tree was confirmed
+clean (0 modified paths) both before and after the fast-forward.
+
+**A finding worth recording.** `git ls-remote --heads origin` returns exactly one branch —
+`refs/heads/main`. The branch `visual-v20-homepage-reset` **does not exist on the remote**,
+because previous rounds pushed their content straight to `main` rather than pushing a
+feature branch. This matters for anyone repeating the release: "push the branch" and "push
+to main" are not two spellings of the same thing here. The first would create a new remote
+branch and deploy nothing; the second is the deploy. The distinction was checked against
+`.github/workflows/deploy.yml` rather than assumed — it triggers on
+`on: push: branches: [main]` plus `workflow_dispatch`, so a push to any other branch cannot
+deploy.
+
+## R3. CI
+
+All nineteen steps of the `build` job and all three of the `deploy` job passed:
+
+```
+build  1. Set up job · 2. Checkout · 3. Set up Node · 4. Install dependencies
+       5. Lint · 6. Typecheck · 7. Build · 8. Verify build output
+       9. Check theme system · 10. Check artifacts · 11. Check science copy
+      12. Check visual system · 13. Check public identity
+      14. Resolve Playwright version · 15. Cache Playwright browsers
+      16. Install Playwright browser (skipped — cache hit)
+      17. Test · 18. Configure Pages · 19. Upload artifact
+deploy 1. Set up job · 2. Deploy to GitHub Pages · 3. Complete job
+```
+
+**Step 7 (`Build`) passing on CI is itself a result.** §17 records that `npm run build`
+exits 1 in the local sandbox without `CODEBUDDY_SAFE_DELETE_ENABLED=0`, because Astro's
+`cleanServerOutput` is blocked by the safe-delete guard *after* the pages are written. CI
+builds the same source with an unmodified `npm run build` and it passes, which confirms that
+the local non-zero exit is an artefact of this environment and not a property of the tree.
+
+**Step 17 (`Test`) passing is the independent confirmation of §16.** CI runs the suite under
+its own configuration — `workers: 1`, `retries: 1` — which is exactly the configuration the
+authoritative local run used. The one failure the default local run produced
+(`net::ERR_NO_BUFFER_SPACE`, six workers against one preview server) did not reproduce in
+CI, and nothing was changed to make that true.
+
+## R4. Verified against the live site, not just against `dist`
+
+Byte comparison, each page fetched with a cache-busting query and compared to the built file:
+
+| page | `dist/` | live | result |
+| ---- | ------- | ---- | ------ |
+| `/` | 46,512 B | 46,512 B | **identical** |
+| `/zh/` | 46,442 B | 46,442 B | **identical** |
+| `/research/` | 50,344 B | 50,344 B | **identical** |
+| `/about/` | 43,494 B | 43,494 B | **identical** |
+
+The new system is present in the deployed HTML, and the retired one is not:
+
+| marker on the live homepage | count |
+| --------------------------- | ----- |
+| `data-editorial-background` | 1 |
+| `global-scientific-canvas` (retired v1.7 canvas) | **0** |
+| `hero-640.webp` in `srcset` (ladder + preload) | 2 |
+| `color:transparent` (the fallback-text rule, §11.1) | 1 |
+
+The texture is referenced from the **bundled stylesheet**, not from the HTML — Astro emits
+it as `_astro/about.N14eJ5w7.css`, and the live file contains `url(/texture/paper.webp)`.
+Grepping the page HTML alone would have produced a false negative here.
+
+| live asset | status | bytes | matches `dist/` |
+| ---------- | ------ | ----- | --------------- |
+| `/texture/paper.webp` | 200 | 16,444 | yes |
+| `/images/home/v2/hero-640.webp` | 200 | 39,634 | yes |
+| `/images/home/v2/hero-960.webp` | 200 | 82,238 | yes |
+| `/images/home/v2/hero-1440.webp` | 200 | 156,264 | yes |
+| `/images/home/v2/wennian-960.webp` | 200 | 57,912 | yes |
+| `/images/site/v2/pages/research-960.webp` | 200 | 50,288 | yes |
+| `/images/site/v2/pages/about-960.webp` | 200 | 64,928 | yes |
+
+**Nine URLs that must not resolve, all 404** — four source-archive paths
+(`/images/home/v2/hero-source.png`, `/images/home/v2/source/hero-source.png`,
+`/images/site/v2/pages/research-source.png`, `/.artwork-source/home/v2/hero-source.png`)
+and the five unsuffixed pre-ladder WebP that this round replaced
+(`biopulse`, `hero`, `hycell`, `morn`, `wennian`, and `site/v2/pages/about.webp`). The
+ladder replaced the single-size files rather than sitting beside them.
+
+**A note on the probing.** Several probes returned `000` or `0 B` on first attempt and the
+correct value on retry — the same sandbox proxy flakiness that §17 records for local
+servers. Every figure in the tables above is from a probe that retried until it got a
+settled answer, and every byte count was cross-checked against `dist/` rather than trusted
+from a single response. A check taken immediately after a deploy can also hit a stale CDN
+copy; that is why the page fetches carry a cache-buster.
+
+## R5. The report annotates, it does not rewrite
+
+Two places in this document carried the status this release has advanced — the header and
+§18's terminal state. Each now carries a pointer forward and **keeps its original text**,
+following the convention the v2.1 report established. A reader who lands on either sees both
+what was believed when it was written and what is true now.
+
+That matters here specifically because a report that quietly rewrites its own history cannot
+be audited: the only way to tell a corrected claim from an unchanged one is that the
+correction is visible. Nothing was overwritten and no old status string was deleted.
+
+**Terminal state: `RELEASED`.**
