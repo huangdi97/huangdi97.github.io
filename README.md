@@ -234,8 +234,12 @@ do not paste one into the other.
 `.github/workflows/deploy.yml` runs on every push to `main`:
 
 ```
-install → lint → typecheck → build → verify → upload-pages-artifact → deploy-pages
+install → lint → typecheck → build → verify → theme → artifacts → science
+        → visual → identity → test → configure-pages → upload-pages-artifact → deploy-pages
 ```
+
+Every step before `configure-pages` is blocking: a failing gate or test means no deployment,
+without exception.
 
 Required permissions are minimal:
 
@@ -337,9 +341,10 @@ The accent is cobalt; the background's biological marks add one muted green (`--
 No other hue is introduced anywhere. `scripts/check-theme-system.mjs` enforces the contrast
 ratios and `scripts/check-visual-system.mjs` enforces the background's opacity bands.
 
-Type uses system fonts only (`Inter` → `system-ui` → `PingFang SC` / `Microsoft YaHei`),
-so there is no webfont cost on first paint. Motion is 150–500 ms and fully disabled
-under `prefers-reduced-motion`.
+Type uses system fonts only — the stack leads with `Inter` and `Geist`, ends at `system-ui`,
+and carries `PingFang SC` / `Microsoft YaHei` for Chinese — so there is no webfont cost on
+first paint. Motion is 150–420 ms (`--dur-fast` 150, `--dur-base` 260, `--dur-slow` 420) and
+fully disabled under `prefers-reduced-motion`.
 
 ### The background
 
