@@ -55,15 +55,23 @@ npm run dev          # http://localhost:4321
 | Script | What it does |
 | --- | --- |
 | `npm run dev` | Dev server with HMR |
-| `npm run build` | Regenerate static assets, then build to `dist/` |
+| `npm run build` | `assets` → `texture` → `astro build`, into `dist/` |
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | ESLint over `.ts` / `.astro` |
 | `npm run typecheck` | `astro check` (strict TypeScript diagnostics) |
 | `npm run format` | Prettier write |
 | `npm run check` | `lint` → `typecheck` → `build` |
-| `npm run verify` | `check` → link/asset verification of `dist/` |
-| `npm run test` | Playwright browser tests against `dist/` |
 | `npm run assets` | Regenerate OG images and icons from SVG |
+| `npm run texture` | Regenerate the paper texture → `public/texture/paper.webp` |
+| `npm run artwork:v2` | Homepage artwork → three WebP rungs per slot + size manifest |
+| `npm run artwork:pages` | Inner-page bands → three WebP rungs per slot + size manifest |
+| `npm run artwork:preview` | Render an `object-fit: cover` crop without a full build |
+| `npm run qa:v22` | 30 acceptance frames + `measurements.json` into `.qa-screens/` |
+| `npm run verify` | Link + asset verification over `dist/` |
+| `npm run test` | Playwright browser tests against `dist/` |
+
+The five remaining gates — `theme`, `artifacts`, `science`, `visual`, `identity` — are
+listed under [Quality assurance](#quality-assurance).
 
 ---
 
@@ -74,37 +82,53 @@ npm run build        # → dist/
 npm run preview      # inspect the built site
 ```
 
-`npm run build` first executes `scripts/generate-assets.mjs`, which renders the OG
-images, favicon variants and PWA icons from SVG sources into `public/og/` and the
-site root. Those outputs are committed, so a plain `astro build` in CI is reproducible
-even though the script re-runs locally.
+`npm run build` runs three steps in order: `scripts/generate-assets.mjs` renders the OG
+images, favicon variants and PWA icons from SVG sources into `public/og/` and the site
+root; `scripts/build-paper-texture.mjs` generates the tiling paper texture; then
+`astro build` writes `dist/`.
+
+Both generated sets are committed, so a plain `astro build` in CI is reproducible even
+though the scripts re-run locally. The texture is deterministic — a seeded LCG over a
+fixed lattice — so re-running it yields a byte-identical file, and
+`npm run texture -- --check` verifies the committed one without rewriting it.
 
 ---
 
 ## Project structure
 
 ```
-├── public/
+├── .artwork-source/            Owner's source PNGs — tracked in git, never served
+├── public/                     Copied verbatim into dist/ — everything here is public
 │   ├── og/                     OG images (1200×630), one per route + default
+│   ├── images/                 Published artwork — three WebP rungs per slot
+│   ├── texture/paper.webp      Tiling paper texture (256×256, 16 KB)
 │   ├── favicon.svg             HL monogram
 │   ├── manifest.webmanifest    PWA manifest
 │   ├── robots.txt
 │   └── CNAME                   Published custom domain
 ├── scripts/
 │   ├── generate-assets.mjs     SVG → PNG asset pipeline (@resvg/resvg-js)
-│   └── verify-build.mjs        Link + asset checker over dist/
+│   ├── build-paper-texture.mjs Deterministic seamless noise → paper.webp
+│   ├── optimize-home-images.mjs   Homepage artwork → WebP ladder + manifest
+│   ├── build-page-artwork.mjs     Inner-page bands → WebP ladder + manifest
+│   ├── preview-artwork-crops.mjs  Render an object-fit: cover crop for review
+│   ├── lib/artwork-ladder.mjs  Shared ladder [640, 960, 1440] + stale-rung pruning
+│   ├── verify-build.mjs        Link + asset checker over dist/
+│   └── check-*.mjs             The five remaining gates
 ├── src/
-│   ├── components/             Header, MobileNav, HeroSystem, ProjectCard, …
+│   ├── components/             Header, MobileNav, Artwork, ProjectEntry, …
+│   │   └── visual/             ScientificEditorialBackground — the site-wide background
 │   ├── config/site.ts          Single source of truth for verifiable facts
 │   ├── content/projects/       Content collections: en/ and zh/
-│   ├── data/                   research.ts, resume.ts, oss.ts, how.ts, about.ts
+│   ├── data/                   research, resume, oss, how, about, artwork
 │   ├── i18n/ui.ts              UI string table (en / zh-Hans)
-│   ├── layouts/BaseLayout.astro
+│   ├── layouts/BaseLayout.astro  Mounts the background, emits the one image preload
 │   ├── lib/projects.ts         Collection queries and ordering
+│   ├── lib/artworkAsset.ts     Slot names, variants, srcset — one source of truth
 │   ├── pages/                  English routes (default language)
 │   │   └── zh/                 Chinese routes, mirroring the English tree
 │   └── styles/global.css       Design tokens + typography + primitives
-├── tests/site.spec.ts          Playwright end-to-end checks
+├── tests/                      Playwright specs (site, entries, theme, background)
 └── astro.config.mjs
 ```
 
@@ -231,22 +255,37 @@ Any future domain only requires editing `public/CNAME` — no code changes.
 
 ## Quality assurance
 
-| Check | Command |
-| --- | --- |
-| Lint | `npm run lint` |
-| Types | `npm run typecheck` |
-| Production build | `npm run build` |
-| Dead links / missing assets | `node scripts/verify-build.mjs` |
-| Browser tests | `npm run test` |
+`npm run lint`, `npm run typecheck` and `npm run build` come first, then six gates, then
+the browser suite. All of them are blocking in CI, in this order.
+
+| Gate | Command | What it owns |
+| --- | --- | --- |
+| Verify | `npm run verify` | Dead links, missing assets, both locales present |
+| Theme | `npm run theme` | Three themes; every colour a token; contrast ratios |
+| Artifacts | `npm run artifacts` | Project evidence rendered, never raw |
+| Science | `npm run science` | No overclaims; conceptual notation labelled |
+| Visual | `npm run visual` | The background contract and the raster loading policy |
+| Identity | `npm run identity` | No private contact data; PDF text and metadata |
+| Browser tests | `npm run test` | Playwright — desktop 1440×900 + Pixel 5 |
 
 `scripts/verify-build.mjs` walks every generated HTML file, resolves internal links
 against built routes, checks local asset references exist, and confirms each case
 study is present in both locales.
 
-`tests/site.spec.ts` covers: homepage render, navigation, project listing, case-study
-detail, language switching with path preservation, mobile hamburger menu, resume print
-route, 404 page, external link attributes, no horizontal overflow at 375 px, and
-absence of console errors.
+`scripts/check-visual-system.mjs` is the one to read before touching anything visual. It
+asserts against both source and built HTML: that the retired v1.7 canvas is imported
+nowhere; that the background component carries no script, no animation, no
+`Math.random` and no hard-coded opacity; that every `--bg-*` weight sits inside its
+per-theme band; and the raster loading policy — the expected eager count per page, a
+loading hint plus intrinsic size plus `srcset` on every drawing, at most one image
+preload and only where an eager drawing exists, eager bytes at the largest rung under
+250 KB, and no source file published.
+
+The browser suite covers homepage render, navigation, project listing, case-study detail,
+language switching with path preservation, mobile hamburger menu, resume print route, 404
+page, external link attributes, no horizontal overflow at 375 px, absence of console
+errors, the background layer's inertness and per-theme bands, and the no-image case for
+three pages.
 
 ### Verified viewports
 
@@ -256,20 +295,65 @@ absence of console errors.
 
 ## Design system
 
-Tokens are declared once in `src/styles/global.css`:
+Tokens are declared once in `src/styles/global.css`, per theme, and nothing hard-codes a
+surface — every colour is read from a custom property. Three themes are supported, selected
+by `[data-theme]` on the document element and applied by an inline bootstrap script before
+the first paint, so there is no flash of the wrong theme:
 
-| Token | Value | Use |
-| --- | --- | --- |
-| `--canvas` | `#F7F7F4` | Page background |
-| `--surface` | `#FFFFFF` | Cards |
-| `--ink` | `#111111` | Primary text |
-| `--ink-2` | `#666666` | Secondary text |
-| `--line` | `rgba(0,0,0,0.10)` | Borders |
-| `--accent` | `#315CFF` | Sparse — links, single focal elements |
+| Token | Paper | White | Night | Use |
+| --- | --- | --- | --- | --- |
+| `--canvas` | `#f0eee8` | `#ffffff` | `#111210` | Page background |
+| `--surface` | `#f6f4ee` | `#f7f7f4` | `#161715` | Raised surfaces |
+| `--ink` | `#151515` | `#111111` | `#ecece7` | Primary text |
+| `--muted` | `#5a564e` | `#5f5f5a` | `#a09f98` | Secondary text |
+| `--faint` | `#6e685f` | `#757570` | `#8a8a83` | Tertiary text |
+| `--line` | `rgba(20,20,18,.1)` | `rgba(0,0,0,.1)` | `rgba(255,255,255,.1)` | Borders |
+| `--accent` | `#2e56f2` | `#2e56f2` | `#6e8bff` | Sparse — links, one focal element |
+
+The accent is cobalt; the background's biological marks add one muted green (`--bg-bio-ink`).
+No other hue is introduced anywhere. `scripts/check-theme-system.mjs` enforces the contrast
+ratios and `scripts/check-visual-system.mjs` enforces the background's opacity bands.
 
 Type uses system fonts only (`Inter` → `system-ui` → `PingFang SC` / `Microsoft YaHei`),
 so there is no webfont cost on first paint. Motion is 150–500 ms and fully disabled
 under `prefers-reduced-motion`.
+
+### The background
+
+Every page sits on a three-layer background, mounted once by `BaseLayout` behind the whole
+document (`src/components/visual/ScientificEditorialBackground.astro`):
+
+| Layer | What it is |
+| --- | --- |
+| Wash | Four very low-alpha radial gradients, all read from `--bg-*` tokens |
+| Texture | One 256×256 alpha-only WebP tile, repeated — alpha-only, so Night inverts it rather than shipping a second file |
+| Marks | At most five inline-SVG fragments: notation, a probability curve, a neural fragment, cell contours, a 5×5 matrix, half a helix |
+
+It contains **no JavaScript, no animation and no motion**, is `aria-hidden` with
+`pointer-events: none` and nothing focusable, and is deterministic — no `Math.random`, no
+time. It makes exactly one request: the 16 KB texture. `BaseLayout`'s `backgroundMode` prop
+chooses how dense a page's atmosphere is (`default` / `research` / `about` / `resume` /
+`minimal`); **a mode changes density only — never the palette, never the layout.**
+
+> `GlobalScientificCanvas.astro` and its three composition components are still in
+> `src/components/`, but **nothing imports them and they must not be revived** — they were
+> the v1.7 page-wide canvas, which read as a research poster behind the text and is exactly
+> what this background replaced. `scripts/check-visual-system.mjs` asserts that no source
+> file imports them, and the browser suite asserts their DOM markers never appear on a
+> built page.
+
+### Artwork
+
+Each drawing ships as three WebP rungs — 640 / 960 / 1440 — with `srcset` and a
+layout-specific `sizes`, so a phone fetches the 640 rung and never the 1440 one. The ladder
+never upscales a source. Only a page's own largest-contentful drawing is eager; everything
+else is lazy, and a page emits at most one `<link rel="preload" as="image">`, and only where
+an eager drawing exists. Rungs a slot no longer references are pruned, because `public/` is
+copied into `dist/` verbatim — an unreferenced file there is a published file.
+
+The drawings are enhancements rather than the page's structure: hero, project rows and
+inner-page bands are feathered into the paper with nested masks, and every page is complete
+and readable with images blocked entirely.
 
 ---
 
