@@ -122,7 +122,7 @@ fixed lattice — so re-running it yields a byte-identical file, and
 │   │   └── visual/             ScientificEditorialBackground — the site-wide background
 │   ├── config/site.ts          Single source of truth for verifiable facts
 │   ├── content/projects/       Content collections: en/ and zh/
-│   ├── data/                   research, resume, oss, how, about, artwork
+│   ├── data/                   Page models + fact layer (research, resume, oss, …)
 │   ├── i18n/ui.ts              UI string table (en / zh-Hans)
 │   ├── layouts/BaseLayout.astro  Mounts the background, emits the one image preload
 │   ├── lib/projects.ts         Collection queries and ordering
@@ -268,15 +268,15 @@ Any future domain only requires editing `public/CNAME` — no code changes.
 `npm run lint`, `npm run typecheck` and `npm run build` come first, then six gates, then
 the browser suite. All of them are blocking in CI, in this order.
 
-| Gate          | Command             | What it owns                                            |
-| ------------- | ------------------- | ------------------------------------------------------- |
-| Verify        | `npm run verify`    | Dead links, missing assets, both locales present        |
-| Theme         | `npm run theme`     | Three themes; every colour a token; contrast ratios     |
-| Artifacts     | `npm run artifacts` | The evidence table is kept but rendered nowhere          |
-| Science       | `npm run science`   | No overclaims; conceptual notation labelled             |
-| Visual        | `npm run visual`    | The background contract and the raster loading policy   |
-| Identity      | `npm run identity`  | No private contact data; PDF text and metadata          |
-| Browser tests | `npm run test`      | Playwright — desktop 1440×900 + Pixel 5                 |
+| Gate          | Command             | What it owns                                          |
+| ------------- | ------------------- | ----------------------------------------------------- |
+| Verify        | `npm run verify`    | Dead links, missing assets, both locales present      |
+| Theme         | `npm run theme`     | Three themes; every colour a token; contrast ratios   |
+| Artifacts     | `npm run artifacts` | The evidence table is kept but rendered nowhere       |
+| Science       | `npm run science`   | No overclaims; conceptual notation labelled           |
+| Visual        | `npm run visual`    | The background contract and the raster loading policy |
+| Identity      | `npm run identity`  | No private contact data; PDF text and metadata        |
+| Browser tests | `npm run test`      | Playwright — desktop 1440×900 + Pixel 5               |
 
 `scripts/verify-build.mjs` walks every generated HTML file, resolves internal links
 against built routes, checks local asset references exist, and confirms each case
@@ -342,11 +342,11 @@ document (`src/components/visual/ScientificEditorialBackground.astro`). Four is 
 — there is no fifth layer, no blur, no `backdrop-filter`, no repeating gradient and no second
 raster:
 
-| Layer | What it is                                                                                                           |
-| ----- | -------------------------------------------------------------------------------------------------------------------- |
-| A     | `--canvas`, the theme's warm paper                                                                                   |
-| B     | Three radial gradients at **fixed `rem` radii**, all read from `--bg-*` tokens                                       |
-| C     | One **128×128** alpha-only WebP tile, repeated — alpha-only, so Night inverts it rather than shipping a second file  |
+| Layer | What it is                                                                                                                              |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| A     | `--canvas`, the theme's warm paper                                                                                                      |
+| B     | Three radial gradients at **fixed `rem` radii**, all read from `--bg-*` tokens                                                          |
+| C     | One **128×128** alpha-only WebP tile, repeated — alpha-only, so Night inverts it rather than shipping a second file                     |
 | D     | Two to four inline-SVG groups: a three-line notation note, a probability curve, a neural fragment, cell contours, a ruled-grid fragment |
 
 Layer B is sized in `rem` rather than percentages on purpose. A percentage-sized ellipse on a
@@ -363,7 +363,7 @@ It makes exactly one request: the 6.5 KB texture.
 reserved) / `minimal` (0, used by the 404). A variant carries its own mark set and its own
 placement, not only a multiplier: **a variant changes density and composition — never the
 palette, never the layout.** Two dials multiply and stay independent — `--ebg-scale` (this
-page) × `--ebg-mobile` (this viewport, 0.7 below 900 px) — and below 900 px a page also *hides*
+page) × `--ebg-mobile` (this viewport, 0.7 below 900 px) — and below 900 px a page also _hides_
 groups rather than shrinking them, because a mark shrunk to fit is still a mark competing with
 the text.
 
