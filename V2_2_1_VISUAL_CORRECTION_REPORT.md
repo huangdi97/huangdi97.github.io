@@ -4,6 +4,12 @@
 **Base:** `baa716a` (v2.2, released) → working tree, 31 files changed, +1670 / −1149.
 **Terminal state:** `WAITING_FOR_OWNER_VISUAL_APPROVAL`. Nothing merged, nothing deployed.
 
+> **Released.** The owner approved on 2026-09-20 and this round was merged and
+> deployed. The line above is left as written; the release record — commit,
+> CI run, and the byte-level live verification — is in
+> **"Owner decision applied — release"** at the end of this report. Current
+> state: **`RELEASED`**.
+
 > **Superseded in part.** The header's `31 files changed, +1670 / −1149` was
 > measured when this report was written (19:36). Two files were edited after it
 > — `README.md` (19:45) and `src/content.config.ts` (19:46) — so the working
@@ -698,3 +704,101 @@ Playwright delta of §14.2 (327 / 5 / 0) is real.
 Not established, and not claimed: anything visual. This verification says the
 gate stack agrees with the report. Whether the correction is *right* is the
 owner's judgement, and that is what the terminal state is waiting on.
+
+---
+
+# Owner decision applied — release
+
+The owner was asked, with the verification above in hand, and answered
+**"批准并发布"** (approve and release). The round was then merged and deployed.
+Every number below is from a command that ran.
+
+## R1. What the owner approved
+
+Not a re-review of the report's claims — those had already been re-measured
+independently (previous section). The approval was the visual judgement the
+terminal state was holding for, and it also lifted the repository's standing
+prohibition on merging to `main` and deploying.
+
+## R2. Commit and merge
+
+```
+b980d63  v2.2.1: scientific editorial visual correction
+         35 files changed, 2852 insertions(+), 1202 deletions(-)
+         create V2_2_1_VISUAL_CORRECTION_REPORT.md
+         create scripts/qa-v221-shots.mjs
+```
+
+Pushed with a ref-to-ref push, so the working tree was never checked out:
+
+```
+$ git push origin visual-v20-homepage-reset:main
+   ef6c797..b980d63  visual-v20-homepage-reset -> main
+$ git fetch . visual-v20-homepage-reset:main
+   ef6c797..b980d63  visual-v20-homepage-reset -> main
+```
+
+`local main` = `remote main` = `HEAD` = `b980d63`, working tree 0 modified
+before and after. No `git checkout` was used: this repository has a documented
+CRLF trap in which `checkout` rewrites every text file and the `\n`-anchored
+gate regexes fail while the build still passes.
+
+## R3. CI
+
+Run **`35509100236`** — **completed / success**, **26 steps, 0 non-success**
+(step 16 `Install Playwright browser` skipped: cache hit).
+
+All thirteen gate steps passed on CI: Lint, Typecheck, Build, Verify build
+output, Check theme system, Check artifacts, Check science copy, Check visual
+system, Check public identity, then Test, Configure Pages, Upload artifact, and
+the `deploy` job's `Deploy to GitHub Pages`.
+
+That `Build` passes on CI with an unmodified `npm run build` is itself a
+result: locally that command exits 1 because Astro's `cleanServerOutput` is
+stopped by the sandbox's safe-delete guard *after* the pages are written. CI
+proves the non-zero local exit is an artifact of this environment, not a
+property of the tree.
+
+## R4. Live verification
+
+All six routes are **byte-identical** to `dist/`. Fetched with cache-busters
+and retried; the sandbox proxy truncates responses intermittently, so a single
+response was never trusted.
+
+| route | live | `dist/` |
+| --- | --- | --- |
+| `/` | 46,001 | 46,001 |
+| `/zh/` | 45,931 | 45,931 |
+| `/research/` | 48,438 | 48,438 |
+| `/projects/` | 47,043 | 47,043 |
+| `/about/` | 42,115 | 42,115 |
+| `/resume/` | 44,151 | 44,151 |
+
+Published assets, same method:
+
+| asset | live | `dist/` |
+| --- | --- | --- |
+| `/texture/paper.webp` | 6,622 | 6,622 |
+| `/images/home/v2/hero-640.webp` | 39,634 | 39,634 |
+| `/images/home/v2/hero-960.webp` | 82,238 | 82,238 |
+| `/images/home/v2/hero-1440.webp` | 156,264 | 156,264 |
+
+`hero-1440.webp` needs a note, because it first looked like a CDN mismatch.
+Five GETs returned `0`, `156264`, `156264`, `156264`, `113995` — three complete,
+two truncated mid-transfer. A `HEAD` settled it: `Content-Length: 156264`,
+`Content-Type: image/webp`, `Last-Modified: Sun, 20 Sep 2026 11:56:25 GMT`
+(the deploy). **The file is correct; the short reads were the proxy, not the
+CDN.** The texture is now 6,622 B, down from v2.2's 16,444 B.
+
+Homepage markers: `data-editorial-background` 1 · `global-scientific-canvas` 0
+· `entry-intro` 0 · `hero-640.webp` 2 · `color:transparent` 1. The retired
+canvas has not been revived and the retired surface has not returned.
+
+Six URLs that must not resolve were checked and all return **404**:
+`/images/home/v2/hero-source.png`, `/images/home/v2/wennian-source.png`,
+`/images/home/v2/README.md`, `/images/site/v2/pages/research-source.png`,
+`/images/home/v2/hero.webp`, `/images/home/v2/wennian.webp`.
+
+## R5. State
+
+**`RELEASED`.** `main` = `b980d63`. Nothing about this round is pending.
