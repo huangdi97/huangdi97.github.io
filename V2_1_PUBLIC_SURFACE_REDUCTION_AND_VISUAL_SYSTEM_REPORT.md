@@ -1320,3 +1320,215 @@ across 20 page/locale/viewport combinations · 10 source URLs 404 · 9 productio
 the band feather should be loosened (§18.4), and the sitewide release approval itself.
 No merge, no deploy, no production-ready claim.
 
+---
+
+# OWNER DECISIONS APPLIED — RELEASE
+
+*2026-09-20 — the three open questions answered, the work re-verified, and the release shipped*
+
+The owner answered §18.1, §18.4 and §19 in three words:
+
+| §    | question                                   | answer                |
+| ---- | ------------------------------------------ | --------------------- |
+| 18.1 | track `.artwork-source/` in git?           | **纳入** — yes        |
+| 18.4 | loosen the band's right-edge feather?      | **放松** — yes        |
+| 19   | the sitewide release approval              | **批准** — approved   |
+
+Nothing below is carried over from §1–§19. Every number was re-measured after the changes,
+because two of the three decisions changed source that the earlier numbers were taken on.
+
+## R1. `.artwork-source/` is tracked
+
+8 files · **16,785,060 B = 16.01 MiB**, largest single file 2,533,743 B — comfortably under
+GitHub's per-file limit, so no Git LFS and no partial archive.
+
+| file                                    | bytes     |
+| --------------------------------------- | --------- |
+| `home/v2/biopulse-source.png`           | 2,533,743 |
+| `home/v2/hero-source.png`               | 2,527,367 |
+| `home/v2/hycell-source.png`             | 2,454,061 |
+| `site/v2/pages/about-source.png`        | 2,416,596 |
+| `home/v2/wennian-source.png`            | 2,412,969 |
+| `site/v2/pages/research-source.png`     | 2,333,006 |
+| `home/v2/morn-source.png`               | 2,102,800 |
+| `README.md`                             | 4,518     |
+
+The README gained a **Version control** section that states the distinction explicitly: the
+archive is kept out of `public/` so it is never *served*, not so that it is lost. A clone
+that cannot find the sources cannot regenerate a single `.webp`. Nothing under
+`.artwork-source/` is reachable over HTTP; the deployable output is `public/**/*.webp`.
+
+Its `artwork:preview` example was also corrected — it still pointed at `.qa-art/`, the
+directory §18.7 retired.
+
+## R2. The band's right-edge feather: 91% → 96.5%
+
+"Loosen it" turned out to be worth more than a preference once it was measured.
+
+Column-wise ink profiling of the two served assets, expressed as each column's standard
+deviation over that image's peak column deviation:
+
+| asset           | 100% (last col) | 99%  | 97%      | 95%  | 91%  |
+| --------------- | --------------- | ---- | -------- | ---- | ---- |
+| `research.webp` | 31.8            | 35.0 | 52.4     | 59.5 | 78.3 |
+| `about.webp`    | **91.9**        | 94.5 | **100.0**| 85.7 | 86.5 |
+
+`about.webp`'s **final column is 91.9% of the image's peak deviation, and its single
+strongest column in the whole image is at 97%** — the right edge *is* content (the book
+stack, the stone). A 9% ramp there was fading real subject, which is precisely what read as
+a washed-out right side. `research.webp` is quieter at the very edge (31.8%) but reaches
+52.4% only 3% in.
+
+The left edge is the opposite and stays wide: first ink sits at 45.3% (research) and 29.1%
+(about), so the left 9% ramps across nothing but the artwork's own blank paper. **The two
+edges are deliberately asymmetric, and the asymmetry is measured, not aesthetic.**
+
+The chosen value is **96.5%** — a 3.5% ramp. That is not a new number: the hero has used
+`#000 96.5%` on its right edge since v2.0-P1, for the same stated reason (the artwork's own
+paper ground is warmer than the canvas, so the frame otherwise ends on a visible vertical
+step). The band now matches an already-validated precedent instead of carrying a wider ramp
+that nobody had measured.
+
+Confirmed on screen rather than assumed: `about-top-1440-zh.png` and `research-top-1440-zh.png`
+now show the book stack, stone, plant, DNA helix and protein ribbon at full contrast, and
+`about-band-390-zh.png` shows the same on a phone. Nothing else about the frame moved — the
+vertical 13% feather, the left 9%, and both mobile crops are untouched. No gate or test
+asserts on the feather value (checked), so this change is presentation-only.
+
+## R3. Re-verification on the changed source
+
+| check                                             | result |
+| ------------------------------------------------- | ------ |
+| `npm run lint`                                    | exit 0 |
+| `npm run typecheck`                               | exit 0 · **101 files** · 0 errors / 0 warnings / 0 hints |
+| `CODEBUDDY_SAFE_DELETE_ENABLED=0 npm run build`   | exit 0 · 26 pages · **61 files** · 0 `.mjs` residue |
+| `npm run verify`                                  | exit 0 · 61 files · 26 pages · 638 internal links · 22 local assets |
+| `npm run theme`                                   | exit 0 · 1030 checks · 66 source files · night artifact room ink 14.29:1, muted 6.38:1 |
+| `npm run artifacts`                               | exit 0 · 155 checks · 5 entries · 3 rendered · **0 raw bodies**, both locales |
+| `npm run science`                                 | exit 0 · 1861 checks · 106 files scanned · 26 pages |
+| `npm run visual`                                  | exit 0 · 590 checks |
+| `npm run identity`                                | exit 0 · 408 assertions · 2 résumé PDFs · 26 pages |
+| `npx playwright test`                             | exit 0 · **296 passed / 8 skipped / 0 failed** |
+| source URLs (10)                                  | **10 / 10 → 404** |
+| production assets (9)                             | **9 / 9 → 200** |
+| `npm run qa:v21`                                  | exit 0 · **32 frames**, bands measured at 1088×680 `8/5 @ 100% 50%` and 342×257 `4/3 @ 84%`, 342×228 `3/2 @ 90%` |
+| `find dist -ipath "*source*"`                     | **empty** |
+
+The built HTML carries the new value — `mask-image:linear-gradient(to right,transparent
+0%,#000 9%,#000 96.5%,transparent 100%)` is present in `dist/research/index.html` and
+`dist/about/index.html` (inlined `<style>`, not an external stylesheet).
+
+### One number changed, and it is explained rather than waved away
+
+§16 recorded typecheck at **108 files**; this round measures **101**. The difference is
+exactly the seven root-level scratch files (`_font.mjs`, `_font2.mjs`, `_font3.mjs`,
+`_render-art.mjs`, `_t.mjs`, `_v15_shots.mjs`, `_v20_detail.mjs`) that §18.7 moved into the
+gitignored `.qa-screens/retired/`. `astro check` does not walk that directory, so the check
+surface legitimately shrank by seven: 101 + 7 = 108. No source file was added or removed.
+
+## R4. A flaky test was found and fixed, not retried away
+
+The first full-suite run after the source changes reported **295 passed / 1 failed**:
+
+```
+[mobile] theme.spec.ts:85:3 › theme switching ›
+         switching theme costs no navigation and no network request
+Expected  - Array []
+Received  + Array [ "/images/home/v2/wennian.webp", "/images/home/v2/hycell.webp",
+                    "/images/home/v2/morn.webp",   "/images/home/v2/biopulse.webp" ]
+```
+
+The four requests are the homepage's project images, and they are all `loading="lazy"`.
+`visit()` waits for `load`, and **`load` does not wait for lazy images** — so under
+full-suite load they can still be in flight when the listener is installed. A lazy image
+finishing is not the theme switch costing a request, so the test was measuring the wrong
+thing.
+
+It was diagnosed before being touched: 4/4 passes in isolation, and the failure is
+load-dependent. The fix settles in-flight loads with `waitForLoadState('networkidle')`
+before the listener goes on; **the assertion itself is unchanged**. Verified: 4/4 isolated,
+then a full-suite run at exit 0, 296 passed / 8 skipped / 0 failed.
+
+This is a pre-existing race, not something the feather change introduced — the homepage and
+its images were not touched this round.
+
+## R5. Local checks now cover the same files as CI
+
+`eslint.config.mjs` and `tsconfig.json` gained a `.qa-screens/**` exclusion. ESLint's flat
+config does not read `.gitignore`, so the retired scratch and the local review frames were
+being linted locally while being invisible to CI — meaning a gitignored scratch file could
+have failed the local gate without ever failing the pipeline. The two surfaces now match.
+
+## R6. Working copy normalised to LF
+
+Six files (`scripts/check-visual-system.mjs`, `scripts/generate-home-artwork.mjs`,
+`src/components/Artwork.astro`, `src/i18n/ui.ts`, `src/styles/global.css`,
+`tests/site.spec.ts`) held CRLF in the working copy while `.gitattributes` stores LF. That
+means the bytes CI receives were never the bytes that had been verified locally. They were
+normalised to LF, and **lint, typecheck, build, all six gates and the full Playwright suite
+were then re-run on that normalised form** — §R3's numbers are from the LF tree, which is
+what CI builds.
+
+## R7. Release
+
+| step | result |
+| ---- | ------ |
+| commit | **`066e104`** — `v2.1: finalize public portfolio surface and visual system` |
+| merge | fast-forward — `main` (7420f53) was an ancestor of the branch, and `git ls-remote` confirmed the remote was still at 7420f53, so there was no divergence to reconcile and no merge commit |
+| push | `7420f53..066e104  visual-v20-homepage-reset -> main` |
+| CI | run [`35493198924`](https://github.com/huangdi97/huangdi97.github.io/actions/runs/35493198924) — **completed / success**, 2026-09-20T06:04:55Z |
+
+CI's thirteen quality steps all passed — `npm ci`, lint, typecheck, build, verify, theme,
+artifacts, science, visual, identity, Playwright — and Pages deployed. That is the
+independent confirmation of §R6: **the LF tree is the tree that passes in CI.**
+
+`main` gained two commits: `865a169` (v2.0-P0) and `066e104` (this release). The lineage was
+kept rather than squashed — it is the real history, and rewriting it was not asked for.
+
+The push was made with `git push origin visual-v20-homepage-reset:main` and local `main` was
+fast-forwarded with `git fetch . visual-v20-homepage-reset:main`, so **no `git checkout` was
+performed**. That is deliberate: this repository has a recorded history of a checkout
+rewriting every text file to CRLF and breaking the `\n`-anchored gate regexes while the build
+still passed.
+
+The deploy workflow runs eleven blocking steps — `npm ci` → lint → typecheck → build →
+verify → theme → artifacts → science → visual → identity → test → Pages — and deploys only
+if all eleven pass. A failing test means no deployment, without exception.
+
+### Verified against the live site, not just against `dist`
+
+| check | result |
+| ----- | ------ |
+| `https://haoleilab.com/research/` vs local `dist/research/index.html` | **byte-identical** — 58,356 B, `cmp` clean |
+| band mask on the live page | `transparent 0%,#000 9%,#000 96.5%` |
+| live `<img>` | `src="/images/site/v2/pages/research.webp"` with the §25 English alt, `loading="eager"`, `fetchpriority="high"` |
+| source URLs (10) | **10 / 10 → 404** |
+| production assets (9) | **9 / 9 → 200** (7 WebP + 2 résumé PDFs) |
+
+One note for whoever repeats this: the first fetch of `/research/` returned a **stale CDN
+copy** (30,316 B, no `<img>`, the pre-release build). The same URL with a cache-busting query
+returned the current page, and the origin's `Last-Modified` was `2026-09-20T06:04:49Z`. A
+plain-URL check taken immediately after a deploy can therefore be misleading; compare bytes
+against `dist/` rather than trusting one response.
+
+## R8. Final state
+
+**`RELEASED`** — merged to `main`, pushed, built by CI, and live at `https://haoleilab.com`
+from `066e104`.
+
+The owner's two artworks are in place as the real rasters for `/research` and `/about`, each
+cropped for desktop and for a phone separately. Nothing that is not served is published any
+more. `/projects` carries 17.2% evidence instead of 44.3%, with a gate and a test holding it
+there. The résumé's two PDFs are present, linked, served and clean. The sources are
+archived, tracked, and outside the public surface.
+
+**Verified locally on the LF tree that CI builds:** lint 0 · typecheck 101 files 0/0/0 ·
+clean build exit 0 (61 files, 26 pages) · six gates exit 0 · Playwright 296 passed / 8
+skipped / 0 failed · 32 QA frames.
+
+**Verified in CI:** run `35493198924`, completed / success.
+
+**Verified on the live site:** `/research/` byte-identical to `dist/research/index.html`
+(58,356 B) · 10 source URLs 404 · 9 production assets 200 · the new 96.5% band mask and the
+raster `<img>` present in the served HTML.
+
