@@ -136,15 +136,21 @@ fixed lattice — so re-running it yields a byte-identical file, and
 
 ### Routes
 
-| Route                                                                        | zh counterpart        |
-| ---------------------------------------------------------------------------- | --------------------- |
-| `/`                                                                          | `/zh/`                |
-| `/projects`                                                                  | `/zh/projects`        |
-| `/projects/wennian` · `hycell` · `taiyi-lingjing` · `pet-ai-health` · `pdig` | `/zh/projects/<slug>` |
-| `/research`                                                                  | `/zh/research`        |
-| `/about`                                                                     | `/zh/about`           |
-| `/resume`                                                                    | `/zh/resume`          |
-| `/404`                                                                       | `/zh/404`             |
+| Route              | zh counterpart        |
+| ------------------ | --------------------- |
+| `/`                | `/zh/`                |
+| `/projects`        | `/zh/projects`        |
+| `/projects/<slug>` | `/zh/projects/<slug>` |
+| `/research`        | `/zh/research`        |
+| `/about`           | `/zh/about`           |
+| `/resume`          | `/zh/resume`          |
+| `/404`             | `/zh/404`             |
+
+Seven slugs exist: `biopulse`, `hycell`, `morn`, `pdig`, `pet-ai-health`, `taiyi-lingjing` and
+`wennian`. Four of them — `biopulse`, `hycell`, `morn`, `wennian` — are `featured: true`, and
+those four are what the `/projects` index lists. The other three are `featured: false`: their
+pages are live and reachable from `/research` and from the next-project link on other case
+pages, but the index does not list them.
 
 ---
 
@@ -167,7 +173,7 @@ summary: 'One sentence, no adjectives that cost nothing.'
 description: 'Two sentences: what it is, and how much is public today.' # SEO + case page
 publicLine: 'What the project is, at the level of the whole project.' # the /projects line
 tags: ['Aging clock', 'Agents', 'Digital twin']
-featured: true
+featured: true # listed on /projects; false = live page, not listed
 order: 1
 role: 'Design & implementation'
 visual: 'aging-state' # which case-study diagram to draw
