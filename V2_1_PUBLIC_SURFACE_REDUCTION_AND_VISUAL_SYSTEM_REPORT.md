@@ -1,9 +1,17 @@
 # V2.1 — Site-wide Public Surface Reduction & Inner-page Visual System
 
-**Status: `WAITING_FOR_OWNER_SITEWIDE_APPROVAL`**
+**Status: `RELEASED`** — merged to `main` as `066e104` (the release) and `02ecc59` (this
+report), built and deployed by CI, and live at `https://haoleilab.com`. The current fact is
+`# OWNER DECISIONS APPLIED — RELEASE` at the end of this document.
 
-Not a release. Nothing has been merged to `main`, nothing has been deployed, and
-no claim of production readiness is made anywhere in this document.
+Each round's status line is kept as the record of the state it was written in —
+`WAITING_FOR_OWNER_SITEWIDE_APPROVAL` for the v2.1 round, `WAITING_FOR_OWNER_RELEASE_APPROVAL`
+for the final closure — and annotated where it has since been superseded, rather than
+silently rewritten.
+
+**No `PRODUCTION_READY` claim is made anywhere in this document.** That string has been
+prohibited since v2.0, and `RELEASED` is not a substitute for it: it states what was done
+(merged, deployed, verified) rather than asserting a quality level.
 
 This round did not add content. It took the site from *an R&D document set* to
 *a public portfolio*: it removed the explanations of **how** the work is done and
@@ -805,6 +813,10 @@ survive any such change.
 
 ## 12. 最终状态
 
+> **Superseded.** This was the v2.1 round's terminal state; the round after it
+> (`# FINAL CLOSURE`) advanced it to `WAITING_FOR_OWNER_RELEASE_APPROVAL`, and the owner's
+> approval then advanced it to **`RELEASED`**. Kept as the record of this round.
+
 **`WAITING_FOR_OWNER_SITEWIDE_APPROVAL`**
 
 The site now reads as a public portfolio rather than a runnable R&D document set.
@@ -843,6 +855,11 @@ The round stops here.
 # FINAL CLOSURE
 
 *2026-09-20 — root artwork intake · Research / About final integration · pre-release cleanup*
+
+> **Superseded in part by `# OWNER DECISIONS APPLIED — RELEASE` below.** This section was
+> written while the release was still awaiting approval; the owner then approved it, and the
+> two questions it left open (§18.1 tracking, §18.4 feather) were answered. Where this
+> section disagrees with the release section, the release section is the current fact.
 
 **Terminal state: `WAITING_FOR_OWNER_RELEASE_APPROVAL`.** No merge to `main`, no deploy,
 no candidate commit. The working tree is the candidate. Where this section disagrees with
@@ -1264,6 +1281,13 @@ was skipped to make a failure disappear — every skip is the existing desktop/m
 
 ## 18. Known issues
 
+> **Two of these were closed by the release round below.** Items **1** and **4** were the
+> owner's open questions and were answered — the archive is now tracked, and the feather is
+> now 96.5% rather than 91% — so both are resolved in `# OWNER DECISIONS APPLIED — RELEASE`.
+> Item **2** is also closed: the candidate commit was created and released as `066e104`.
+> Items **3**, **5**, **6** and **7** still stand. The text below is kept as the record of
+> what this round knew, not rewritten to match what happened next.
+
 1. **`.artwork-source/` is untracked, and that is now a 17 MB decision.** The archive holds
    4,749,602 B of page sources and 12,030,940 B of homepage sources. It is deliberately not
    gitignored, so it stays visible in `git status` rather than disappearing; whether to
@@ -1298,6 +1322,12 @@ was skipped to make a failure disappear — every skip is the existing desktop/m
    on disk.
 
 ## 19. Final state
+
+> **Superseded by `# OWNER DECISIONS APPLIED — RELEASE` below.** The owner approved the
+> release on 2026-09-20, so this round's terminal state advanced from
+> `WAITING_FOR_OWNER_RELEASE_APPROVAL` to **`RELEASED`**: merged to `main`, pushed, CI green,
+> and live. The three questions named at the end of this section were all answered. Read the
+> section below as the current fact.
 
 **`WAITING_FOR_OWNER_RELEASE_APPROVAL`**
 
@@ -1510,6 +1540,17 @@ copy** (30,316 B, no `<img>`, the pre-release build). The same URL with a cache-
 returned the current page, and the origin's `Last-Modified` was `2026-09-20T06:04:49Z`. A
 plain-URL check taken immediately after a deploy can therefore be misleading; compare bytes
 against `dist/` rather than trusting one response.
+
+### The report annotates, it does not rewrite
+
+Four places in this document carried a status that this release has since advanced — the
+document header, §12's terminal state, the `# FINAL CLOSURE` header, and §19. Each now
+carries a pointer forward and **keeps its original text**, following the convention §11
+already used. A reader who lands on any of them sees both what was believed when it was
+written and what is true now; nothing was silently overwritten, and no old status string was
+deleted. That matters here specifically because a report that quietly rewrites its own
+history cannot be audited — the only way to tell a corrected claim from an unchanged one is
+that the correction is visible.
 
 ## R8. Final state
 
