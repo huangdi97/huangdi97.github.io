@@ -1,91 +1,88 @@
-# VERIFIED RESUME DATA REQUIRED
+# RESUME DATA — STATUS
 
-This file lists exactly what must be supplied before the Education section —
-and any other identity record — appears on haoleilab.com.
+> **The filename is historical.** This file was written on 2026-09-17 as a list of
+> the fields that had to be supplied before the résumé could publish an Education
+> section. Every one of those fields has since been supplied and is live. The
+> file is kept because §2 records the contact decisions and §4 records the
+> standing disclosure policy — both are still in force.
+>
+> Reconciled against source and build output on 2026-09-20.
 
-Nothing on the site is inferred. Until a value is supplied, the corresponding
-section is **absent from the page**, not replaced by a placeholder that speaks
-to the visitor.
-
-Status as of 2026-09-17: **no verified education record has been supplied.**
-The Education section is therefore not rendered on `/resume/` or `/zh/resume/`.
+Nothing on the site is inferred. A value that has not been supplied is **absent
+from the page**, never replaced by a placeholder that speaks to the visitor.
 
 ---
 
-## 1. Education — required fields
+## 1. Supplied and published
 
-Minimum viable entry, per institution:
+### Education — `src/data/education.ts` → `EDUCATION: EducationEntry[]`
 
-| Field | Why it is required | Example format |
-| --- | --- | --- |
-| Official institution name | The diploma name, not a colloquial one | `Tsinghua University` / `清华大学` |
-| Degree type | Master / Bachelor / PhD / non-degree | `Master of Engineering` |
-| Major or field | Needed to make the degree meaningful | `Computer Science and Technology` |
-| Enrolment date | Year-month minimum | `2019-09` |
-| Graduation date (or expected) | Year-month minimum | `2022-06` |
-| City, country | Disambiguates same-named institutions | `Beijing, China` |
+Two entries, both published in full:
 
-Optional, only if verifiable:
+| Institution                                     | Degree                                                                           | Period              | Location                              |
+| ----------------------------------------------- | -------------------------------------------------------------------------------- | ------------------- | ------------------------------------- |
+| Dalian Medical University · 大连医科大学        | Master of Science (M.S.) in Zoology · 理学硕士 · 动物学                          | Aug 2023 — Jun 2026 | Dalian, Liaoning, China · 辽宁 · 大连 |
+| Taiyuan University of Technology · 太原理工大学 | Bachelor of Engineering (B.Eng.) in Biological Engineering · 工学学士 · 生物工程 | Sep 2016 — Jul 2020 | Taiyuan, Shanxi, China · 山西 · 太原  |
 
-- Thesis or dissertation title
-- GPA / ranking — only if a document supports it
-- Supervisor name — only with their consent
-- Honours, scholarships — only with awarding body and year
+The master's record also carries an optional research-focus block (focus areas
+and methods).
 
-For the master's degree specifically, also confirm:
+Deliberately **not** published: 211 designation, rankings, promotional
+institutional titles, CET-6, GPA, class rank, supervisor names. Education is a
+record of study, not a prospectus.
 
-- Whether the programme is full-time or part-time
-- Whether it is a professional degree (e.g. M.Eng) or an academic one (M.Sc)
+### Employment — `src/data/experience.ts`
 
-For the undergraduate degree, if you want it listed, supply the same seven
-fields. If you do not want it listed, say so explicitly — omission by choice is
-different from omission by default.
+Published in full. `scripts/check-public-identity.mjs` asserts the employer names
+are present on both language pages, so this cannot silently regress.
 
-## 2. Work and internship history
+### Résumé PDFs — `src/config/site.ts` → `SITE.resumePdfs`
 
-Same standard applies. For each role:
+Two generated files, both present in `public/resume/` and linked from both
+language pages:
 
-1. Official employer name
-2. Job title
-3. Start and end dates (year-month)
-4. Employment type (full-time / intern / contract)
-5. City
-6. Three to five outcome statements, each tied to something checkable
-   (a shipped system, a measurable result, a public artifact)
+| id               | path                                           |
+| ---------------- | ---------------------------------------------- |
+| `ai-agent`       | `/resume/Hao-Lei-AI-Agent-Resume-ZH.pdf`       |
+| `ai-lifescience` | `/resume/Hao-Lei-AI-LifeScience-Resume-ZH.pdf` |
 
-Avoid duty lists. "Responsible for X" is not evidence. "Shipped X, which did Y"
-is.
+`availableResumePdfs()` filters the list through `existsSync` at build time, so a
+download button is only ever emitted for a file that actually exists — the site
+cannot ship a 404 download.
 
-## 3. Identity and contact
+To add one: drop the file in `public/resume/` and add an entry to
+`SITE.resumePdfs`. No page-template change is required.
 
-| Item | Current state | Action |
-| --- | --- | --- |
-| Name (Latin) | `Hao Lei` — in use | Confirm or correct |
-| Name (Chinese) | `郝磊` — in use | Confirm or correct |
-| Email | `304418554@qq.com` — published in the WenNian README | Confirm it is the address you want public |
-| City | not shown anywhere | Supply if you want it listed |
-| Phone | **not collected, not shown** | Only add on explicit instruction |
-| LinkedIn | none listed | Supply a real profile URL if you want it linked |
-| Google Scholar / ORCID | none listed | Supply if a real profile exists |
+⚠️ **Earlier revisions of this file were wrong here.** They described a single
+`SITE.resumePdf` (singular) that was `null`, with a "Print / Save as PDF" button
+as the only affordance. That field does not exist; the plural array replaced it,
+and both files are real.
 
-Default stance: phone is not published. It is added only when you say so in
-writing.
+## 2. Still open — contact decisions
 
-## 4. Resume PDF
+Not gaps that block release. Each item is absent by default and is added only on
+explicit instruction.
 
-`SITE.resumePdf` in `src/config/site.ts` is `null`.
+| Item                   | Current state                                         | Action                                          |
+| ---------------------- | ----------------------------------------------------- | ----------------------------------------------- |
+| Name (Latin)           | `Hao Lei` — published                                 | Confirm or correct                              |
+| Name (Chinese)         | `郝磊` — published                                    | Confirm or correct                              |
+| Email                  | `h30441854@gmail.com`, `304418554@qq.com` — published | Confirm these are the addresses you want public |
+| City of residence      | not shown anywhere                                    | Supply if you want it listed                    |
+| Phone                  | **not collected, not shown**                          | Added only on written instruction               |
+| LinkedIn               | none listed                                           | Supply a real profile URL if you want it linked |
+| Google Scholar / ORCID | none listed                                           | Supply if a real profile exists                 |
 
-- The `/resume/` page shows **Print / Save as PDF**, which prints the same DOM
-  that is on screen. Screen and paper cannot drift.
-- A "Download PDF" button appears automatically the moment `resumePdf` points at
-  a real file. No other change is needed.
-- Do not fill this with an auto-generated file: a PDF that differs from the
-  printed page would break the consistency guarantee the page makes.
+Not public by policy (`src/config/site.ts`): the 163 address used for doctoral
+applications, and the mobile number printed on the private job-application PDFs.
+Neither appears in source copy, JSON-LD, OG metadata or any published PDF.
 
-To wire it up: drop the file in `public/` (e.g. `public/resume.pdf`) and set
-`resumePdf: '/resume.pdf'`.
+## 3. How to supply
 
-## 5. What will never be invented
+Reply with the values in plain text, one per line. Contact values are edited in
+`src/config/site.ts`; identity records in `src/data/`.
+
+## 4. What will never be invented
 
 Regardless of what is or is not supplied, the following are not written from
 inference:
@@ -96,28 +93,3 @@ inference:
 - Metrics of any kind
 - City of residence
 - Any statement about clinical, regulatory or commercial validation
-
-## 6. How to supply
-
-Reply with the values in plain text, one per line, or edit
-`src/data/resume.ts` → `EDUCATION` directly:
-
-```ts
-export const EDUCATION: { en: ResumeItem[]; zh: ResumeItem[] } = {
-  en: [
-    {
-      label: 'Master of Engineering, Computer Science and Technology',
-      value: 'Tsinghua University · Beijing, China · 2019-09 – 2022-06',
-    },
-  ],
-  zh: [
-    {
-      label: '工学硕士，计算机科学与技术',
-      value: '清华大学 · 中国北京 · 2019-09 – 2022-06',
-    },
-  ],
-};
-```
-
-The Education section appears in both languages as soon as the array is
-non-empty. No page template changes are required.
