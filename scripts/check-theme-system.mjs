@@ -56,16 +56,9 @@ const REQUIRED_TOKENS = [
   'dg-dot',
   'dg-grid',
   'diagram-line',
-  'formula-opacity',
-  'grid-opacity',
-  /* Global scientific canvas (v1.7). Five weights — major contour, biological
-     network, notation, ticks, and the AI accent — plus the background-only
-     biological ink, which must never be a UI colour. */
-  'science-major',
-  'science-bio',
-  'science-formula',
-  'science-grid',
-  'science-accent',
+  /* Background-only ink for the retired v1.7 canvas. Nothing renders the canvas,
+     but the five compositions are kept in `src/components/` as a record, and the
+     `var()` references in that record still have to resolve. */
   'science-bio-ink',
   /* Editorial artwork ink (v2.0). The five drawings in `src/assets/home/` are
      painted with these, so a theme that forgets one renders a drawing with a

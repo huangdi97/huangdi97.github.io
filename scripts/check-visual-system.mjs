@@ -172,6 +172,16 @@ for (const page of caseStudyPages) {
  * owner's rasters. What *is* enforced is that it is off: nothing under `src/`
  * imports it, and no built page mounts it. If either check ever goes green
  * again, the site has quietly gone back to the route §1 forbids.
+ *
+ * v2.2.3 removed what those drawings were *painted with*, without touching the
+ * drawings: the `.global-science` / `.sci-*` rules, `@keyframes sci-drift` and
+ * the five `--science-*` weight tokens that only those rules consumed are gone
+ * from `global.css`. They had been shipping in the published stylesheet, because
+ * Tailwind's content scan found the class names in these retained files and so
+ * kept their `@layer components` rules alive. Re-importing a composition
+ * therefore also means restoring its styling. `--science-bio-ink` is kept — the
+ * compositions still reference it, and `check-theme-system.mjs` still requires
+ * it, so the record stays resolvable.
  */
 const RETIRED = [
   ['GlobalScientificCanvas', CANVAS],
