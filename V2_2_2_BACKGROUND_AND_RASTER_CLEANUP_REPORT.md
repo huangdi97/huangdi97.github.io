@@ -5,6 +5,10 @@
 (+26 / −34: eight source and gate files for the two items, plus `README.md`).
 **Terminal state:** `WAITING_FOR_OWNER_VISUAL_APPROVAL`. Nothing committed, nothing deployed.
 
+> **Superseded in part — see §7.** The owner approved on 2026-09-20 and the round
+> was released as `897cbbf`. The header above is kept as written; the current
+> state is `RELEASED`.
+
 The brief was explicit about the boundary, and it held: no redesign, no page
 refactor, no new section, no artwork regenerated, no project fact or public
 status touched. Two items only.
@@ -188,3 +192,61 @@ if the grain token came back, and the visual gate would fail if an accent page
 started preloading or loading eagerly again.
 
 **State: `WAITING_FOR_OWNER_VISUAL_APPROVAL`.**
+
+---
+
+## 7. Owner decision applied — released
+
+**Released 2026-09-20.** The owner approved, and the round went out on the
+standing path: commit, push to `main` by ref, CI, then a byte-level check of the
+live site.
+
+| item | value |
+| --- | --- |
+| commit | `897cbbf` — 10 files, +216 / −34 (nine modified, plus this report) |
+| push | `455e0b2..897cbbf` → `main`, by ref; local `main` fast-forwarded, no checkout |
+| CI | **`35511950421`** completed / success — 26 steps, 0 non-success (1 skipped: Playwright browser cache hit) |
+| live | `haoleilab.com` updated |
+
+### Live verification
+
+Every route is compared against `dist/` by the `Content-Length` from `HEAD`, not
+by a single `GET` — the proxy truncated several reads this round, and a
+`GET`-only check would have produced false `DIFF`s.
+
+| route | live | dist |
+| --- | --- | --- |
+| `/` | 46,001 | 46,001 |
+| `/zh/` | 45,931 | 45,931 |
+| `/research/` | 48,107 | 48,107 |
+| `/zh/research/` | 47,888 | 47,888 |
+| `/projects/` | 47,043 | 47,043 |
+| `/about/` | 41,796 | 41,796 |
+| `/zh/about/` | 41,513 | 41,513 |
+| `/resume/` | 44,151 | 44,151 |
+
+**The two items, confirmed on the live site rather than assumed from the build:**
+
+* The live stylesheet is now `about.CGhUF7vN.css` (38,724 B; the hash changed
+  from v2.2.1's `DbKRxH47`, which is itself evidence the CSS really changed). It
+  contains **0** occurrences of `feTurbulence` and **1** of `texture/paper.webp`.
+  The double grain is gone in production and Layer C is intact.
+* `/research/` and `/about/` each emit **0** image preloads, and their accent
+  `<img>` carries `loading="lazy" fetchpriority="auto"` — character-for-character
+  the same tag as `dist/`. The two home pages still emit exactly **1** preload,
+  with the hero eager.
+
+Also re-checked and unchanged: the paper texture is 6,622 B; the four artwork
+rungs match `dist` byte-for-byte (39,634 / 156,264 / 108,188 / 134,096); the six
+URLs that must not resolve all return **404**; and the homepage carries no
+`global-scientific-canvas` and no `entry-intro`.
+
+### Terminal state
+
+`RELEASED`. `main` = `897cbbf`, working tree clean.
+
+> A note on reading the live checks: this round the proxy truncated
+> `hero-1440.webp`, the `/research/` page, the stylesheet, and several `HEAD`
+> responses. Each was re-tested and resolved to an exact match. **A truncated
+> read is not a stale deploy**, and the way to tell the two apart is `HEAD`'s
+> `Content-Length` plus a retry — never a single `GET`.
