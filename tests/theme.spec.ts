@@ -86,6 +86,14 @@ test.describe('theme switching', () => {
     await visit(page, '/zh/');
     const url = page.url();
 
+    // Let in-flight loads drain before measuring. The homepage's four project
+    // images are `loading="lazy"`, and `load` — which `visit()` waits for — does
+    // not wait for them. Under a full-suite run they can therefore still be
+    // arriving when the listener goes on, and a lazy image finishing is not the
+    // theme switch costing a request. Settling first is what makes this assertion
+    // measure the switch itself; the assertion below is unchanged.
+    await page.waitForLoadState('networkidle');
+
     const requests: string[] = [];
     page.on('request', (request) => requests.push(request.url()));
 

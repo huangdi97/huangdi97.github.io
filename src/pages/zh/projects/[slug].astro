@@ -1,16 +1,41 @@
 ---
+/**
+ * Project page (Chinese) — v2.1, a public case study.
+ *
+ * What changed. The page used to be a build report: a breadcrumb, a category
+ * eyebrow, the meta block, a conceptual figure, a sticky sidebar with a table of
+ * contents, an architecture diagram and a tag list, the full Markdown body with
+ * ten to thirteen sections, the implementation-status matrix, and a next-project
+ * link. Every part was true; together they documented how the system is built
+ * and where it is going, which is internal design rather than public surface.
+ *
+ * v2.1 (§15–§21) keeps six questions and stops:
+ *
+ *   What it is · Why it matters · Current public status ·
+ *   What is publicly available · Notes
+ *
+ * — authored in the project's own Markdown, so the page cannot grow a section
+ * nobody decided to publish. Around it the page keeps exactly three things:
+ *
+ *   · the meta block, which states year, status, role, stack and the two
+ *     evidence facts (public code, reality) — §16.3;
+ *   · the conceptual figure, which is this page type's one drawing and the only
+ *     place a formula may be the subject;
+ *   · the implementation-status matrix, which is the evidence layer rendered —
+ *     §16.3 and §16.5, and the reason the page can claim what it claims.
+ *
+ * Removed: the table of contents, the architecture diagram, the tag list and the
+ * links sidebar (its links are already the header actions). The page is now a
+ * single column, because a case study is read in order.
+ */
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ProjectScientificVisual from '../../../components/ProjectScientificVisual.astro';
 import ProjectMeta from '../../../components/ProjectMeta.astro';
-import ArchitectureDiagram from '../../../components/ArchitectureDiagram.astro';
 import ProjectReality from '../../../components/ProjectReality.astro';
-import Tag from '../../../components/Tag.astro';
-import CaseContents from '../../../components/CaseContents.astro';
 import { SITE } from '../../../config/site';
 import { useT } from '../../../i18n/ui';
 import { projectsHref, projectHref, nextProject, getProjects } from '../../../lib/projects';
-import { getArchitecture } from '../../../data/architecture';
 import { getProjectEvidence } from '../../../data/evidence';
 
 export async function getStaticPaths() {
@@ -30,7 +55,7 @@ const all = await getProjects(lang);
 const entry = all.find((e) => e.data.slug === slug);
 if (!entry) throw new Error(`Unknown project: ${slug}`);
 
-const { Content, headings } = await render(entry);
+const { Content } = await render(entry);
 const d = entry.data;
 const upNext = nextProject(all, d.slug);
 
@@ -38,7 +63,6 @@ const path = `/zh/projects/${d.slug}/`;
 const enPath = `/projects/${d.slug}/`;
 const zhPath = path;
 
-const steps = getArchitecture(d.slug, lang);
 const evidence = getProjectEvidence(d.slug);
 
 const ld: Record<string, unknown>[] = [
@@ -75,7 +99,7 @@ const ld: Record<string, unknown>[] = [
 <BaseLayout
   title={d.title}
   seoTitle={d.seoTitle}
-  description={d.summary}
+  description={d.description}
   lang={lang}
   path={path}
   enPath={enPath}
@@ -93,7 +117,7 @@ const ld: Record<string, unknown>[] = [
     </nav>
 
     <header class="case-head">
-      <p class="eyebrow">{d.category}</p>
+      <p class="eyebrow">{t('case.eyebrow')}</p>
       <h1 class="h1 case-title">{d.title}</h1>
       {d.subtitle && <p class="case-subtitle">{d.subtitle}</p>}
       <p class="case-thesis">{d.summary}</p>
@@ -131,6 +155,13 @@ const ld: Record<string, unknown>[] = [
           )
         }
         {
+          !d.repo && (
+            <span class="case-no-repo">
+              {t('work.repo')} — {t('project.noRepo')}
+            </span>
+          )
+        }
+        {
           d.demo && (
             <a href={d.demo} class="btn btn-outline" target="_blank" rel="noopener noreferrer">
               Demo
@@ -153,79 +184,11 @@ const ld: Record<string, unknown>[] = [
       <ProjectScientificVisual variant={d.visual} label={`${d.title} — ${d.category}`} />
     </div>
 
-    <div class="case-grid">
-      <div class="prose-editorial case-prose">
-        <Content />
-      </div>
-
-      <aside class="case-aside">
-        <CaseContents headings={headings} lang={lang} />
-
-        {
-          steps.length > 0 && (
-            <section class="aside-block">
-              <ArchitectureDiagram steps={steps} title="架构" />
-            </section>
-          )
-        }
-
-        <section class="aside-block">
-          <p class="eyebrow">{t('project.links')}</p>
-          <ul class="aside-links">
-            {
-              d.repo && (
-                <li>
-                  <a href={d.repo} class="link-arrow" target="_blank" rel="noopener noreferrer">
-                    {t('work.repo')}
-                    <span class="arrow" aria-hidden="true">
-                      ↗
-                    </span>
-                  </a>
-                </li>
-              )
-            }
-            {
-              !d.repo && (
-                <li class="aside-muted">
-                  {t('work.repo')} — {t('project.noRepo')}
-                </li>
-              )
-            }
-            {
-              d.demo && (
-                <li>
-                  <a href={d.demo} class="link-arrow" target="_blank" rel="noopener noreferrer">
-                    Demo
-                    <span class="arrow" aria-hidden="true">
-                      ↗
-                    </span>
-                  </a>
-                </li>
-              )
-            }
-          </ul>
-        </section>
-
-        {
-          d.tags.length > 0 && (
-            <section class="aside-block">
-              <p class="eyebrow">Tags</p>
-              <ul class="aside-tags">
-                {d.tags.map((tag) => (
-                  <li>
-                    <Tag text={tag} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )
-        }
-      </aside>
+    <div class="prose-editorial case-prose">
+      <Content />
     </div>
 
-    {
-      evidence && <ProjectReality evidence={evidence} lang={lang} idPrefix={d.slug} />
-    }
+    {evidence && <ProjectReality evidence={evidence} lang={lang} idPrefix={d.slug} />}
 
     {
       upNext && (
@@ -295,8 +258,18 @@ const ld: Record<string, unknown>[] = [
   .case-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
     margin-top: 2rem;
+  }
+
+  /* §16.4: a project with no repository says so in the same place a project with
+     one shows its link, rather than quietly omitting the row. */
+  .case-no-repo {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--faint);
   }
 
   .case-visual {
@@ -307,58 +280,11 @@ const ld: Record<string, unknown>[] = [
     padding: clamp(0.75rem, 2vw, 1.5rem);
   }
 
-  .case-grid {
-    display: grid;
-    gap: 3rem;
+  /* A case study is read in order, so the body is one column. 68ch is the
+     measure the rest of the site's prose uses. */
+  .case-prose {
+    max-width: 68ch;
     margin-top: clamp(2.5rem, 5vw, 4rem);
-  }
-
-  @media (min-width: 1024px) {
-    .case-grid {
-      grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
-      gap: 5rem;
-      align-items: start;
-    }
-
-    .case-aside {
-      position: sticky;
-      top: calc(var(--header-h) + 2rem);
-    }
-  }
-
-  .case-aside {
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
-  }
-
-  .aside-block {
-    border-top: 1px solid var(--line);
-    padding-top: 1.25rem;
-  }
-
-  .aside-links {
-    list-style: none;
-    margin: 1rem 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .aside-muted {
-    margin-top: 1rem;
-    font-size: 0.875rem;
-    color: var(--faint);
-  }
-
-  .aside-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.375rem;
-    list-style: none;
-    margin: 1rem 0 0;
-    padding: 0;
   }
 
   .case-next {
@@ -434,6 +360,29 @@ const ld: Record<string, unknown>[] = [
     background: rgba(0, 0, 0, 0.045);
     padding: 0.1em 0.35em;
     border-radius: 2px;
+  }
+
+  .case-prose :global(ul) {
+    margin-block: 1rem;
+    padding-left: 1.25rem;
+    list-style: none;
+  }
+
+  .case-prose :global(ul li) {
+    position: relative;
+    margin-bottom: 0.6rem;
+    color: var(--muted);
+    line-height: 1.72;
+  }
+
+  .case-prose :global(ul li)::before {
+    content: '';
+    position: absolute;
+    left: -1.25rem;
+    top: 0.78em;
+    width: 10px;
+    height: 1px;
+    background: var(--ink);
   }
 
   .case-prose :global(ol) {

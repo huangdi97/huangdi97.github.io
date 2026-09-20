@@ -8,175 +8,44 @@ status: 'Active'
 category: 'Agent Runtime · Distributed Systems · Rust'
 summary: 'A domain-neutral control plane for governed work, durable execution and safe evolution.'
 description: >-
-  A Rust workspace that treats work itself as governed state: a stable semantic
-  kernel, an append-only ledger, a governed action gateway with graded effect
-  classes, and a two-node durable runtime. Four product surfaces, a Tauri
-  desktop shell and a scripted full verification run are public.
+  Morn is a local-first desktop experiment in letting AI collaborate, plan and
+  execute work on the user’s own machine. It ships as a public repository you
+  can build and inspect yourself.
+publicLine: 'A local-first AI desktop system experiment'
 tags: ['Rust', 'Control Plane', 'Durable Runtime', 'Governance', 'Desktop']
 featured: true
 order: 3
 repo: 'https://github.com/huangdi97/morn'
 role: 'System design, architecture and engineering'
-groups: ['agents', 'infrastructure']
 visual: 'agent-dag'
 statusNote: 'Public Rust workspace. The README reports v1.0.0-rc.1 with local GA complete; this site quotes that status and does not re-run the suite.'
 stack: ['Rust', 'axum', 'React / Vite', 'Tauri v2', 'SQLite']
-coverType: 'Local-first Multi-Agent Desktop System'
-coverDescription: >-
-  Composes Model, Tool, Prompt, Memory and an Agent Runtime into local intelligent workflows you orchestrate yourself.
-coverCapabilities: ['Agent Runtime', 'DAG', 'Tools', 'Memory', 'Providers', 'Desktop']
-coverStatus: 'Distributed runtime'
-coverStatusSecondary: 'Desktop application'
-coverVisualHint: 'agent-dag'
 ---
 
-## Overview
+## What it is
 
-Morn is a work and organisation control plane: a domain-neutral kernel for
-governed work, actors, artifacts, outcomes, evolution and distributed durable
-execution.
+Morn is a local-first AI desktop system experiment: it lets AI collaborate, plan and execute work on the user's own machine.
 
-The repository README describes the current state as **v1.0.0-rc.1, local GA
-complete**. Four product surfaces — Workbench, Studio, Console and Hub — sit on
-one axum backend with one React / Vite front end, joined by a Tauri v2 desktop
-shell and a developer CLI.
+It is a Rust workspace with an axum backend, a React / Vite frontend, a Tauri v2 desktop shell and a developer command-line tool.
 
-How to read this page: behavioural claims come from the public repository, and
-every number is quoted from the README rather than from a run this site
-performed. No pass rate is asserted.
+## Why it matters
 
-## Problem
+Once software can act on its own, the interesting questions stop being about what it can do and start being about which effects are reversible, who approved them, and what still holds after a node dies mid-run.
 
-Most workflow and project tools store the same thing twice: the record of what
-was decided, and the record of what actually happened. They drift apart, and
-nothing in the system notices.
+Morn puts those questions inside the write path rather than in a log viewer added afterwards.
 
-"Durable agent execution" makes this worse rather than better. Once software can
-take actions on its own, the interesting question is no longer what it can do —
-it is which effects are reversible, who approved them, and what remains true if
-a node dies halfway through.
+## Current public status
 
-Three requirements follow, and they are not separable:
+Public Rust workspace. The repository README reports v1.0.0-rc.1 with local GA complete.
 
-- A **canonical state change** must be distinguishable from a derived view. A
-  runtime that can write canonical state directly can also destroy it silently.
-- An **irreversible effect** must be gated differently from a reversible one.
-  Uniform permission models either block everything or permit too much.
-- A **checkpoint** must survive a node failure, or the work restarts from an
-  unclear point and produces duplicate effects.
+This site cites that state and does not re-run the test suite, so it claims no pass rate.
 
-## Why It Matters
+## What is publicly available
 
-Agent and automation products tend to solve this with a log viewer bolted on
-afterwards. That records what happened but does not constrain what is allowed to
-happen.
+- The `morn` repository — Rust, Tauri v2 and React.
+- The full acceptance entry point, `scripts/run_all.ps1`: formatting, linting, Rust tests, frontend checks, desktop build and UI / E2E smoke.
+- Two external blockers stated in the README: a real harness smoke run needs real credentials, and a real data pilot needs a lawful dataset. Both are recorded as blocked rather than passed.
 
-If the constraint lives in the write path instead, three properties become
-structural rather than aspirational: claims are auditable because actions pass a
-single gateway; interruptions are recoverable because leasing and checkpoints
-are part of the runtime; and change is reversible because promotion creates a
-new version plus a rollback point instead of editing production.
+## Notes
 
-## Product / Research Thesis
-
-1. **Semantics must be un-redefinable.** Kernel primitives are fixed; plugins
-   extend the surface, never the meaning.
-2. **Effect class, not role, governs writes.** How hard an effect is to undo is
-   a better authorisation boundary than who is asking.
-3. **Durability is a storage problem and a coordination problem.** Checkpointing
-   without leasing only removes one of the two failure modes.
-4. **Domain neutrality is a test.** Starting and running with zero domain packs
-   proves the core carries no accidental domain assumptions.
-
-## System Design
-
-Canonical state changes flow through one path:
-
-```text
-Proposal → Schema → Domain → Policy → Approval / Simulation
-        → Action Gateway → Commit → Verify → Ledger / Outcome
-```
-
-Runtimes and providers sit behind stable contracts and cannot commit canonical
-world state directly. Effects are graded: E0 read-only through E3 irreversible,
-with approval required for E3 and a compensation plan required for E2.
-
-## Architecture
-
-**Semantic kernel** (`morn-kernel`) — identity, workspace, policy, approval,
-append-only ledger and versioned contracts.
-
-**Operational world** (`morn-world`) — objects, relations, events, state
-snapshots, state diffs and outcomes behind the governed gateway.
-
-**Work and organisation** (`morn-work`, `morn-organization`, `morn-actor`) —
-work packages, acceptance specs, durable runtimes, role slots, members and
-actors, with representation contracts held as data.
-
-**Evolution** (`morn-evolution`, `morn-foundry`, `morn-assurance`) —
-candidate / branch / evaluation / promotion separated from production, plus a
-solution compiler, certification and rollback points.
-
-**Capability fabric** (`morn-capability`, `morn-harness`, `morn-runtime`,
-`morn-integration`) — replaceable providers, runtimes and connectors; connectors
-write only through governed tokens.
-
-**Node and process** (`morn-node`, `morn-process`) — two-node claim, checkpoint,
-lease, failover and dedupe.
-
-**Domain SDK** (`morn-domain-sdk`, `morn-package`) — install, enable, disable,
-upgrade and uninstall for domain packs with preserved history.
-
-## Core Capabilities
-
-**Governed action gateway.** Four effect classes with different gates, so the
-cost of an action determines the friction required to take it.
-
-**Immutable artifacts.** Edits create new versions with lineage; old versions
-stay readable.
-
-**Non-mutating promotion.** A new version and a rollback point replace the old
-one — production is never edited in place.
-
-**Two-node durable execution.** Claim, checkpoint, lease, failover and dedupe
-across two nodes.
-
-**Zero-domain start.** The core boots with no domain pack installed; the
-reference `biolab-reference` pack is separate and feature-gated.
-
-## Technical Decisions
-
-**22 crates, ordered by dependency.** kernel → world / work → capability → app.
-The ordering is a compile-time statement about what is allowed to depend on
-what.
-
-**Domain packs are installed, never imported.** Domain knowledge enters through
-the public SDK, so the kernel cannot absorb domain assumptions by accident.
-
-**One verification script.** `scripts/run_all.ps1` covers fmt, clippy, Rust
-tests, front-end checks, the desktop build and UI / E2E smokes — acceptance is
-scripted rather than described.
-
-**Blockers recorded instead of hidden.** Two known external blockers are written
-into the README: a real DeepSeek harness smoke needs real credentials, and a
-real BioLab data pilot needs a lawful dataset. Both are reported as blocked, not
-as passing.
-
-## Current Status
-
-Public Rust workspace, twenty-two crates, four product surfaces, a Tauri v2
-desktop shell and a developer CLI. `scripts/run_all.ps1` is the documented full
-verification path.
-
-The README reports v1.0.0-rc.1 with local GA complete, and 218+ Rust tests with
-none ignored. This site did not run that suite, so no pass rate is claimed.
-
-Two items remain blocked for reasons outside the repository, and are listed as
-blockers rather than quietly omitted.
-
-## Next
-
-- Resolve the two recorded blockers with real credentials and a lawful dataset,
-  or keep them marked as blocked.
-- Extend the two-node runtime contract beyond two nodes and publish what breaks.
-- Move pack lifecycle changes behind the same evidence trail as work actions.
+The behavioural claims on this page come from the public repository, and every figure is quoted from the README rather than produced here.

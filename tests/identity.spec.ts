@@ -180,7 +180,7 @@ test.describe('naming', () => {
 
   test('repository URL and slug stay stable across the rename', async ({ page }) => {
     await visit(page, '/projects/wennian/');
-    const repo = page.getByRole('complementary').getByRole('link', { name: 'Repository' });
+    const repo = page.locator('.case-actions').getByRole('link', { name: 'Repository' });
     await expect(repo).toHaveAttribute('href', 'https://github.com/huangdi97/WenNian');
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',

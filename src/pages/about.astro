@@ -1,25 +1,29 @@
 ---
 /**
- * About (English) — v1.6.
+ * About (English) — v2.1, an introduction rather than a method statement.
  *
- * This page is where the homepage's biography went. The condensed five-node
- * path (life science → wet lab → computational biology → AI systems → agents)
- * is rendered here, above the phase-by-phase detail. See the Chinese mirror.
+ * See the Chinese mirror for the full argument. v1.6 ran this page as a
+ * statement of working method — a six-card technique grid, a "How I work"
+ * section rendering the six-stage process rail, and an expanded background
+ * chain (§29–§33).
+ *
+ * v2.1 keeps: who this is, a page artwork band, five one-line directions, a
+ * single lead sentence and the five-node path rail, scope, and contact.
+ * Removed: the method grid, the "How I work" stages and their process rail,
+ * the design-philosophy paragraph, and the portrait branch (`SITE.portrait` is
+ * still null, so it rendered nothing, and the page now has a visual of its own).
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Timeline from '../components/Timeline.astro';
 import BackgroundTimeline from '../components/BackgroundTimeline.astro';
 import ContactLinks from '../components/ContactLinks.astro';
+import Artwork from '../components/Artwork.astro';
+import { ARTWORK_LABELS, ART_ALT } from '../data/artwork';
 import { SITE } from '../config/site';
-import { useT } from '../i18n/ui';
 import { getAbout } from '../data/about';
-import { getHow } from '../data/how';
 import { profilePageJsonLd } from '../data/profile';
 
 const lang = 'en' as const;
-const t = useT(lang);
 const about = getAbout(lang);
-const how = getHow(lang);
 
 const path = '/about/';
 const enPath = '/about/';
@@ -41,32 +45,16 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
   jsonLd={profileLd}
 >
   <article class="shell section">
-    <div class:list={['about-top', SITE.portrait && 'about-top-with-portrait']}>
-      <header class="about-head">
-        <p class="eyebrow">About</p>
-        <h1 class="display about-name">HAO LEI</h1>
-        <p class="about-headline">{about.headline}</p>
-      </header>
+    <header class="about-head">
+      <p class="eyebrow">About</p>
+      <h1 class="display about-name">HAO LEI</h1>
+      <p class="about-headline">{about.headline}</p>
+    </header>
 
-      {
-        /*
-         * Portrait slot. Rendered only when SITE.portrait points at a real
-         * image. With no photograph the page keeps its text-only layout —
-         * nothing here invents a face.
-         */
-        SITE.portrait && (
-          <figure class="about-portrait">
-            <img
-              src={SITE.portrait}
-              width="480"
-              height="600"
-              alt={t('about.portraitAlt')}
-              loading="lazy"
-              decoding="async"
-            />
-          </figure>
-        )
-      }
+    <!-- Page artwork: the same paper and ink as the homepage, without the
+         hero's profile and without a product screen. -->
+    <div class="about-band">
+      <Artwork name="about" label={ARTWORK_LABELS.about[lang]} alt={ART_ALT.about[lang]} />
     </div>
 
     <div class="about-intro">
@@ -75,15 +63,8 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
 
     <section class="about-section">
       <h2 class="h2">{about.focusTitle}</h2>
-      <ul class="focus-grid">
-        {
-          about.focus.map((item) => (
-            <li class="focus-item">
-              <h3 class="focus-title">{item.title}</h3>
-              <p class="focus-body">{item.body}</p>
-            </li>
-          ))
-        }
+      <ul class="focus-list">
+        {about.focus.map((item) => <li>{item}</li>)}
       </ul>
     </section>
 
@@ -93,25 +74,6 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
 
       <div class="about-path">
         <BackgroundTimeline lang={lang} />
-      </div>
-
-      <ol class="background-chain">
-        {
-          about.background.map((step) => (
-            <li class="background-step">
-              <p class="background-step-title">{step.title}</p>
-              <p class="background-step-body">{step.body}</p>
-            </li>
-          ))
-        }
-      </ol>
-    </section>
-
-    <section class="about-section">
-      <h2 class="h2">{about.approachTitle}</h2>
-      <p class="lead about-section-lead">{about.approachIntro}</p>
-      <div class="about-timeline">
-        <Timeline steps={how} />
       </div>
     </section>
 
@@ -133,33 +95,6 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
 </BaseLayout>
 
 <style>
-  .about-top {
-    display: grid;
-    gap: clamp(1.5rem, 3vw, 2.5rem);
-    align-items: end;
-  }
-
-  @media (min-width: 900px) {
-    .about-top-with-portrait {
-      grid-template-columns: minmax(0, 1fr) 260px;
-      gap: 3rem;
-    }
-  }
-
-  .about-portrait {
-    margin: 0;
-    border: 1px solid var(--line);
-    border-radius: 3px;
-    overflow: hidden;
-    background: var(--card);
-  }
-
-  .about-portrait img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
   .about-head {
     max-width: 44ch;
   }
@@ -174,6 +109,10 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
     line-height: 1.32;
     letter-spacing: -0.026em;
     max-width: 28ch;
+  }
+
+  .about-band {
+    margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
   }
 
   .about-intro {
@@ -200,49 +139,36 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
     margin-top: 1rem;
   }
 
-  .focus-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.75rem 3rem;
+  /* Five one-line directions, not six method cards. */
+  .focus-list {
     list-style: none;
-    margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+    margin: clamp(1.5rem, 3vw, 2rem) 0 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    max-width: 68ch;
   }
 
-  @media (min-width: 700px) {
-    .focus-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 1100px) {
-    .focus-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  .focus-item {
-    border-top: 1px solid var(--line);
-    padding-top: 1rem;
-  }
-
-  .focus-title {
-    font-size: 1.0625rem;
-    letter-spacing: -0.015em;
-  }
-
-  .focus-body {
-    margin-top: 0.5rem;
-    font-size: 0.9375rem;
+  .focus-list li {
+    position: relative;
+    padding-left: 1.5rem;
     color: var(--muted);
-    line-height: 1.65;
+    font-size: 0.9375rem;
+    line-height: 1.7;
   }
 
-  .about-timeline {
-    margin-top: clamp(1.75rem, 3vw, 2.5rem);
+  .focus-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.72em;
+    width: 10px;
+    height: 1px;
+    background: var(--ink);
   }
 
-  /* The condensed path rail, moved here from the homepage in v1.6. */
+  /* The five-node path rail. */
   .about-path {
     margin-top: clamp(1.75rem, 3vw, 2.5rem);
   }
@@ -273,44 +199,6 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
     width: 10px;
     height: 1px;
     background: var(--ink);
-  }
-
-  .background-chain {
-    list-style: none;
-    margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem 2.5rem;
-  }
-
-  @media (min-width: 700px) {
-    .background-chain {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 1100px) {
-    .background-chain {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  .background-step {
-    border-top: 1px solid var(--line);
-    padding-top: 1rem;
-  }
-
-  .background-step-title {
-    font-size: 0.9375rem;
-    color: var(--ink);
-  }
-
-  .background-step-body {
-    margin-top: 0.4rem;
-    font-size: 0.875rem;
-    line-height: 1.65;
-    color: var(--muted);
   }
 
   .about-actions {

@@ -23,30 +23,30 @@
  *   · the four featured projects are four stacked rows, alternating sides, each
  *     with its own drawing, its name, one line of type, one status and one link.
  *     No cards, no index numbers, no keyword pills, no proof lines;
- *   · Mathematics × Biology × AI is one breath — a statement, one expression,
- *     one way out;
+ *   · Mathematics × Biology × AI is no longer on the homepage (§32 of the v2.0-P1
+ *     brief). The component and its copy still exist, and /research still carries
+ *     the argument; the homepage simply closes from the work to the contact band;
  *   · the close is a name, a positioning line and four links. No card, no
  *     eyebrow, no second content block.
  *
- * The visual rhythm is deliberate (§9): strong (hero) → clear (work) → a light
- * thought (statement) → close. It is not one texture all the way down.
+ * The visual rhythm is deliberate (§9): strong (hero) → clear (work) → close.
+ * It is not one texture all the way down.
  *
- * Page order (§36): Header · Hero · Featured Projects · Mathematics × Biology ×
- * AI · Contact · Footer. Research & Notes stays off the homepage; the component
- * and its data are untouched.
+ * Page order (§34): Header · Hero · Featured Projects · Contact · Footer.
+ * Research & Notes stays off the homepage; the component and its data are
+ * untouched.
  *
- * See V2_0_P0_HOMEPAGE_VISUAL_RESET_REPORT.md for what is deliberately
+ * See V2_0_P1_FINAL_ARTWORK_INTEGRATION_REPORT.md for what is deliberately
  * unfinished, and src/pages/index.astro for the English mirror.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Artwork from '../../components/Artwork.astro';
 import ProjectFeatureRow from '../../components/ProjectFeatureRow.astro';
-import MathematicsBiologyAI from '../../components/MathematicsBiologyAI.astro';
 import ContactLinks from '../../components/ContactLinks.astro';
 import { SITE } from '../../config/site';
 import { useT, localizedPath } from '../../i18n/ui';
 import { getFeaturedProjects, projectsHref } from '../../lib/projects';
-import { ARTWORK_LABELS } from '../../data/home';
+import { ARTWORK_LABELS, ART_ALT } from '../../data/artwork';
 import { personSchema } from '../../data/profile';
 
 const lang = 'zh' as const;
@@ -86,15 +86,13 @@ const websiteLd = {
   canvas={false}
 >
   <!-- ───────────────────────────── 首屏 / HERO ──────────────────────────
-       The name first, then the drawing, then the mathematics and biology
-       underneath it (§8). One artwork, no figure, no panel, no border, and no
-       background canvas behind either half. -->
+       The name first, then the drawing beside it (§8). One artwork, no figure,
+       no panel, no border, and no background canvas behind either half. -->
   <section class="shell hero">
     <div class="hero-copy">
       <h1 class="hero-name">{t('hero.title')}</h1>
       <p class="hero-role">{t('hero.subtitle')}</p>
       <p class="hero-statement">{t('hero.statement')}</p>
-      <p class="hero-support">{t('hero.support')}</p>
 
       <div class="hero-actions">
         <a href={projectsHref(lang)} class="btn btn-primary">{t('hero.cta.work')}</a>
@@ -108,7 +106,7 @@ const websiteLd = {
     </div>
 
     <div class="hero-art">
-      <Artwork name="hero" label={ARTWORK_LABELS.hero[lang]} />
+      <Artwork name="hero" label={ARTWORK_LABELS.hero[lang]} alt={ART_ALT.hero[lang]} />
     </div>
   </section>
 
@@ -130,9 +128,6 @@ const websiteLd = {
       </a>
     </p>
   </section>
-
-  <!-- ─────────────────── 数学 × 生物 × AI / MATHEMATICS × BIOLOGY × AI ─── -->
-  <MathematicsBiologyAI lang={lang} />
 
   <!-- ─────────────────────────── 联系 / CONTACT ──────────────────────────
        A name, one line and four links (§29). The /about route is in the header;
@@ -159,8 +154,13 @@ const websiteLd = {
 
   @media (min-width: 900px) {
     .hero {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr);
-      column-gap: clamp(2.5rem, 5vw, 4.5rem);
+      /* §8: the copy takes roughly two fifths of the row and the artwork the
+         rest — close to 39% / 56% of the shell once the column gap is taken
+         out, which keeps the image in the 55–62% band without letting it crowd
+         the words. Not an even split: an even split would make the artwork read
+         as an illustration beside an article rather than as the page's face. */
+      grid-template-columns: minmax(0, 0.76fr) minmax(0, 1.08fr);
+      column-gap: clamp(2rem, 4vw, 3.5rem);
     }
   }
 
@@ -191,14 +191,6 @@ const websiteLd = {
     line-height: 1.42;
     letter-spacing: -0.022em;
     max-width: 22ch;
-  }
-
-  .hero-support {
-    margin: 1.125rem 0 0;
-    font-size: clamp(1rem, 1.4vw, 1.125rem);
-    line-height: 1.6;
-    color: var(--muted);
-    max-width: 40ch;
   }
 
   .hero-actions {

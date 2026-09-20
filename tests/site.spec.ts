@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import { visit, waitForPath } from './helpers';
 
 const ROUTES = [
@@ -34,6 +34,38 @@ async function collectConsoleErrors(page: Page): Promise<string[]> {
   page.on('pageerror', (err) => errors.push(String(err)));
   return errors;
 }
+
+/**
+ * The homepage artwork has two possible sources, and the contract is the same
+ * for both (§50):
+ *
+ *   · placeholder — the inlined drawing, an `<svg role="img" aria-label>`;
+ *   · official asset — the owner's WebP, an `<img alt>`.
+ *
+ * Asserting on `svg` alone would make this suite pass only while the five real
+ * files are missing, and start failing the moment they are integrated — which is
+ * exactly backwards. So the assertion is on the invariant, not the tag.
+ */
+async function expectArtworkLabelled(art: Locator) {
+  const svg = art.locator('svg[role="img"]');
+  const img = art.locator('img');
+
+  if ((await img.count()) > 0) {
+    await expect(img).toHaveAttribute('alt', /.{12,}/);
+    // §49: the intrinsic size has to be declared, or the layout shifts as the
+    // image decodes.
+    await expect(img).toHaveAttribute('width', /\d+/);
+    await expect(img).toHaveAttribute('height', /\d+/);
+    return;
+  }
+
+  await expect(svg).toHaveCount(1);
+  await expect(svg).toHaveAttribute('role', 'img');
+  await expect(svg).toHaveAttribute('aria-label', /.{12,}/);
+}
+
+/** Every artwork on the homepage, whichever source is active. */
+const ARTWORK_SELECTOR = 'main [data-artwork] :is(svg[role="img"], img)';
 
 test.describe('pages render', () => {
   for (const route of ROUTES) {
@@ -86,9 +118,13 @@ test.describe('homepage', () => {
 
   /**
    * v2.0 (§13–§14): a homepage row shows a project, it does not explain one.
-   * Each row carries a name, one line of type, one status, one project link and
-   * a labelled drawing — and none of the apparatus a card used to stack on top
-   * of that.
+   * Each row carries a name, one line of positioning, one status, one project
+   * link and a labelled drawing — and none of the apparatus a card used to
+   * stack on top of that.
+   *
+   * v2.1 (§7–§8) renamed the type line: the row no longer prints a project
+   * *type* plus a sentence about how the project works. It prints exactly one
+   * line, the project's own `publicLine`, which /projects prints too.
    */
   test('each featured row shows the project and nothing more', async ({ page }) => {
     await visit(page, '/');
@@ -99,15 +135,13 @@ test.describe('homepage', () => {
       const row = page.locator(`[data-featured-row][data-slug="${slug}"]`);
       await expect(row).toHaveCount(1);
       await expect(row.locator('.row-name')).toBeVisible();
-      await expect(row.locator('.row-type')).toBeVisible();
+      await expect(row.locator('.row-position')).toBeVisible();
       await expect(row.locator('.row-status')).toHaveCount(1);
       await expect(row.locator('.row-status')).toBeVisible();
       await expect(row.locator('.row-link')).toBeVisible();
 
-      // The drawing carries meaning, so it is a labelled image.
-      const visual = row.locator('[data-artwork] svg');
-      await expect(visual).toHaveAttribute('role', 'img');
-      await expect(visual).toHaveAttribute('aria-label', /.{12,}/);
+      // The artwork carries meaning, so it is a labelled image.
+      await expectArtworkLabelled(row.locator('[data-artwork]'));
 
       // Removed in v2.0: the card shell and everything that came with it.
       await expect(row.locator('[data-mosaic-card]')).toHaveCount(0);
@@ -152,16 +186,20 @@ test.describe('homepage', () => {
   });
 
   /**
-   * The v1.7 prototype, as a test. Four content areas; every block that left
-   * the homepage still exists on the site, and none of it may creep back.
+   * The v2.0-P1 homepage, as a test. Three content areas, not four: §32 of the
+   * brief removes the Mathematics × Biology × AI band from the homepage, so the
+   * page now closes straight from the work to the contact band (§34). Every
+   * block that left the homepage still exists somewhere on the site, and none of
+   * it may creep back.
    */
-  test('homepage is reduced to four content areas', async ({ page }) => {
+  test('homepage is reduced to three content areas', async ({ page }) => {
     await visit(page, '/');
 
-    // Hero · Selected Work · Math × Bio × AI · About/Contact
-    await expect(page.locator('main > section')).toHaveCount(4);
+    // Hero · Featured Projects · Contact
+    await expect(page.locator('main > section')).toHaveCount(3);
 
     // Removed from the homepage, relocated to a sub-page.
+    await expect(page.locator('#mathbio')).toHaveCount(0); // → /research
     await expect(page.locator('#artifacts')).toHaveCount(0); // → /projects
     await expect(page.locator('section[aria-labelledby="now-label"]')).toHaveCount(0); // → /projects
     await expect(page.locator('.oss-list')).toHaveCount(0); // → /projects
@@ -169,8 +207,37 @@ test.describe('homepage', () => {
     await expect(page.locator('ol.rail')).toHaveCount(0); // → /about
     await expect(page.locator('aside.eq')).toHaveCount(0); // → /research
 
+    // The band's own copy is gone too — no eyebrow, no state-transition
+    // expression, no research CTA left behind on the homepage (§37).
+    await expect(page.getByText('Mathematics × Biology × AI')).toHaveCount(0);
+    await expect(page.locator('main math')).toHaveCount(0);
+
     // Hidden for the prototype: the component and its data are untouched.
     await expect(page.locator('.rn-list')).toHaveCount(0);
+  });
+
+  /**
+   * §22–§28: /research is a page of questions, not a statement of method. In
+   * v1.6 it carried the five directions *and* a complete mathematical-biology
+   * figure set, a standalone conceptual equation and the full lab-note log.
+   * v2.1 keeps the artwork band, five one-to-three-sentence directions, the two
+   * tiers and the notes — and nothing that answers "how would you build this".
+   */
+  test('research states five directions as questions, not as methods', async ({ page }) => {
+    await visit(page, '/research/');
+
+    // The page artwork, labelled like every other drawing on the site.
+    await expectArtworkLabelled(page.locator('[data-artwork="research"]'));
+
+    // Five directions, one paragraph each.
+    await expect(page.locator('.research-area')).toHaveCount(5);
+    await expect(page.locator('.research-area .area-summary')).toHaveCount(5);
+
+    // The figure set, the interest lists and the standalone equation are gone.
+    await expect(page.locator('.area-list')).toHaveCount(0);
+    await expect(page.locator('#mathbio')).toHaveCount(0);
+    await expect(page.locator('aside.eq')).toHaveCount(0);
+    await expect(page.locator('main math')).toHaveCount(0);
   });
 
   /**
@@ -189,9 +256,7 @@ test.describe('homepage', () => {
     // Exactly one drawing, and it is the hero artwork.
     await expect(hero.locator('[data-artwork]')).toHaveCount(1);
     await expect(hero.locator('[data-artwork="hero"]')).toHaveCount(1);
-    const art = hero.locator('[data-artwork="hero"] svg');
-    await expect(art).toHaveAttribute('role', 'img');
-    await expect(art).toHaveAttribute('aria-label', /.{12,}/);
+    await expectArtworkLabelled(hero.locator('[data-artwork="hero"]'));
 
     // The figures and the page-wide canvas are gone from the homepage.
     await expect(hero.locator('.hero-system')).toHaveCount(0);
@@ -221,23 +286,6 @@ test.describe('homepage', () => {
     const height = (await hero.boundingBox())?.height ?? 0;
     expect(height).toBeGreaterThan(900 * 0.6);
     expect(height).toBeLessThan(900 * 0.95);
-  });
-
-  test('the statement band is one breath, not a research section', async ({ page }) => {
-    await visit(page, '/');
-    const band = page.locator('#mathbio');
-    await expect(band).toBeVisible();
-
-    // The eyebrow carries the title; there is no heading and no figure.
-    await expect(band).toContainText('Mathematics × Biology × AI');
-    await expect(band.locator('svg')).toHaveCount(0);
-    await expect(band.locator('math')).toHaveCount(1);
-    await expect(band.locator('.mb-q')).toHaveCount(0);
-    await expect(band.getByRole('link', { name: /research directions/i })).toBeVisible();
-
-    const height = (await band.boundingBox())?.height ?? 0;
-    expect(height, 'statement band height').toBeGreaterThanOrEqual(260);
-    expect(height, 'statement band height').toBeLessThanOrEqual(460);
   });
 
   /**
@@ -283,7 +331,7 @@ test.describe('homepage', () => {
     await visit(page, '/');
     await expect(page.locator('[data-global-scientific-canvas]')).toHaveCount(0);
 
-    const drawings = page.locator('main [data-artwork] svg[role="img"]');
+    const drawings = page.locator(ARTWORK_SELECTOR);
     await expect(drawings).toHaveCount(5);
     const slugs = await page
       .locator('main [data-artwork]')
@@ -340,46 +388,70 @@ test.describe('homepage', () => {
 
   test('every project drawing is exposed as a labelled image', async ({ page }) => {
     await visit(page, '/');
-    const visuals = page.locator('[data-featured-row] [data-artwork] svg[role="img"]');
-    await expect(visuals).toHaveCount(4);
-    const count = await visuals.count();
-    for (let i = 0; i < count; i += 1) {
-      await expect(visuals.nth(i)).toHaveAttribute('aria-label', /.{12,}/);
+    const rows = page.locator('[data-featured-row]');
+    await expect(rows).toHaveCount(4);
+    for (let i = 0; i < 4; i += 1) {
+      await expectArtworkLabelled(rows.nth(i).locator('[data-artwork]'));
     }
   });
 });
 
 test.describe('projects', () => {
-  test('filter narrows the grid without navigating', async ({ page }) => {
+  /**
+   * §10–§14: /projects is a curated directory, not a filterable catalogue. Each
+   * entry carries an image, a name, one positioning line, a short public
+   * introduction, one status and one link — and there is no filter bar.
+   */
+  test('is a curated directory of entries, with no filter bar', async ({ page }) => {
     await visit(page, '/projects/');
-    const cards = page.locator('article[data-groups]');
-    await expect(cards).toHaveCount(7);
 
-    await page.getByRole('button', { name: 'Infrastructure' }).click();
-    await expect(page.locator('article[data-groups]:visible')).toHaveCount(2);
-    await expect(page.locator('article[data-slug="pdig"]')).toBeVisible();
-    await expect(page.locator('article[data-slug="morn"]')).toBeVisible();
+    const entries = page.locator('[data-project-entry]');
+    await expect(entries).toHaveCount(4);
 
-    await page.getByRole('button', { name: 'All' }).click();
-    await expect(page.locator('article[data-groups]:visible')).toHaveCount(7);
+    for (const slug of ['wennian', 'hycell', 'morn', 'biopulse']) {
+      const entry = page.locator(`[data-project-entry][data-slug="${slug}"]`);
+      await expect(entry).toHaveCount(1);
+      await expect(entry.locator('.entry-name')).toBeVisible();
+      await expect(entry.locator('.entry-line')).toBeVisible();
+      await expect(entry.locator('.entry-intro')).toBeVisible();
+      await expect(entry.locator('.entry-status')).toHaveCount(1);
+      await expect(entry.getByRole('link', { name: /View project/ })).toBeVisible();
+      await expectArtworkLabelled(entry.locator('[data-artwork]'));
+    }
+
+    // The filter bar and the card grid are gone, and no card apparatus remains.
+    await expect(page.getByRole('button', { name: 'Infrastructure' })).toHaveCount(0);
+    await expect(page.locator('article[data-groups]')).toHaveCount(0);
+    await expect(page.locator('[data-cover]')).toHaveCount(0);
+    await expect(page.locator('[data-cover-caps]')).toHaveCount(0);
+
+    /* Only the four projects with a real artwork get an entry. The other three
+       are indexed as text rather than given an invented drawing (§36, §51). */
+    await expect(page.locator('[data-project-entry] [data-artwork]')).toHaveCount(4);
+    await expect(page.locator('.other-list li')).toHaveCount(3);
   });
 
-  test('case study renders its full structure', async ({ page }) => {
+  test('case study renders its public structure', async ({ page }) => {
     await visit(page, '/projects/wennian/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('ZhiShen · WenNian');
-    for (const heading of ['Overview', 'Problem', 'Architecture', 'Current Status', 'Next']) {
+    for (const heading of [
+      'What it is',
+      'Why it matters',
+      'Current public status',
+      'What is publicly available',
+    ]) {
       await expect(page.locator('h2', { hasText: heading }).first()).toBeVisible();
     }
-    const repoLink = page.getByRole('complementary').getByRole('link', { name: 'Repository' });
+    const repoLink = page.locator('.case-actions').getByRole('link', { name: 'Repository' });
     await expect(repoLink).toHaveAttribute('href', 'https://github.com/huangdi97/WenNian');
   });
 
   test('projects without a verified repo show no repository link', async ({ page }) => {
     await visit(page, '/projects/pdig/');
-    await expect(page.getByRole('link', { name: /Repository/ })).toHaveCount(0);
-    await expect(
-      page.getByRole('complementary').getByText('No public repository'),
-    ).toBeVisible();
+    await expect(page.locator('.case-actions').getByRole('link', { name: /Repository/ })).toHaveCount(
+      0,
+    );
+    await expect(page.locator('.case-no-repo')).toBeVisible();
   });
 });
 
@@ -424,24 +496,32 @@ test.describe('evidence layer', () => {
 
   test('home page rows carry one reality status each', async ({ page }) => {
     await visit(page, '/');
-    /* v2.0 (§14): each row states the project once, in words, from the evidence
-       layer — exactly one line. ZhiShen and HyCell are identified by their
-       reality headline; Morn and BioPulse by the public-code fact. No pill, no
-       second code label, no trailing status word, no proof line. */
+    /* v2.0 (§14): each row states the project once, in words — exactly one line.
+       No pill, no second code label, no trailing status word, no proof line.
+
+       The wording is the owner's, fixed by §21–§24 of the P1 brief rather than
+       read straight out of `evidence.headline`. ZhiShen · WenNian was corrected
+       so that it opens with the canonical evidence wording instead of a
+       paraphrase of it — the headline leads and the second clause is
+       `evidence.proof[2]`. HyCell is title-cased relative to its headline. Morn
+       and BioPulse are the public-code fact, unchanged.
+       `evidence.ts` itself is untouched (§57); this is a homepage presentation
+       choice, and `HOME_STATUS_TEXT` falls back to the evidence layer for any
+       slug it does not list. */
     const statuses = page.locator('[data-featured-row] .row-status');
     await expect(statuses).toHaveCount(4);
 
     await expect(page.locator('[data-featured-row][data-slug="wennian"] .row-status')).toHaveText(
-      'Open-source MVP',
+      'Open-source MVP · Active Development',
     );
     await expect(page.locator('[data-featured-row][data-slug="hycell"] .row-status')).toHaveText(
-      'Research prototype',
+      'Research Prototype',
     );
     await expect(page.locator('[data-featured-row][data-slug="morn"] .row-status')).toHaveText(
-      'Public repository',
+      'Public Repository',
     );
     await expect(page.locator('[data-featured-row][data-slug="biopulse"] .row-status')).toHaveText(
-      'Public repository',
+      'Public Repository',
     );
   });
 

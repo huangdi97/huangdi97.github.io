@@ -10,5 +10,5 @@
     }
   },
   "include": [".astro/types.d.ts", "**/*.ts", "**/*.astro", "**/*.mjs"],
-  "exclude": ["dist", "node_modules", "playwright-report", "test-results"]
+  "exclude": ["dist", "node_modules", "playwright-report", "test-results", ".qa-screens"]
 }

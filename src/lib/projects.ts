@@ -32,21 +32,3 @@ export function nextProject(all: ProjectEntry[], slug: string): ProjectEntry | u
   if (i === -1) return undefined;
   return all[(i + 1) % all.length];
 }
-
-export const PROJECT_FILTERS = [
-  'ai-health',
-  'ai-science',
-  'agents',
-  'infrastructure',
-  'experiments',
-] as const;
-
-export type ProjectFilter = (typeof PROJECT_FILTERS)[number];
-
-export const FILTER_LABELS: Record<ProjectFilter, { en: string; zh: string }> = {
-  'ai-health': { en: 'AI Health', zh: 'AI 健康' },
-  'ai-science': { en: 'AI Science', zh: 'AI 科学' },
-  agents: { en: 'Agents', zh: '智能体' },
-  infrastructure: { en: 'Infrastructure', zh: '基础设施' },
-  experiments: { en: 'Experiments', zh: '实验' },
-};

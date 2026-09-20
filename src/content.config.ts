@@ -5,33 +5,33 @@ import { glob } from 'astro/loaders';
  * Project content model.
  *
  * Metadata lives in frontmatter so pages never hard-code project copy.
- * The long-form case-study narrative lives in the Markdown/MDX body under a
- * fixed heading structure. Most projects use:
  *
- *   ## Overview
- *   ## Problem
- *   ## Why It Matters
- *   ## Product / Research Thesis
- *   ## System Design
- *   ## Architecture
- *   ## Core Capabilities
- *   ## Technical Decisions
- *   ## Current Status
- *   ## Next
+ * v2.1 (§15–§21): the body is a **public case study**, not a build report. It
+ * answers five questions and stops:
  *
- * A **concept** that has not been implemented (TaiYi Lingjing) uses a different
- * structure on purpose, so it can never read like a build report:
+ *   ## What it is
+ *   ## Why it matters
+ *   ## Current public status
+ *   ## What is publicly available
+ *   ## Notes
  *
- *   ## Overview
- *   ## Motivation
- *   ## Research Questions
- *   ## Proposed Discovery Loop
- *   ## Proposed Architecture
- *   ## Design Principles
- *   ## What Must Be Validated
- *   ## First Implementation Milestone
- *   ## Current Status
- *   ## Next
+ * A **concept** that has not been implemented (TaiYi Lingjing) keeps its own
+ * structure on purpose, so it can never read like a build report: the same five
+ * headings, with "Current public status" stating plainly that nothing has
+ * started.
+ *
+ * Removed in v2.1 and deliberately not replaced: system design, architecture,
+ * core capabilities, technical decisions, engineering implementation,
+ * validation internals, "what I learned" and next steps. Those describe how a
+ * system is built and where it is going, which is internal design rather than
+ * public surface.
+ *
+ * Also removed in v2.1: the six `cover*` fields, the `groups` buckets and
+ * `publicIntro`. The cover belonged to the retired ProjectCover component, and a
+ * capability list is the "core capability breakdown" the round takes off the
+ * public surface. `groups` existed only for the /projects filter bar, which is
+ * gone; `publicIntro` duplicated `description`, and /projects now prints
+ * `description` directly, so the two cannot drift.
  *
  * `repo` is only set when the repository has been verified to exist and to be
  * public. Unverified projects simply omit it and show no repository link.
@@ -51,10 +51,26 @@ const projectSchema = z.object({
   year: z.number().int(),
   status: z.enum(['Active', 'Research', 'Prototype', 'Stable', 'Archived']),
   category: z.string(),
-  /** One-line thesis — used on cards, hero and meta description. */
+  /** One-line thesis — used on the hero, the meta description and /projects. */
   summary: z.string(),
-  /** Two to three lines of plain explanation. */
+  /**
+   * The short public introduction (v2.1, §13–§14).
+   *
+   * Two to three lines answering exactly three questions: what it is, what it
+   * is roughly for, and how much of it is public today. It is not a mechanism
+   * description, not a capability list and not a roadmap. /projects prints it as
+   * the entry's paragraph; the case-study body expands it.
+   */
   description: z.string(),
+  /**
+   * The one positioning line (v2.1, §7–§8).
+   *
+   * Says what the project *is*, at the level of the whole project — not how it
+   * is built. Rendered on the homepage row and on /projects alike, so the two
+   * surfaces cannot drift apart and neither has to own a copy of the other's
+   * sentence.
+   */
+  publicLine: z.string(),
   tags: z.array(z.string()).default([]),
   /**
    * Homepage Selected Work membership.
@@ -69,12 +85,9 @@ const projectSchema = z.object({
   /** Only present when verified public. */
   repo: z.string().url().optional(),
   demo: z.string().url().optional(),
-  cover: z.string().optional(),
   role: z.string(),
-  /** Filter buckets on /projects. */
-  groups: z.array(z.string()).default([]),
   /**
-   * Which system diagram to render.
+   * Which system diagram to render on the case-study page.
    *
    * The stroke, palette, typography and spacing are shared across all of them;
    * what differs is the scientific metaphor — each project gets its own
@@ -99,42 +112,6 @@ const projectSchema = z.object({
   statusNote: z.string().optional(),
   /** Extra facts for the project meta block. */
   stack: z.array(z.string()).default([]),
-
-  /* ---------------------------------------------------------------------
-   * Project Cover (v1.4.1)
-   *
-   * A cover describes the *project*, not the science. Mathematics, biology
-   * and AI belong to the ambient layer; here they may only appear as a small
-   * auxiliary mark, never as the subject.
-   * --------------------------------------------------------------------- */
-
-  /** Short type line under the name — "AI aging assessment system". */
-  coverType: z.string(),
-  /** One sentence: what it is and what it solves. Shorter than `description`. */
-  coverDescription: z.string(),
-  /** Core capabilities or modules. Three to six, never a feature dump. */
-  coverCapabilities: z.array(z.string()).min(3).max(6),
-  /**
-   * Reality line. Must equal the evidence headline for this locale — it is
-   * re-checked by `scripts/check-visual-system.mjs`, so the cover can never
-   * drift away from the truth layer.
-   */
-  coverStatus: z.string(),
-  /**
-   * Second reality token, e.g. "Active development". Must be one of the
-   * project's published proof tokens.
-   */
-  coverStatusSecondary: z.string(),
-  /** Which small auxiliary mark to draw beside the copy. */
-  coverVisualHint: z.enum([
-    'assessment-flow',
-    'cell-state',
-    'agent-dag',
-    'compliance-triangle',
-    'dependency-graph',
-    'discovery-loop',
-    'care-flow',
-  ]),
 });
 
 const projects = defineCollection({

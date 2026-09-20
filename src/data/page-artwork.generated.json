@@ -1,0 +1,18 @@
+{
+  "generatedBy": "scripts/build-page-artwork.mjs",
+  "note": "Generated. Intrinsic size for the /research and /about bands; do not edit by hand.",
+  "images": {
+    "research": {
+      "src": "/images/site/v2/pages/research.webp",
+      "width": 1600,
+      "height": 800,
+      "bytes": 131166
+    },
+    "about": {
+      "src": "/images/site/v2/pages/about.webp",
+      "width": 1600,
+      "height": 800,
+      "bytes": 160246
+    }
+  }
+}

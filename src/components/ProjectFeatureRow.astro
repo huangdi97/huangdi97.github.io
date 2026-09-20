@@ -12,7 +12,13 @@
  * v2.0 makes four rows, stacked, alternating sides, and cuts the row down to
  * what a visitor actually uses to decide whether to click:
  *
- *   name · one line of type · one status · one link (plus the repository)
+ *   name · one line of positioning · one status · one link (plus the repository)
+ *
+ * v2.1 (§7–§8) removes one more block. The row used to print the project's own
+ * type line *and* a second sentence explaining how the project works; §7 allows
+ * exactly one line, and §8 fixes what it says. That line now lives in each
+ * project's frontmatter as `publicLine`, so the homepage and /projects print
+ * the same sentence rather than two paraphrases of it.
  *
  * Removed: the index number, the category eyebrow, the keyword list, the proof
  * line, the second copy of the public-code fact, the border, the card fill.
@@ -25,8 +31,8 @@
  */
 import { useT, type Lang } from '../i18n/ui';
 import { projectHref, type ProjectEntry } from '../lib/projects';
-import { getProjectEvidence } from '../data/evidence';
-import { ARTWORK_LABELS, HOME_STATUS } from '../data/home';
+import { projectStatus } from '../lib/projectStatus';
+import { ARTWORK_LABELS, ART_ALT } from '../data/artwork';
 import Artwork, { type ArtworkName } from './Artwork.astro';
 
 export interface Props {
@@ -40,14 +46,10 @@ const { project, lang, index } = Astro.props;
 const t = useT(lang);
 const d = project.data;
 
-const evidence = getProjectEvidence(d.slug);
-const statusField = HOME_STATUS[d.slug] ?? 'headline';
-const status =
-  evidence && statusField === 'publicCode'
-    ? evidence.publicCode === 'open'
-      ? t('publiccode.open')
-      : t('publiccode.none')
-    : (evidence?.headline[lang] ?? null);
+/* One status, resolved from the evidence layer by `projectStatus`. The homepage
+   and /projects call the same function, so the two surfaces cannot print two
+   different words for one fact. */
+const status = projectStatus(d.slug, lang, t);
 
 const href = projectHref(lang, d.slug);
 const label = ARTWORK_LABELS[d.slug]?.[lang] ?? d.title;
@@ -60,7 +62,11 @@ const flipped = index % 2 === 1;
   data-slug={d.slug}
 >
   <div class="row-art">
-    <Artwork name={d.slug as ArtworkName} label={label} />
+    <Artwork
+      name={d.slug as ArtworkName}
+      label={label}
+      alt={ART_ALT[d.slug]?.[lang]}
+    />
   </div>
 
   <div class="row-copy">
@@ -68,8 +74,12 @@ const flipped = index % 2 === 1;
       <a href={href}>{d.title}</a>
     </h3>
 
-    {/* The project's own type line. It is the only prose in the row. */}
-    <p class="row-type">{d.coverType}</p>
+    {/* One line of positioning and one status (§7–§8). v2.0 printed the
+        project's own type line *and* a second sentence describing how it works;
+        §7 keeps exactly one line per row, and it says what the project is. The
+        line now lives in the project's own frontmatter (`publicLine`), so the
+        homepage and /projects cannot disagree about it. */}
+    <p class="row-position">{d.publicLine}</p>
 
     {status && <p class="row-status">{status}</p>}
 
@@ -104,27 +114,47 @@ const flipped = index % 2 === 1;
     align-items: center;
   }
 
+  /* §25: the drawing takes a little over half the row and the words about a
+     third, with the remaining fourteenth left empty between them.
+     An earlier version expressed this as a twelve-column grid with a 72px
+     column gap, which technically produced the same two blocks but spent 73% of
+     the row on gutters — eleven columns of about 25px each, separated by 72px of
+     nothing. The percentages that came out were art 55.6% / copy 29%, and the
+     copy fell below the 32–40% the brief asks for. Three explicit tracks say the
+     same thing in one line and land where the brief says to land.
+     The drawing's 59% is not arbitrary either: at the 3:2 frame ratio the
+     artwork uses, it is what puts the row at 428px, inside §26's 420–520 band,
+     without shrinking the image to get there. */
   @media (min-width: 900px) {
     .row {
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      column-gap: clamp(2.5rem, 5vw, 4.5rem);
+      grid-template-columns: minmax(0, 59fr) minmax(0, 7fr) minmax(0, 34fr);
+      column-gap: 0;
     }
 
     .row-art {
-      grid-column: 1 / span 7;
+      grid-column: 1;
     }
 
     .row-copy {
-      grid-column: 9 / span 4;
+      grid-column: 3;
+    }
+
+    /* Rows 2 and 4 mirror: words left, drawing right. The tracks mirror with
+       them, so the drawing keeps the wide track on both sides of the page —
+       assigning it `grid-column: 3` without mirroring the template put it in the
+       narrow 35fr track and gave the words 57%, which is the one thing §25 says
+       not to do. */
+    .row--flipped {
+      grid-template-columns: minmax(0, 34fr) minmax(0, 7fr) minmax(0, 59fr);
     }
 
     .row--flipped .row-art {
-      grid-column: 6 / span 7;
+      grid-column: 3;
       grid-row: 1;
     }
 
     .row--flipped .row-copy {
-      grid-column: 1 / span 4;
+      grid-column: 1;
       grid-row: 1;
     }
   }
@@ -153,22 +183,43 @@ const flipped = index % 2 === 1;
     text-underline-offset: 7px;
   }
 
-  .row-type {
+  /* The positioning line is the row's only sentence. It carries the ink; the
+     status below it steps back to the mono faint face. Two levels, so the row
+     has a reading order instead of two grey paragraphs. */
+  .row-position {
     margin: 0.875rem 0 0;
-    font-size: clamp(0.9375rem, 1.2vw, 1.0625rem);
-    line-height: 1.55;
-    color: var(--muted);
-    max-width: 32ch;
+    font-size: clamp(1rem, 1.25vw, 1.125rem);
+    line-height: 1.45;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    max-width: 34ch;
   }
 
   /* One status, in the mono face but never shouted: no uppercase, no pill, no
-     badge, no second code label beside it. */
+     badge, no second code label beside it. §41 asks for a dot and plain text —
+     the dot is a pseudo-element, so the accessible text stays the status alone
+     and a screen reader never has to announce a bullet. */
   .row-status {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
     margin: 1.125rem 0 0;
     font-family: var(--font-mono);
     font-size: 0.75rem;
     letter-spacing: 0.06em;
     color: var(--faint);
+  }
+
+  .row-status::before {
+    content: '';
+    flex: none;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    /* Optical alignment against the mono baseline rather than the em box. */
+    transform: translateY(-1px);
+    opacity: 0.7;
   }
 
   .row-actions {

@@ -1,4 +1,21 @@
 ---
+/**
+ * One research direction (v2.1).
+ *
+ * What this replaces. v1.6 rendered a direction as a small specification: the
+ * index, the title, a "Core question" block, a "Current interests" block with
+ * four bulleted items naming techniques, and a "Related projects" block. The
+ * four bullets are the part §22–§24 removes — they described how the work would
+ * be done, and a public research page states what the question is.
+ *
+ * What is left is the index, the title, one paragraph and the projects the
+ * direction touches. The paragraph carries the ink; the index and the project
+ * states stay in the quiet mono face.
+ *
+ * The project states are still read from the evidence layer and never written
+ * here, so TaiYi Lingjing reads "Concept / Not Started" on the link itself
+ * rather than inheriting the weight of the four directions around it (§28).
+ */
 import { useT, type Lang } from '../i18n/ui';
 import type { ResearchArea as Area } from '../data/research';
 import { getProjectEvidence } from '../data/evidence';
@@ -14,12 +31,6 @@ const { area, lang, headingLevel = 'h3' } = Astro.props;
 const t = useT(lang);
 const Heading = headingLevel;
 
-/**
- * Each related project carries the state its own evidence entry reports —
- * never one written here. This is what keeps a concept from being rendered as
- * the twin of an active build once the tier label is a heading away: TaiYi
- * Lingjing reads "Concept / Not Started" on the project link itself.
- */
 const stateOf = (href: string) => {
   const slug = href.replace(/\/+$/, '').split('/').pop() ?? '';
   return getProjectEvidence(slug)?.headline[lang] ?? null;
@@ -33,17 +44,7 @@ const stateOf = (href: string) => {
   </div>
 
   <div class="area-body">
-    <div class="area-question">
-      <p class="mono">{t('research.question')}</p>
-      <p class="question">{area.question}</p>
-    </div>
-
-    <div class="area-block">
-      <p class="mono">{t('research.interests')}</p>
-      <ul class="area-list">
-        {area.interests.map((i) => <li>{i}</li>)}
-      </ul>
-    </div>
+    <p class="area-summary">{area.summary}</p>
 
     {
       area.projects.length > 0 && (
@@ -71,7 +72,7 @@ const stateOf = (href: string) => {
 <style>
   .research-area {
     display: grid;
-    gap: 1.5rem 3rem;
+    gap: 1.25rem 3rem;
     padding-block: 2.25rem;
     border-top: 1px solid var(--line);
   }
@@ -96,52 +97,29 @@ const stateOf = (href: string) => {
   .area-body {
     display: flex;
     flex-direction: column;
-    gap: 1.75rem;
+    gap: 1.5rem;
   }
 
-  .question {
-    margin-top: 0.5rem;
-    font-size: 1.125rem;
-    line-height: 1.5;
-    letter-spacing: -0.015em;
+  /* The direction's only paragraph. Larger than body text and set at a reading
+     measure, because it is the whole of what the row says. */
+  .area-summary {
+    margin: 0;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    letter-spacing: -0.012em;
     color: var(--ink);
-    max-width: 52ch;
+    max-width: 58ch;
   }
 
   .area-block {
     max-width: 62ch;
   }
 
-  .area-list,
   .area-links {
     list-style: none;
     margin: 0.75rem 0 0;
     padding: 0;
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .area-list li {
-    position: relative;
-    padding-left: 1.25rem;
-    color: var(--muted);
-    font-size: 0.9375rem;
-    line-height: 1.7;
-  }
-
-  .area-list li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.72em;
-    width: 8px;
-    height: 1px;
-    background: var(--faint);
-  }
-
-  .area-links {
-    flex-direction: row;
     flex-wrap: wrap;
     gap: 0.5rem 2rem;
   }

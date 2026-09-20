@@ -1,26 +1,32 @@
 ---
 /**
- * Projects index (English) — v1.6.
+ * Projects index (English) — v2.1.
  *
- * This page took on the evidence half of the homepage in v1.6: the NOW rail,
- * the inverted artifact room and the full open-source table. The rule is that
- * the homepage answers "what have you built?" and this page answers "show me
- * the evidence". See the Chinese mirror for the full note.
+ * The locale mirror of /zh/projects. English is not the reviewed locale, but it
+ * must build and must not diverge structurally: a visitor who switches language
+ * should not land in a different information architecture.
+ *
+ * See `src/pages/zh/projects/index.astro` for what changed and why: a curated
+ * directory of public entries with the project's own artwork, a light "other
+ * work" index, and one reduced evidence list — three rows, each quoting a public
+ * repository, in place of the five-tile room that used to take 44% of the page.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
-import ProjectCard from '../../components/ProjectCard.astro';
-import NowStrip from '../../components/NowStrip.astro';
+import ProjectEntry from '../../components/ProjectEntry.astro';
 import SelectedArtifacts from '../../components/SelectedArtifacts.astro';
 import OpenSourceList from '../../components/OpenSourceList.astro';
 import { SITE } from '../../config/site';
 import { useT } from '../../i18n/ui';
-import { getProjects, FILTER_LABELS, PROJECT_FILTERS } from '../../lib/projects';
+import { getProjects, projectHref } from '../../lib/projects';
+import { projectStatus } from '../../lib/projectStatus';
 
 const lang = 'en' as const;
 const t = useT(lang);
 
-const projects = await getProjects(lang);
+const all = await getProjects(lang);
+const featured = all.filter((project) => project.data.featured);
+const others = all.filter((project) => !project.data.featured);
 
 const path = '/projects/';
 const enPath = '/projects/';
@@ -29,13 +35,13 @@ const zhPath = '/zh/projects/';
 const collectionLd = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  name: `Work — ${SITE.nameEn}`,
+  name: `Projects — ${SITE.nameEn}`,
   url: new URL(path, SITE.url).href,
   inLanguage: 'en',
   mainEntity: {
     '@type': 'ItemList',
-    numberOfItems: projects.length,
-    itemListElement: projects.map((p, i) => ({
+    numberOfItems: all.length,
+    itemListElement: all.map((p, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       name: p.data.title,
@@ -46,8 +52,8 @@ const collectionLd = {
 ---
 
 <BaseLayout
-  title="Work"
-  description="Selected systems in AI, health, computational biology, simulation and local-first infrastructure — with full case studies."
+  title="Projects"
+  description="Curated projects in AI health, computational biology, agent systems and local-first infrastructure. Each entry says what it is, what it is for, and how much is public today."
   lang={lang}
   path={path}
   enPath={enPath}
@@ -55,46 +61,46 @@ const collectionLd = {
   ogImage="/og/projects.png"
   jsonLd={collectionLd}
 >
-  <!-- NOW: the projects page is its only sensible home. Removed from / in v1.6. -->
-  <NowStrip lang={lang} />
-
   <section class="shell section">
     <SectionHeading
       as="h1"
       eyebrow={t('work.eyebrow')}
-      title="Work"
-      lead="Every project below has a full case study: the problem, the architecture, the decisions and what is actually built."
+      title="Projects"
+      lead={t('work.public.lead')}
     />
 
-    <div class="filter-bar" role="group" aria-label={t('filter.label')}>
-      <button type="button" class="filter-btn is-active" data-filter="all" aria-pressed="true">
-        {t('filter.all')}
-      </button>
-      {
-        PROJECT_FILTERS.map((key) => (
-          <button type="button" class="filter-btn" data-filter={key} aria-pressed="false">
-            {FILTER_LABELS[key].en}
-          </button>
-        ))
-      }
-      <p
-        class="filter-count"
-        aria-live="polite"
-        data-filter-count
-        data-unit={t('filter.count')}
-      >
-        {projects.length} {t('filter.count')}
-      </p>
+    <div class="entry-grid">
+      {featured.map((project) => <ProjectEntry project={project} lang={lang} />)}
     </div>
-
-    <div class="project-grid" data-project-grid>
-      {projects.map((project, i) => <ProjectCard project={project} lang={lang} index={i} />)}
-    </div>
-
-    <p class="filter-empty" data-filter-empty hidden>{t('filter.empty')}</p>
   </section>
 
-  <!-- Evidence room: moved here from the homepage. The inversion is semantic. -->
+  <!-- Other work: no public repository and no official artwork, so a light index
+       rather than a second grid of cards. -->
+  <section class="shell section-tight">
+    <h2 class="other-title">{t('work.other')}</h2>
+    <p class="other-lead">{t('work.other.lead')}</p>
+
+    <ul class="other-list">
+      {
+        others.map((project) => {
+          const status = projectStatus(project.data.slug, lang, t);
+          return (
+            <li class="other-item">
+              <a class="other-name" href={projectHref(lang, project.data.slug)}>
+                {project.data.title}
+              </a>
+              <span class="other-line">{project.data.publicLine}</span>
+              {status && <span class="other-status">{status}</span>}
+            </li>
+          );
+        })
+      }
+    </ul>
+  </section>
+
+  <!-- Selected public work: three rows, each quoted from a public repository,
+       each with the file it was read from. The repository trees, terminal
+       transcripts and metric dumps are no longer printed here. -->
   <SelectedArtifacts lang={lang} />
 
   <section class="shell section">
@@ -110,99 +116,83 @@ const collectionLd = {
   </section>
 </BaseLayout>
 
-<script>
-  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
-  const cards = document.querySelectorAll<HTMLElement>('[data-groups]');
-  const count = document.querySelector<HTMLElement>('[data-filter-count]');
-  const empty = document.querySelector<HTMLElement>('[data-filter-empty]');
-  const total = cards.length;
-
-  function apply(filter: string) {
-    let visible = 0;
-
-    cards.forEach((card) => {
-      const groups = (card.dataset.groups ?? '').split(' ').filter(Boolean);
-      const show = filter === 'all' || groups.includes(filter);
-      card.hidden = !show;
-      if (show) visible += 1;
-    });
-
-    buttons.forEach((btn) => {
-      const active = btn.dataset.filter === filter;
-      btn.classList.toggle('is-active', active);
-      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-
-    if (count) count.textContent = `${visible} ${count.dataset.unit ?? ''}`.trim();
-    if (empty) empty.hidden = visible !== 0;
-    void total;
-  }
-
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', () => apply(btn.dataset.filter ?? 'all'));
-  });
-</script>
-
 <style>
-  .filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: clamp(2rem, 4vw, 3rem);
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .filter-btn {
-    min-height: 44px;
-    padding: 0 0.875rem;
-    border: 1px solid var(--line);
-    border-radius: 2px;
-    background: transparent;
-    font-size: 0.875rem;
-    color: var(--muted);
-    transition:
-      color var(--dur-fast) var(--ease),
-      border-color var(--dur-fast) var(--ease),
-      background-color var(--dur-fast) var(--ease);
-  }
-
-  .filter-btn:hover {
-    color: var(--ink);
-    border-color: var(--line-strong);
-  }
-
-  .filter-btn.is-active {
-    color: var(--canvas);
-    background: var(--ink);
-    border-color: var(--ink);
-  }
-
-  .filter-count {
-    margin-left: auto;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--faint);
-  }
-
-  .project-grid {
+  .entry-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
-    margin-top: 2.5rem;
+    gap: clamp(2.5rem, 5vw, 3.5rem);
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
   }
 
-  @media (min-width: 700px) {
-    .project-grid {
+  @media (min-width: 760px) {
+    .entry-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(2.5rem, 4vw, 3.5rem) clamp(2rem, 4vw, 3rem);
     }
   }
 
-  .filter-empty {
-    margin-top: 2.5rem;
+  .other-title {
+    font-size: clamp(1.25rem, 2vw, 1.5rem);
+    letter-spacing: -0.022em;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .other-lead {
+    margin: 0.625rem 0 0;
+    font-size: 0.9375rem;
     color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .other-list {
+    list-style: none;
+    margin: clamp(1.5rem, 3vw, 2rem) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* A light index, not a second grid of cards: one hairline per row, the name
+     in ink, the line muted, the status quiet in the mono face. */
+  .other-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+    padding-block: 1rem;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 760px) {
+    .other-item {
+      grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) auto;
+      gap: 0.25rem 1.5rem;
+      align-items: baseline;
+    }
+  }
+
+  .other-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .other-name:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+
+  .other-line {
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  .other-status {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    white-space: nowrap;
   }
 </style>

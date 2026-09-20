@@ -1,27 +1,31 @@
 /**
- * Visual system gate (v1.4.1).
+ * Visual system gate (v2.1).
  *
- * v1.4 made every project drawing double as a mathematics poster. This gate is
- * the thing that stops that from happening again. It enforces the split:
+ * The split this gate exists to hold is the one v1.4 broke: a project drawing
+ * must not double as a mathematics poster. Four types are kept apart, and none
+ * of them may do another's job:
  *
- *   1. PROJECT COVER             — ProjectCover.astro
- *      describes the project in words: name, type, one sentence, capabilities,
- *      real status. No MathML, no formula block, no notation-heavy artwork.
+ *   1. PROJECT ARTWORK        — Artwork.astro, driven by `src/data/artwork.ts`
+ *      One frame for every page drawing: the homepage hero and its four project
+ *      rows, and the /research and /about bands. The drawing carries meaning, so
+ *      it is always a labelled image — never silent decoration — and it carries
+ *      no notation of its own. In v2.1 it also replaced the words-first project
+ *      cover, which is why §10–§14 could put real images back on /projects.
  *   2. CONCEPTUAL SCIENCE VISUAL — ProjectScientificVisual.astro
- *      case-study only. This is the one place a formula may be the subject.
- *   3. GLOBAL SCIENTIFIC CANVAS  — GlobalScientificCanvas.astro (v1.6)
- *      page atmosphere, mounted once in BaseLayout behind the whole document.
+ *      Case-study only. This is the one place a formula may be the subject.
+ *   3. GLOBAL SCIENTIFIC CANVAS  — GlobalScientificCanvas.astro
+ *      page atmosphere, mounted once in BaseLayout behind the inner pages.
  *      aria-hidden, pointer-events:none, no canvas, no WebGL, no image, no
- *      network request, inside the theme's opacity budget — and, new in v1.6,
- *      required to carry mathematics, biology AND AI motifs at once, so the
- *      field can never quietly collapse into "just formulas".
+ *      network request, inside the theme's opacity budget — and required to
+ *      carry mathematics, biology AND AI motifs at once, so the field can never
+ *      quietly collapse into "just formulas".
+ *   4. THE PUBLIC SURFACE        — the pages themselves.
+ *      §10–§14 turn /projects into a curated directory, §22–§28 turn /research
+ *      into a page of questions and §29–§33 turn /about into an introduction.
+ *      This gate checks that the contraction actually happened and that the
+ *      removed sections have not crept back.
  *
- *      v1.4/v1.5 kept this field as section-scoped decoration at 2.5–5.5%
- *      opacity. The owner's verdict was that nobody could see it, so the
- *      budget is now deliberately higher (macro 0.06–0.18) and the gate
- *      enforces a *floor* as well as a ceiling: too faint is a failure too.
- *
- * It also re-checks every cover against the evidence layer, so a cover can
+ * It also re-checks every project file against the evidence layer, so a page can
  * never quietly claim a status the truth layer does not support.
  *
  * Usage: node scripts/check-visual-system.mjs
@@ -67,67 +71,60 @@ const MATH_GLYPHS = /[∈∝Σ∫∇∂√≈≤≥θλσΩΔαβγπℝⁿˣᵖ
 const FORMULA_WORDS = /\b(?:argmin|argmax|softmax|log-likelihood)\b/i;
 
 /* -------------------------------------------------------------------------- */
-/* 0. The three components exist, and none of them does another's job         */
+/* 0. The visual types exist, and none of them does another's job             */
 /* -------------------------------------------------------------------------- */
 
-const COVER = join(src, 'components', 'ProjectCover.astro');
+const ARTWORK = join(src, 'components', 'Artwork.astro');
 const SCIENCE = join(src, 'components', 'ProjectScientificVisual.astro');
 const CANVAS = join(src, 'components', 'GlobalScientificCanvas.astro');
 const HERO_C = join(src, 'components', 'HeroComposition.astro');
 const MID_C = join(src, 'components', 'MidComposition.astro');
 const LOWER_C = join(src, 'components', 'LowerComposition.astro');
-const MOSAIC = join(src, 'components', 'ProjectMosaic.astro');
-const MOSAIC_VISUAL = join(src, 'components', 'ProjectMosaicVisual.astro');
-const CARD = join(src, 'components', 'ProjectCard.astro');
-const SHOWCASE = join(src, 'components', 'ProjectShowcase.astro');
 
 for (const [name, path] of [
-  ['ProjectCover.astro', COVER],
+  ['Artwork.astro', ARTWORK],
   ['ProjectScientificVisual.astro', SCIENCE],
   ['GlobalScientificCanvas.astro', CANVAS],
   ['HeroComposition.astro', HERO_C],
   ['MidComposition.astro', MID_C],
   ['LowerComposition.astro', LOWER_C],
-  ['ProjectMosaic.astro', MOSAIC],
-  ['ProjectMosaicVisual.astro', MOSAIC_VISUAL],
 ]) {
   checks += 1;
-  if (!existsSync(path)) fail(`${name} is missing — the three visual types must stay separate`);
+  if (!existsSync(path)) fail(`${name} is missing — the visual types must stay separate`);
 }
 
-if (existsSync(COVER)) {
-  const cover = readFileSync(COVER, 'utf8');
+/* §10–§14: the words-first project cover was retired in v2.1. If any of its
+   files comes back, the round has been undone rather than extended. */
+for (const retired of ['ProjectCover.astro', 'ProjectMosaic.astro', 'ProjectMosaicVisual.astro']) {
   checks += 1;
-  const glyphs = cover.match(MATH_GLYPHS);
+  if (existsSync(join(src, 'components', retired))) {
+    fail(`${retired} is back — v2.1 replaced the project cover with a real image`);
+  }
+}
+
+/* The one frame every drawing goes through. It carries no notation of its own:
+   a formula belongs to the conceptual science visual or to the canvas. */
+if (existsSync(ARTWORK)) {
+  const artwork = readFileSync(ARTWORK, 'utf8');
+  checks += 1;
+  const glyphs = artwork.match(MATH_GLYPHS);
   if (glyphs) {
     fail(
-      `ProjectCover.astro carries ${glyphs.length} formula glyph(s): ${[...new Set(glyphs)].join(' ')} — notation belongs to the ambient layer`,
+      `Artwork.astro carries ${glyphs.length} formula glyph(s): ${[...new Set(glyphs)].join(' ')} — notation belongs to the conceptual layer`,
     );
   }
   checks += 1;
-  if (FORMULA_WORDS.test(cover)) fail('ProjectCover.astro contains formula vocabulary');
+  if (FORMULA_WORDS.test(artwork)) fail('Artwork.astro contains formula vocabulary');
   checks += 1;
-  if (/<math|MathML/i.test(cover)) fail('ProjectCover.astro must not render MathML');
-  checks += 1;
-  if (!/aria-hidden="true"/.test(cover)) {
-    fail('ProjectCover.astro must mark its auxiliary drawing aria-hidden');
-  }
-  checks += 1;
-  if (!/data-cover-title/.test(cover)) fail('ProjectCover.astro must expose data-cover-title');
-}
+  if (/<math|MathML/i.test(artwork)) fail('Artwork.astro must not render MathML');
 
-for (const [name, path] of [
-  ['ProjectCard.astro', CARD],
-  ['ProjectShowcase.astro', SHOWCASE],
-]) {
-  if (!existsSync(path)) continue;
-  const text = readFileSync(path, 'utf8');
+  /* Both sources have to be labelled, or the drawing is silent decoration. */
   checks += 1;
-  if (/ProjectVisual|ProjectScientificVisual/.test(text)) {
-    fail(`${name} must use ProjectCover, not the conceptual science visual`);
+  if (!/role="img"/.test(artwork) || !/aria-label=/.test(artwork)) {
+    fail('Artwork.astro must expose its placeholder drawing as a labelled image');
   }
   checks += 1;
-  if (!/ProjectCover/.test(text)) fail(`${name} does not render a ProjectCover`);
+  if (!/alt=/.test(artwork)) fail('Artwork.astro must give the raster asset alt text');
 }
 
 const caseStudyPages = walk(join(src, 'pages'), ['.astro']).filter((file) =>
@@ -139,7 +136,7 @@ for (const page of caseStudyPages) {
   const text = readFileSync(page, 'utf8');
   checks += 1;
   if (!/ProjectScientificVisual/.test(text)) {
-    fail(`${relative(root, page)} should show the conceptual science visual, not a cover`);
+    fail(`${relative(root, page)} should show the conceptual science visual`);
   }
 }
 
@@ -389,7 +386,7 @@ if (
 }
 
 /* -------------------------------------------------------------------------- */
-/* 3. Project cover data — present, honest, and not a copy of the body        */
+/* 3. Project frontmatter — the public fields, and nothing retired            */
 /* -------------------------------------------------------------------------- */
 
 const EVIDENCE = join(src, 'data', 'evidence.ts');
@@ -415,34 +412,34 @@ const EVIDENCE_VARS = (() => {
   return map;
 })();
 
-/** Read one project's evidence headline and proof tokens for a locale. */
+/** Read one project's evidence headline for a locale. */
 function evidenceFor(slug, lang) {
   const key = EVIDENCE_VARS.get(slug);
   if (!key) return null;
   const start = evidenceText.indexOf(`const ${key}: ProjectEvidence = {`);
   if (start === -1) return null;
   const slice = evidenceText.slice(start, start + 4000);
-
   const headline = /headline:\s*\{[^}]*?\b(?:en|zh):\s*'([^']*)'[^}]*?\b(?:en|zh):\s*'([^']*)'/s.exec(slice);
-  const proofBlock = /proof:\s*\[([\s\S]*?)\],/.exec(slice);
-  if (!headline || !proofBlock) return null;
-
-  const en = headline[1];
-  const zh = headline[2];
-  const tokens = [...proofBlock[1].matchAll(/\{\s*en:\s*'([^']*)',\s*zh:\s*'([^']*)'\s*\}/g)].map((m) =>
-    lang === 'zh' ? m[2] : m[1],
-  );
-  return { headline: lang === 'zh' ? zh : en, tokens };
+  if (!headline) return null;
+  return { headline: lang === 'zh' ? headline[2] : headline[1] };
 }
 
-const COVER_FIELDS = [
+/* §7–§8 and §13: what a project file must publish. `publicLine` is the single
+   positioning sentence the homepage row and /projects both print. */
+const REQUIRED_FIELDS = ['slug', 'title', 'publicLine', 'summary', 'description', 'status', 'year'];
+/* Retired by v2.1. Any of these reappearing means the contraction was undone. */
+const RETIRED_FIELDS = [
+  'groups',
   'coverType',
   'coverDescription',
   'coverCapabilities',
   'coverStatus',
   'coverStatusSecondary',
   'coverVisualHint',
+  'publicIntro',
 ];
+
+const normalise = (value) => value.replace(/\s+/g, '').replace(/[，。,.]/g, '');
 
 const projectFiles = walk(contentRoot, ['.md']);
 checks += 1;
@@ -455,80 +452,53 @@ for (const file of projectFiles) {
   const front = text.slice(0, text.indexOf('\n---\n', 1));
   const slug = /^slug:\s*'?([^'\n]+)'?/m.exec(front)?.[1]?.trim();
 
-  for (const field of COVER_FIELDS) {
+  for (const field of REQUIRED_FIELDS) {
     checks += 1;
     if (!new RegExp(`^${field}:`, 'm').test(front)) fail(`${rel} is missing ${field}`);
   }
 
-  const caps = /^coverCapabilities:\s*\[(.*)\]/m.exec(front)?.[1] ?? '';
-  const capCount = caps ? caps.split("',").length : 0;
+  for (const field of RETIRED_FIELDS) {
+    checks += 1;
+    if (new RegExp(`^${field}:`, 'm').test(front)) {
+      fail(`${rel} still carries ${field} — retired in v2.1`);
+    }
+  }
+
+  const line = /^publicLine:\s*(?:'([^']*)'|"([^"]*)")/m.exec(front);
+  const publicLine = (line?.[1] ?? line?.[2] ?? '').trim();
   checks += 1;
-  if (capCount < 3 || capCount > 6) {
-    fail(`${rel} has ${capCount} cover capabilities — the range is 3 to 6`);
+  if (publicLine.length < 6 || publicLine.length > 90) {
+    fail(`${rel} publicLine is ${publicLine.length} characters — the budget is 6 to 90`);
   }
 
-  const status = /^coverStatus:\s*(?:'([^']*)'|"([^"]*)")/m.exec(front);
-  const secondary = /^coverStatusSecondary:\s*(?:'([^']*)'|"([^"]*)")/m.exec(front);
-  const ev = slug ? evidenceFor(slug, lang) : null;
-
-  if (status && ev) {
-    checks += 1;
-    const value = (status[1] ?? status[2] ?? '').trim();
-    if (value !== ev.headline) {
-      fail(`${rel} coverStatus "${value}" does not match the evidence headline "${ev.headline}"`);
-    }
-  } else if (!ev && slug) {
-    checks += 1;
-    fail(`${rel} has no evidence entry — cover status cannot be verified`);
-  }
-
-  if (secondary && ev) {
-    checks += 1;
-    const value = (secondary[1] ?? secondary[2] ?? '').trim();
-    if (!ev.tokens.includes(value)) {
-      fail(`${rel} coverStatusSecondary "${value}" is not one of the project's proof tokens`);
-    }
-  }
-
-  /* A cover sentence and a body sentence must never be the same sentence. */
-  const coverDesc = /^coverDescription:\s*>-\s*\n((?:\s+.*\n)+)/m.exec(front)?.[1] ?? '';
-  const normalise = (value) => value.replace(/\s+/g, '').replace(/[，。,.]/g, '');
+  /* The positioning line must be its own sentence, not the summary or the
+     description copied into a second field. */
   const summary = normalise(/^summary:\s*(?:'([^']*)'|"([^"]*)")/m.exec(front)?.[1] ?? '');
   const description = normalise(
     /^description:\s*>-\s*\n((?:\s+.*\n)+)/m.exec(front)?.[1] ?? '',
   );
-  const flat = normalise(coverDesc);
   checks += 1;
+  const flat = normalise(publicLine);
   if (flat && (flat === summary || flat === description)) {
-    fail(`${rel} repeats its summary/description verbatim in coverDescription`);
+    fail(`${rel} publicLine repeats its summary/description verbatim`);
   }
+
+  /* The status a page prints is the evidence layer's, never the file's own. */
+  const ev = slug ? evidenceFor(slug, lang) : null;
   checks += 1;
-  if (flat.length < 12) fail(`${rel} coverDescription is too short to explain the project`);
+  if (!ev) fail(`${rel} has no evidence entry — its public status cannot be verified`);
 }
 
-/* 4. Built pages — five drawings, four rows, and no second canvas            */
+/* -------------------------------------------------------------------------- */
+/* 4. The built pages — the contraction, and what must not creep back          */
 /* -------------------------------------------------------------------------- */
 
 /**
- * v2.0 replaced the v1.7 homepage contract wholesale (§3–§14), so this section
- * is a rewrite rather than an amendment. What it now enforces:
- *
- *   1. the homepage carries five drawings and no sixth — one hero artwork and
- *      one per featured project — each of them a labelled image;
- *   2. four featured rows, stacked, carrying a name, one line of type, one
- *      status and one project link, and none of the apparatus a card carries:
- *      no index number, no category eyebrow, no keyword pills, no proof line,
- *      no capability chips, no MathML;
- *   3. the page-wide scientific canvas is NOT mounted on the homepage. That
- *      layer inked every screen with the same contour / formula / node language,
- *      which is the problem this reset exists to fix (§9);
- *   4. the page is still reduced — four content areas, and none of the sections
- *      that moved to /projects, /research and /about have crept back.
- *
- * The canvas itself is still verified: section 3 above checks its source, and
- * the browser suite checks its behaviour on the inner pages that keep it.
+ * What v2.1 enforces on the homepage: five artworks and no sixth (one hero plus
+ * one per featured project), four stacked rows carrying a name, one positioning
+ * line, one status and one project link, no page-wide canvas, and none of the
+ * sections that moved to /projects, /research and /about.
  */
-
 const HOME_PAGES = ['dist/index.html', 'dist/zh/index.html'];
 const FEATURED = ['wennian', 'hycell', 'morn', 'biopulse'];
 
@@ -556,7 +526,7 @@ for (const rel of HOME_PAGES) {
     checks += 1;
     if (!/class="row-name"/.test(region)) fail(`${label} has no name`);
     checks += 1;
-    if (!/class="row-type"/.test(region)) fail(`${label} has no one-line type`);
+    if (!/class="row-position"/.test(region)) fail(`${label} has no positioning line`);
     checks += 1;
     if (!/class="row-status"/.test(region)) fail(`${label} has no status`);
     checks += 1;
@@ -570,17 +540,40 @@ for (const rel of HOME_PAGES) {
       fail(`${label} prints ${statusCount} status lines — the budget is one`);
     }
 
-    /* The drawing is a labelled image, not silent decoration: it carries the
-       project's meaning, so it has to be readable. */
+    /* The artwork is a labelled image, not silent decoration. Two sources are
+       possible and the contract is the same for both: `placeholder` — the
+       inlined drawing, `<svg role="img" aria-label>`; `asset` — the owner's
+       WebP, `<img alt width height>`. */
     checks += 1;
     if (!/data-artwork=/.test(region)) fail(`${label} has no artwork`);
     const svg = /<svg[^>]*>[\s\S]*?<\/svg>/.exec(region)?.[0] ?? '';
-    checks += 1;
-    if (!/role="img"/.test(svg)) fail(`${label} artwork is not exposed as an image`);
-    checks += 1;
-    if (!/aria-label="[^"]{12,}"/.test(svg)) fail(`${label} artwork has no descriptive label`);
+    const img = /<img[^>]*class="art-img"[^>]*>/.exec(region)?.[0] ?? '';
+    const isAsset = /data-artwork-source="asset"/.test(region);
 
-    /* Removed in v2.0. */
+    checks += 1;
+    if (isAsset) {
+      if (!img) fail(`${label} is marked as an official asset but renders no <img>`);
+    } else if (!/role="img"/.test(svg)) {
+      fail(`${label} artwork is not exposed as an image`);
+    }
+
+    checks += 1;
+    if (isAsset) {
+      if (!/alt="[^"]{12,}"/.test(img)) fail(`${label} artwork has no descriptive label`);
+    } else if (!/aria-label="[^"]{12,}"/.test(svg)) {
+      fail(`${label} artwork has no descriptive label`);
+    }
+
+    /* §49: an official asset has to declare its intrinsic size, or the row
+       reflows as the bytes arrive. The placeholder is inline SVG and cannot. */
+    if (isAsset) {
+      checks += 1;
+      if (!/width="\d+"/.test(img) || !/height="\d+"/.test(img)) {
+        fail(`${label} official asset declares no intrinsic size — the row will shift`);
+      }
+    }
+
+    /* Removed in v2.0 and v2.1. */
     for (const [pattern, what] of [
       [/data-mosaic-card/, 'the mosaic card shell'],
       [/class="card-eyebrow/, 'the category eyebrow'],
@@ -590,14 +583,19 @@ for (const rel of HOME_PAGES) {
       [/data-cover-caps/, 'the capability chips'],
       [/class="tag"/, 'the tag pills'],
       [/<math|mathml/i, 'MathML'],
+      [/class="row-type"/, 'the retired type line'],
+      [/class="row-desc"/, 'the retired second sentence'],
     ]) {
       checks += 1;
       if (pattern.test(region)) fail(`${label} still renders ${what}`);
     }
 
-    /* Text budget: the row's prose is one line of type and one status. The
-       name and the link labels are identification, not body copy. */
-    const body = [...region.matchAll(/class="row-(?:type|status)"[^>]*>([\s\S]*?)<\/p>/g)]
+    /* Text budget. The row's prose is two short blocks — the project's own
+       positioning line and the status — so this is a ceiling, not a target: the
+       point is that a row must not become a paragraph, and that a second
+       description, a proof line or a capability list cannot be added back
+       without tripping this. */
+    const body = [...region.matchAll(/class="row-(?:position|status)"[^>]*>([\s\S]*?)<\/p>/g)]
       .map((m) =>
         m[1]
           .replace(/<[^>]+>/g, ' ')
@@ -606,7 +604,7 @@ for (const rel of HOME_PAGES) {
       )
       .join(' ')
       .trim();
-    const budget = zh ? 60 : 120;
+    const budget = zh ? 95 : 240;
     checks += 1;
     if (body.length > budget) {
       fail(`${label} carries ${body.length} characters of body copy — the budget is ${budget}`);
@@ -658,6 +656,10 @@ for (const rel of HOME_PAGES) {
     [/class="hero-system"/, 'the hero system figure'],
     [/class="hero-field"/, 'the hero field figure'],
     [/class="rn-list"/, 'Research & Notes'],
+    [/id="mathbio"/, 'the Mathematics × Biology × AI band'],
+    [/class="statement-band"/, 'the statement band'],
+    [/<math[\s>]/, 'a standalone MathML expression'],
+    [/class="hero-support"/, 'the hero methodology sentence'],
   ]) {
     checks += 1;
     if (pattern.test(html)) fail(`${rel} still renders ${what}`);
@@ -665,10 +667,129 @@ for (const rel of HOME_PAGES) {
 
   const sections = (html.match(/<section class="shell[^"]*"/g) ?? []).length;
   checks += 1;
-  if (sections > 4) {
-    fail(`${rel} renders ${sections} content areas — the page keeps four`);
+  if (sections > 3) {
+    fail(`${rel} renders ${sections} content areas — §34 leaves three`);
   } else {
     notes.push(`${rel}: ${sections} content areas`);
+  }
+}
+
+/* ---- /projects: a curated directory, not a filterable catalogue (§10–§14) --- */
+for (const rel of ['dist/projects/index.html', 'dist/zh/projects/index.html']) {
+  const path = join(root, rel);
+  checks += 1;
+  if (!existsSync(path)) {
+    fail(`${rel} is missing — run the build before this gate`);
+    continue;
+  }
+  const html = readFileSync(path, 'utf8');
+
+  const entries = (html.match(/data-project-entry/g) ?? []).length;
+  checks += 1;
+  if (entries !== 4) fail(`${rel} renders ${entries} project entries — the featured set is four`);
+
+  const entryArt = [...html.matchAll(/data-project-entry[\s\S]{0,400}?data-artwork="([a-z]+)"/g)].map(
+    (m) => m[1],
+  );
+  checks += 1;
+  if (new Set(entryArt).size !== 4) {
+    fail(`${rel} shows ${new Set(entryArt).size} distinct entry images — every entry needs its own`);
+  }
+
+  for (const [pattern, what] of [
+    [/data-groups/, 'the retired group attribute'],
+    [/data-cover/, 'the retired words-first cover'],
+    [/class="filter/, 'the filter bar'],
+    [/class="project-grid"/, 'the card grid'],
+  ]) {
+    checks += 1;
+    if (pattern.test(html)) fail(`${rel} still renders ${what}`);
+  }
+
+  /* The three projects with no public artwork are indexed as text rather than
+     given an invented drawing (§36, §51). */
+  const other = (html.match(/class="other-item"/g) ?? []).length;
+  checks += 1;
+  if (other !== 3) fail(`${rel} indexes ${other} other projects — the expected set is three`);
+}
+
+/* ---- /research and /about: a page artwork band each (§23, §30) ------------- */
+for (const [rel, slot] of [
+  ['dist/research/index.html', 'research'],
+  ['dist/zh/research/index.html', 'research'],
+  ['dist/about/index.html', 'about'],
+  ['dist/zh/about/index.html', 'about'],
+]) {
+  const path = join(root, rel);
+  checks += 1;
+  if (!existsSync(path)) {
+    fail(`${rel} is missing — run the build before this gate`);
+    continue;
+  }
+  const html = readFileSync(path, 'utf8');
+
+  checks += 1;
+  if (!new RegExp(`data-artwork="${slot}"`).test(html)) {
+    fail(`${rel} has no "${slot}" page artwork`);
+  }
+
+  const svg = new RegExp(`data-artwork="${slot}"[\\s\\S]*?<svg[^>]*>`).exec(html)?.[0] ?? '';
+  const img = new RegExp(`data-artwork="${slot}"[\\s\\S]*?<img[^>]*>`).exec(html)?.[0] ?? '';
+  const isAsset = new RegExp(`data-artwork="${slot}"[\\s\\S]{0,200}?data-artwork-source="asset"`).test(
+    html,
+  );
+  checks += 1;
+  if (isAsset) {
+    if (!/alt="[^"]{12,}"/.test(img)) fail(`${rel} page artwork has no descriptive alt text`);
+  } else if (!/role="img"/.test(svg)) {
+    fail(`${rel} page artwork is not exposed as an image`);
+  }
+}
+
+/* /research is a page of questions, not a method statement (§22–§28). */
+for (const rel of ['dist/research/index.html', 'dist/zh/research/index.html']) {
+  const path = join(root, rel);
+  if (!existsSync(path)) continue;
+  const html = readFileSync(path, 'utf8');
+
+  const areas = (html.match(/class="research-area"/g) ?? []).length;
+  checks += 1;
+  if (areas !== 5) fail(`${rel} renders ${areas} research directions — the set is five`);
+
+  checks += 1;
+  if (!/class="area-summary"/.test(html)) fail(`${rel} states no direction summary`);
+
+  for (const [pattern, what] of [
+    [/id="mathbio"/, 'the mathematical-biology figure set'],
+    [/class="mb-/, 'a mathematical-biology figure'],
+    [/class="area-list"/, 'the interest list'],
+    [/<math[\s>]/, 'a standalone MathML expression'],
+    [/class="eq-/, 'the standalone equation'],
+  ]) {
+    checks += 1;
+    if (pattern.test(html)) fail(`${rel} still renders ${what}`);
+  }
+}
+
+/* /about is an introduction, not a statement of working method (§29–§33). */
+for (const rel of ['dist/about/index.html', 'dist/zh/about/index.html']) {
+  const path = join(root, rel);
+  if (!existsSync(path)) continue;
+  const html = readFileSync(path, 'utf8');
+
+  checks += 1;
+  if (!/class="focus-list"/.test(html)) fail(`${rel} has no current-directions list`);
+  checks += 1;
+  if (!/class="bt"/.test(html)) fail(`${rel} has no background path rail`);
+
+  for (const [pattern, what] of [
+    [/class="focus-grid"/, 'the six-card method grid'],
+    [/class="focus-item"/, 'a method card'],
+    [/class="about-timeline"/, 'the "How I work" stage rail'],
+    [/class="rail"/, 'a process rail'],
+  ]) {
+    checks += 1;
+    if (pattern.test(html)) fail(`${rel} still renders ${what}`);
   }
 }
 
@@ -682,11 +803,13 @@ if (problems.length) {
 }
 
 console.log(`Visual gate passed (${checks} checks).`);
-console.log('  • 3 visual types separated: cover / conceptual science / global canvas');
-console.log(`  • ${projectFiles.length} project file(s) × 6 cover fields, re-checked against evidence`);
+console.log('  • 4 visual types separated: artwork / conceptual science / global canvas / public surface');
+console.log(`  • ${projectFiles.length} project file(s), public fields checked against evidence`);
 console.log('  • canvas: inline SVG only, aria-hidden, pointer-events:none, math + biology + AI');
 console.log('  • canvas: opacity floors and ceilings held, notation kept a step quieter');
-console.log('  • homepage: five drawings (hero + four project covers), four stacked rows');
+console.log('  • homepage: five drawings (hero + four project rows), four stacked rows');
 console.log('  • homepage: no page-wide canvas, no cards, no index numbers, no pills');
-console.log('  • homepage: reduced — no artifact room, no NOW strip, no open-source table');
+console.log('  • /projects: four illustrated entries, no filter bar, no words-first cover');
+console.log('  • /research: page artwork, five directions, no figure set, no equation');
+console.log('  • /about: page artwork, directions list, path rail, no method grid');
 for (const note of notes) console.log(`  • ${note}`);

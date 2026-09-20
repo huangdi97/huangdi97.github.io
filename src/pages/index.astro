@@ -7,17 +7,17 @@
  * switches language should not land in a different information architecture.
  *
  * See `src/pages/zh/index.astro` for what changed and why, and
- * V2_0_P0_HOMEPAGE_VISUAL_RESET_REPORT.md for what is deliberately unfinished.
+ * V2_0_P1_FINAL_ARTWORK_INTEGRATION_REPORT.md for what is deliberately
+ * unfinished.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Artwork from '../components/Artwork.astro';
 import ProjectFeatureRow from '../components/ProjectFeatureRow.astro';
-import MathematicsBiologyAI from '../components/MathematicsBiologyAI.astro';
 import ContactLinks from '../components/ContactLinks.astro';
 import { SITE } from '../config/site';
 import { useT, localizedPath } from '../i18n/ui';
 import { getFeaturedProjects, projectsHref } from '../lib/projects';
-import { ARTWORK_LABELS } from '../data/home';
+import { ARTWORK_LABELS, ART_ALT } from '../data/artwork';
 import { personSchema } from '../data/profile';
 
 const lang = 'en' as const;
@@ -62,7 +62,6 @@ const websiteLd = {
       <h1 class="hero-name">{t('hero.title')}</h1>
       <p class="hero-role">{t('hero.subtitle')}</p>
       <p class="hero-statement">{t('hero.statement')}</p>
-      <p class="hero-support">{t('hero.support')}</p>
 
       <div class="hero-actions">
         <a href={projectsHref(lang)} class="btn btn-primary">{t('hero.cta.work')}</a>
@@ -76,7 +75,7 @@ const websiteLd = {
     </div>
 
     <div class="hero-art">
-      <Artwork name="hero" label={ARTWORK_LABELS.hero[lang]} />
+      <Artwork name="hero" label={ARTWORK_LABELS.hero[lang]} alt={ART_ALT.hero[lang]} />
     </div>
   </section>
 
@@ -95,9 +94,6 @@ const websiteLd = {
       </a>
     </p>
   </section>
-
-  <!-- ──────────────────── MATHEMATICS × BIOLOGY × AI ─────────────────── -->
-  <MathematicsBiologyAI lang={lang} />
 
   <!-- ──────────────────────────── CONTACT ────────────────────────────── -->
   <section class="shell section-tight" id="contact">
@@ -122,8 +118,13 @@ const websiteLd = {
 
   @media (min-width: 900px) {
     .hero {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr);
-      column-gap: clamp(2.5rem, 5vw, 4.5rem);
+      /* §8: the copy takes roughly two fifths of the row and the artwork the
+         rest — close to 39% / 56% of the shell once the column gap is taken
+         out, which keeps the image in the 55–62% band without letting it crowd
+         the words. Not an even split: an even split would make the artwork read
+         as an illustration beside an article rather than as the page's face. */
+      grid-template-columns: minmax(0, 0.76fr) minmax(0, 1.08fr);
+      column-gap: clamp(2rem, 4vw, 3.5rem);
     }
   }
 
@@ -154,14 +155,6 @@ const websiteLd = {
     line-height: 1.42;
     letter-spacing: -0.022em;
     max-width: 22ch;
-  }
-
-  .hero-support {
-    margin: 1.125rem 0 0;
-    font-size: clamp(1rem, 1.4vw, 1.125rem);
-    line-height: 1.6;
-    color: var(--muted);
-    max-width: 40ch;
   }
 
   .hero-actions {

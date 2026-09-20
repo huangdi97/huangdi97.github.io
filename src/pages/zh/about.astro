@@ -1,29 +1,42 @@
 ---
 /**
- * About (Chinese) — v1.6.
+ * About (Chinese) — v2.1, an introduction rather than a method statement.
  *
- * This page is where the homepage's biography went. The homepage used to carry
- * "Background" as a section of its own; a path from life science to AI systems
- * is biography, so it belongs here, next to the rest of it.
+ * What changed. v1.6 ran this page as a statement of working method: after the
+ * introduction it printed a six-card "我在做什么" grid in which each card named a
+ * technique family and described how it is applied, then a "我如何工作" section
+ * rendering the six-stage process rail, then an expanded background chain, then
+ * scope and contact (§29–§33).
  *
- * BackgroundTimeline renders the condensed five-node path (life science → wet
- * lab → computational biology → AI systems → agents); the chain below it
- * expands the same phases in words. One heading, two levels of detail.
+ * v2.1 keeps the page a person page:
+ *
+ *   · 你是谁 — the name and one headline sentence;
+ *   · a page artwork band — the same paper and ink as the homepage, without the
+ *     hero's profile and without a product screen (§30);
+ *   · 当前关注方向 — five directions, one line each, stated as areas rather than
+ *     as methods;
+ *   · 来路 — one lead sentence and the five-node path rail, whose nodes map
+ *     one-to-one onto owner-confirmed résumé fact (`data/background.ts`);
+ *   · 边界 and 联系.
+ *
+ * Removed: the six-card method grid, the "我如何工作" stages and their process
+ * rail, the design-philosophy paragraph, and the portrait branch — `SITE.portrait`
+ * is still null, so the branch rendered nothing, and the page now has a visual of
+ * its own.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Timeline from '../../components/Timeline.astro';
 import BackgroundTimeline from '../../components/BackgroundTimeline.astro';
 import ContactLinks from '../../components/ContactLinks.astro';
+import Artwork from '../../components/Artwork.astro';
+import { ARTWORK_LABELS, ART_ALT } from '../../data/artwork';
 import { SITE } from '../../config/site';
 import { useT } from '../../i18n/ui';
 import { getAbout } from '../../data/about';
-import { getHow } from '../../data/how';
 import { profilePageJsonLd } from '../../data/profile';
 
 const lang = 'zh' as const;
 const t = useT(lang);
 const about = getAbout(lang);
-const how = getHow(lang);
 
 const path = '/zh/about/';
 const enPath = '/about/';
@@ -45,31 +58,16 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
   jsonLd={profileLd}
 >
   <article class="shell section">
-    <div class:list={['about-top', SITE.portrait && 'about-top-with-portrait']}>
-      <header class="about-head">
-        <p class="eyebrow">关于</p>
-        <h1 class="display about-name">{t('hero.title')}</h1>
-        <p class="about-headline">{about.headline}</p>
-      </header>
+    <header class="about-head">
+      <p class="eyebrow">关于</p>
+      <h1 class="display about-name">{t('hero.title')}</h1>
+      <p class="about-headline">{about.headline}</p>
+    </header>
 
-      {
-        /*
-         * 肖像位。仅当 SITE.portrait 指向真实图片时才渲染。
-         * 没有照片时页面保持纯文本版式——此处不会凭空造一张脸。
-         */
-        SITE.portrait && (
-          <figure class="about-portrait">
-            <img
-              src={SITE.portrait}
-              width="480"
-              height="600"
-              alt={t('about.portraitAlt')}
-              loading="lazy"
-              decoding="async"
-            />
-          </figure>
-        )
-      }
+    <!-- 页面主视觉：与首页同一张纸、同一种墨，但不重复首页的人物侧脸，
+         也不是产品界面。 -->
+    <div class="about-band">
+      <Artwork name="about" label={ARTWORK_LABELS.about[lang]} alt={ART_ALT.about[lang]} />
     </div>
 
     <div class="about-intro">
@@ -78,15 +76,8 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
 
     <section class="about-section">
       <h2 class="h2">{about.focusTitle}</h2>
-      <ul class="focus-grid">
-        {
-          about.focus.map((item) => (
-            <li class="focus-item">
-              <h3 class="focus-title">{item.title}</h3>
-              <p class="focus-body">{item.body}</p>
-            </li>
-          ))
-        }
+      <ul class="focus-list">
+        {about.focus.map((item) => <li>{item}</li>)}
       </ul>
     </section>
 
@@ -96,25 +87,6 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
 
       <div class="about-path">
         <BackgroundTimeline lang={lang} />
-      </div>
-
-      <ol class="background-chain">
-        {
-          about.background.map((step) => (
-            <li class="background-step">
-              <p class="background-step-title">{step.title}</p>
-              <p class="background-step-body">{step.body}</p>
-            </li>
-          ))
-        }
-      </ol>
-    </section>
-
-    <section class="about-section">
-      <h2 class="h2">{about.approachTitle}</h2>
-      <p class="lead about-section-lead">{about.approachIntro}</p>
-      <div class="about-timeline">
-        <Timeline steps={how} />
       </div>
     </section>
 
@@ -136,33 +108,6 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
 </BaseLayout>
 
 <style>
-  .about-top {
-    display: grid;
-    gap: clamp(1.5rem, 3vw, 2.5rem);
-    align-items: end;
-  }
-
-  @media (min-width: 900px) {
-    .about-top-with-portrait {
-      grid-template-columns: minmax(0, 1fr) 260px;
-      gap: 3rem;
-    }
-  }
-
-  .about-portrait {
-    margin: 0;
-    border: 1px solid var(--line);
-    border-radius: 3px;
-    overflow: hidden;
-    background: var(--card);
-  }
-
-  .about-portrait img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
   .about-head {
     max-width: 44ch;
   }
@@ -177,6 +122,10 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
     line-height: 1.4;
     letter-spacing: -0.02em;
     max-width: 28ch;
+  }
+
+  .about-band {
+    margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
   }
 
   .about-intro {
@@ -203,49 +152,36 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
     margin-top: 1rem;
   }
 
-  .focus-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.75rem 3rem;
+  /* 当前关注方向：五行短句，不是六张方法卡片。 */
+  .focus-list {
     list-style: none;
-    margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+    margin: clamp(1.5rem, 3vw, 2rem) 0 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    max-width: 68ch;
   }
 
-  @media (min-width: 700px) {
-    .focus-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 1100px) {
-    .focus-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  .focus-item {
-    border-top: 1px solid var(--line);
-    padding-top: 1rem;
-  }
-
-  .focus-title {
-    font-size: 1.0625rem;
-    letter-spacing: -0.012em;
-  }
-
-  .focus-body {
-    margin-top: 0.5rem;
-    font-size: 0.9375rem;
+  .focus-list li {
+    position: relative;
+    padding-left: 1.5rem;
     color: var(--muted);
-    line-height: 1.72;
+    font-size: 0.9375rem;
+    line-height: 1.75;
   }
 
-  .about-timeline {
-    margin-top: clamp(1.75rem, 3vw, 2.5rem);
+  .focus-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.72em;
+    width: 10px;
+    height: 1px;
+    background: var(--ink);
   }
 
-  /* The condensed path rail, moved here from the homepage in v1.6. */
+  /* The five-node path rail. */
   .about-path {
     margin-top: clamp(1.75rem, 3vw, 2.5rem);
   }
@@ -276,44 +212,6 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
     width: 10px;
     height: 1px;
     background: var(--ink);
-  }
-
-  .background-chain {
-    list-style: none;
-    margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem 2.5rem;
-  }
-
-  @media (min-width: 700px) {
-    .background-chain {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 1100px) {
-    .background-chain {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  .background-step {
-    border-top: 1px solid var(--line);
-    padding-top: 1rem;
-  }
-
-  .background-step-title {
-    font-size: 0.9375rem;
-    color: var(--ink);
-  }
-
-  .background-step-body {
-    margin-top: 0.4rem;
-    font-size: 0.875rem;
-    line-height: 1.65;
-    color: var(--muted);
   }
 
   .about-actions {

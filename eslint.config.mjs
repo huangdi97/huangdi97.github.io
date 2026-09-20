@@ -14,6 +14,10 @@ export default [
       'playwright-report/**',
       'test-results/**',
       'public/**',
+      // Local review artifacts and retired scratch, all gitignored. Keeping them
+      // out of lint is what makes a local run cover the same files as CI, which
+      // never sees them at all.
+      '.qa-screens/**',
     ],
   },
   js.configs.recommended,

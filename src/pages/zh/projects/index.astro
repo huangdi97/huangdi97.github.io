@@ -1,33 +1,55 @@
 ---
 /**
- * Projects index (Chinese) — v1.6.
+ * Projects index (Chinese) — v2.1.
  *
- * This page took on the evidence half of the homepage in v1.6. The rule the
- * owner set is: the homepage answers "what have you built?", and this page
- * answers "show me the evidence". So three blocks moved here from /:
+ * What changed and why. v1.6 moved the evidence half of the homepage here and
+ * the page then grew into a project manual: a NOW strip, a five-way filter bar,
+ * seven bordered cards with capability lists and keyword pills, a dark artifact
+ * room, and the full open-source metadata table. Every individual piece was
+ * defensible; together they answered "how much is there?" instead of "what is
+ * worth looking at?".
  *
- *   NowStrip          current project status, in one rail
- *   SelectedArtifacts the inverted evidence room — it keeps its dark surface,
- *                     because here the inversion is semantic (an evidence
- *                     room), not a decorative footer accident
- *   Open Source       the full repository table with role, license and dates
+ * v2.1 (§10–§14) makes it a curated directory of public entries:
  *
- * The grid itself is unchanged: all seven projects, filterable.
+ *   1. a short lead that says how to read the list;
+ *   2. four entries, each with the project's own artwork — the same file the
+ *      homepage shows, not a second design (§11, §43) — its name, one line of
+ *      positioning, two or three lines of public intro, one status and two
+ *      links;
+ *   3. a light "other work" index for the three projects that have no public
+ *      repository and therefore no artwork: a name, a line and a status. No
+ *      drawing is invented for them (§36, §51);
+ *   4. the evidence stays, because everything in it is real and externally
+ *      checkable — but as a footnote, not a chapter. v2.1's final closure cut
+ *      the artifact room from a five-tile mosaic of repository trees, terminal
+ *      transcripts and metric dumps to a three-row "Selected Public Work" list.
+ *      The room had reached 2,875px, 44% of the page, so a visitor asking "what
+ *      have you built" met a directory listing before they met the four
+ *      projects. It is now 751px, 17%. The table in `src/data/artifacts.ts` is
+ *      untouched; only the amount of it the page prints changed. The
+ *      open-source table below it is checked-in GitHub metadata and stays.
+ *
+ * Removed: the NOW strip (its information is each entry's status line, and a
+ * "what I am working on" rail is roadmap-adjacent), the filter bar and the
+ * `groups` frontmatter it read, the card grid, and the ProjectCover component
+ * with its six `cover*` fields.
  */
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import SectionHeading from '../../../components/SectionHeading.astro';
-import ProjectCard from '../../../components/ProjectCard.astro';
-import NowStrip from '../../../components/NowStrip.astro';
+import ProjectEntry from '../../../components/ProjectEntry.astro';
 import SelectedArtifacts from '../../../components/SelectedArtifacts.astro';
 import OpenSourceList from '../../../components/OpenSourceList.astro';
 import { SITE } from '../../../config/site';
 import { useT } from '../../../i18n/ui';
-import { getProjects, FILTER_LABELS, PROJECT_FILTERS } from '../../../lib/projects';
+import { getProjects, projectHref } from '../../../lib/projects';
+import { projectStatus } from '../../../lib/projectStatus';
 
 const lang = 'zh' as const;
 const t = useT(lang);
 
-const projects = await getProjects(lang);
+const all = await getProjects(lang);
+const featured = all.filter((project) => project.data.featured);
+const others = all.filter((project) => !project.data.featured);
 
 const path = '/zh/projects/';
 const enPath = '/projects/';
@@ -41,8 +63,8 @@ const collectionLd = {
   inLanguage: 'zh-Hans',
   mainEntity: {
     '@type': 'ItemList',
-    numberOfItems: projects.length,
-    itemListElement: projects.map((p, i) => ({
+    numberOfItems: all.length,
+    itemListElement: all.map((p, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       name: p.data.title,
@@ -54,7 +76,7 @@ const collectionLd = {
 
 <BaseLayout
   title="项目"
-  description="AI 健康、计算生物学、仿真与本地优先基础设施方向的精选系统，均附完整案例研究。"
+  description="AI 健康、计算生物学、智能体与本地优先基础设施方向的精选项目。每条只说明它是什么、用来做什么，以及当前公开到什么程度。"
   lang={lang}
   path={path}
   enPath={enPath}
@@ -62,41 +84,38 @@ const collectionLd = {
   ogImage="/og/projects.png"
   jsonLd={collectionLd}
 >
-  <!-- 当前关注：项目页是它唯一合适的家。首页已不再展示。 -->
-  <NowStrip lang={lang} />
-
   <section class="shell section">
-    <SectionHeading
-      as="h1"
-      eyebrow={t('work.eyebrow')}
-      title="项目"
-      lead="以下每个项目都配有完整案例：问题定义、架构设计、技术决策，以及真正完成了什么。"
-    />
+    <SectionHeading as="h1" eyebrow={t('work.eyebrow')} title="项目" lead={t('work.public.lead')} />
 
-    <div class="filter-bar" role="group" aria-label={t('filter.label')}>
-      <button type="button" class="filter-btn is-active" data-filter="all" aria-pressed="true">
-        {t('filter.all')}
-      </button>
-      {
-        PROJECT_FILTERS.map((key) => (
-          <button type="button" class="filter-btn" data-filter={key} aria-pressed="false">
-            {FILTER_LABELS[key].zh}
-          </button>
-        ))
-      }
-      <p class="filter-count" aria-live="polite" data-filter-count data-unit={t('filter.count')}>
-        {projects.length} {t('filter.count')}
-      </p>
+    <div class="entry-grid">
+      {featured.map((project) => <ProjectEntry project={project} lang={lang} />)}
     </div>
-
-    <div class="project-grid" data-project-grid>
-      {projects.map((project, i) => <ProjectCard project={project} lang={lang} index={i} />)}
-    </div>
-
-    <p class="filter-empty" data-filter-empty hidden>{t('filter.empty')}</p>
   </section>
 
-  <!-- 证据室：从首页迁来。深色区块在这里是有语义的。 -->
+  <!-- 其他工作：没有公开仓库、也没有正式主视觉的项目，只做一份很轻的索引。 -->
+  <section class="shell section-tight">
+    <h2 class="other-title">{t('work.other')}</h2>
+    <p class="other-lead">{t('work.other.lead')}</p>
+
+    <ul class="other-list">
+      {
+        others.map((project) => {
+          const status = projectStatus(project.data.slug, lang, t);
+          return (
+            <li class="other-item">
+              <a class="other-name" href={projectHref(lang, project.data.slug)}>
+                {project.data.title}
+              </a>
+              <span class="other-line">{project.data.publicLine}</span>
+              {status && <span class="other-status">{status}</span>}
+            </li>
+          );
+        })
+      }
+    </ul>
+  </section>
+
+  <!-- 已公开内容：每件实物都引用自公开仓库。 -->
   <SelectedArtifacts lang={lang} />
 
   <section class="shell section">
@@ -112,97 +131,83 @@ const collectionLd = {
   </section>
 </BaseLayout>
 
-<script>
-  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
-  const cards = document.querySelectorAll<HTMLElement>('[data-groups]');
-  const count = document.querySelector<HTMLElement>('[data-filter-count]');
-  const empty = document.querySelector<HTMLElement>('[data-filter-empty]');
-
-  function apply(filter: string) {
-    let visible = 0;
-
-    cards.forEach((card) => {
-      const groups = (card.dataset.groups ?? '').split(' ').filter(Boolean);
-      const show = filter === 'all' || groups.includes(filter);
-      card.hidden = !show;
-      if (show) visible += 1;
-    });
-
-    buttons.forEach((btn) => {
-      const active = btn.dataset.filter === filter;
-      btn.classList.toggle('is-active', active);
-      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-
-    if (count) count.textContent = `${visible} ${count.dataset.unit ?? ''}`.trim();
-    if (empty) empty.hidden = visible !== 0;
-  }
-
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', () => apply(btn.dataset.filter ?? 'all'));
-  });
-</script>
-
 <style>
-  .filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: clamp(2rem, 4vw, 3rem);
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .filter-btn {
-    min-height: 44px;
-    padding: 0 0.875rem;
-    border: 1px solid var(--line);
-    border-radius: 2px;
-    background: transparent;
-    font-size: 0.875rem;
-    color: var(--muted);
-    transition:
-      color var(--dur-fast) var(--ease),
-      border-color var(--dur-fast) var(--ease),
-      background-color var(--dur-fast) var(--ease);
-  }
-
-  .filter-btn:hover {
-    color: var(--ink);
-    border-color: var(--line-strong);
-  }
-
-  .filter-btn.is-active {
-    color: var(--canvas);
-    background: var(--ink);
-    border-color: var(--ink);
-  }
-
-  .filter-count {
-    margin-left: auto;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--faint);
-  }
-
-  .project-grid {
+  .entry-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
-    margin-top: 2.5rem;
+    gap: clamp(2.5rem, 5vw, 3.5rem);
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
   }
 
-  @media (min-width: 700px) {
-    .project-grid {
+  @media (min-width: 760px) {
+    .entry-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(2.5rem, 4vw, 3.5rem) clamp(2rem, 4vw, 3rem);
     }
   }
 
-  .filter-empty {
-    margin-top: 2.5rem;
+  .other-title {
+    font-size: clamp(1.25rem, 2vw, 1.5rem);
+    letter-spacing: -0.022em;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .other-lead {
+    margin: 0.625rem 0 0;
+    font-size: 0.9375rem;
     color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .other-list {
+    list-style: none;
+    margin: clamp(1.5rem, 3vw, 2rem) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* A light index, not a second grid of cards: one hairline per row, the name
+     in ink, the line muted, the status quiet in the mono face. */
+  .other-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+    padding-block: 1rem;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 760px) {
+    .other-item {
+      grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) auto;
+      gap: 0.25rem 1.5rem;
+      align-items: baseline;
+    }
+  }
+
+  .other-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .other-name:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+
+  .other-line {
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  .other-status {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    white-space: nowrap;
   }
 </style>

@@ -1,61 +1,133 @@
 ---
 /**
- * Editorial artwork frame — the one component that renders the five drawings in
- * `src/assets/home/`.
+ * Editorial artwork frame — the one component that renders every page visual.
  *
- * Why the SVG is inlined rather than referenced with <img>: the drawings are
- * painted with the `--art-*` tokens, and a custom property cannot cross a
- * document boundary. Inlining is what lets one asset follow Paper, White and
- * Night without a second copy of the file.
+ * Two sources, one frame. Which one is used depends on whether the owner's
+ * official asset is in the repository yet:
  *
- * The drawings are real, version-controlled assets produced by
- * `scripts/generate-home-artwork.mjs` (`npm run artwork`) — not markup written
- * by hand inside a component. Astro cannot infer a `role`/`aria-label` for a raw
- * SVG, so the two attributes are injected here, where the locale is known.
+ *   1. A generated manifest — written by `npm run artwork:v2` for the five
+ *      homepage slots and by `npm run artwork:pages` for the two inner-page
+ *      bands. When a slot is filled, the frame renders a real `<img>` with its
+ *      intrinsic size, the per-image `object-position` from `ART_PLACEMENT`,
+ *      and the hero's left-edge fade. This is the intended end state (§1).
  *
- * The tonal wash behind the drawing is a CSS gradient on the frame rather than
- * part of the file: `stop-color` cannot read a custom property from a
- * presentation attribute, so an SVG gradient would have to hard-code a colour
- * and stop being themeable.
+ *   2. The in-repository vector artwork — the P0 placeholder drawings in
+ *      `src/assets/home/` and the two authored page bands in
+ *      `src/assets/pages/`. They are inlined rather than referenced, because
+ *      they are painted with the `--art-*` tokens and a custom property cannot
+ *      cross a document boundary; inlining is what lets one file follow Paper,
+ *      White and Night.
+ *
+ * The fallback is not a second design and it is not a substitute for the real
+ * assets (§2) — it is what keeps the page building and honest while the files
+ * are outstanding. When a manifest fills in, the drawing stops being rendered
+ * and this branch goes quiet on its own.
+ *
+ * What the frame deliberately never has, in either mode: a card fill, a border,
+ * a radius, a shadow, an overlay, a blur or a glass layer (§7, §17, §29). The
+ * image is meant to read as part of the page, not as a thumbnail placed on it.
  */
+import homeManifest from '../data/home-artwork.generated.json';
+import pageManifest from '../data/page-artwork.generated.json';
+import { ART_PLACEMENT } from '../data/artwork';
 import heroSvg from '../assets/home/hero.svg?raw';
 import wennianSvg from '../assets/home/wennian.svg?raw';
 import hycellSvg from '../assets/home/hycell.svg?raw';
 import mornSvg from '../assets/home/morn.svg?raw';
 import biopulseSvg from '../assets/home/biopulse.svg?raw';
+import researchSvg from '../assets/pages/research.svg?raw';
+import aboutSvg from '../assets/pages/about.svg?raw';
 
-export type ArtworkName = 'hero' | 'wennian' | 'hycell' | 'morn' | 'biopulse';
+export type ArtworkName =
+  'hero' | 'wennian' | 'hycell' | 'morn' | 'biopulse' | 'research' | 'about';
 
 export interface Props {
   name: ArtworkName;
-  /** Spoken description. The drawing carries meaning, so it is never silent. */
+  /** Spoken description of the placeholder drawing. The drawing carries meaning, so it is never silent. */
   label: string;
+  /** Short alternative text for the official raster asset (§50). Falls back to `label`. */
+  alt?: string;
   /** Extra classes on the frame, for layout only. */
   class?: string;
 }
 
-const { name, label, class: className } = Astro.props;
+const { name, label, alt, class: className } = Astro.props;
 
+interface ArtworkAsset {
+  src: string;
+  avif?: string;
+  width: number;
+  height: number;
+  bytes: number;
+}
+
+/* Both manifests are generated JSON, so their keys are inferred as `null` until
+   the optimizer runs. The cast is the honest description of the runtime
+   contract: a slot is either a filled asset record or absent. Merging them here
+   keeps one lookup in the component and one writer per pipeline. */
+const assets = {
+  ...((homeManifest.images ?? {}) as unknown as Record<string, ArtworkAsset | null>),
+  ...((pageManifest.images ?? {}) as unknown as Record<string, ArtworkAsset | null>),
+};
+const asset = assets[name] ?? null;
+
+const placement = ART_PLACEMENT[name] ?? { position: '50% 50%', ratio: '4 / 3' };
+const isHero = name === 'hero';
+
+/* §48: the hero is the LCP element and must not be deferred; the four project
+   images sit below the fold and must be. v2.1: the /research and /about bands
+   are their pages' LCP element, so they load eagerly for the same reason. */
+const isPageHero = name === 'research' || name === 'about';
+const loading = isHero || isPageHero ? 'eager' : 'lazy';
+const fetchpriority = isHero || isPageHero ? 'high' : 'auto';
 const ART: Record<ArtworkName, string> = {
   hero: heroSvg,
   wennian: wennianSvg,
   hycell: hycellSvg,
   morn: mornSvg,
   biopulse: biopulseSvg,
+  research: researchSvg,
+  about: aboutSvg,
 };
 
 const safeLabel = label.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
 /* Astro cannot type a `?raw` import as anything but a string, so the one
    attribute injection happens here, explicitly, instead of being hoped for. */
-const svg = ART[name].replace(
-  '<svg ',
-  `<svg role="img" aria-label="${safeLabel}" `,
-);
+const svg = ART[name].replace('<svg ', `<svg role="img" aria-label="${safeLabel}" `);
 ---
 
-<figure class:list={['art', `art--${name}`, className]} data-artwork={name}>
-  <div class="art-ink" set:html={svg} />
+<figure
+  class:list={[
+    'art',
+    `art--${name}`,
+    asset && 'art--raster',
+    isPageHero && 'art--band',
+    className,
+  ]}
+  data-artwork={name}
+  data-artwork-source={asset ? 'asset' : 'placeholder'}
+  style={`--art-ratio: ${placement.ratio}; --art-pos: ${placement.position}; --art-ratio-sm: ${placement.mobileRatio ?? placement.ratio}; --art-pos-sm: ${placement.mobilePosition ?? placement.position};`}
+>
+  {
+    asset ? (
+      <picture>
+        {asset.avif && <source srcset={asset.avif} type="image/avif" />}
+        <img
+          class="art-img"
+          src={asset.src}
+          width={asset.width}
+          height={asset.height}
+          alt={alt ?? label}
+          loading={loading}
+          fetchpriority={fetchpriority}
+          decoding="async"
+        />
+      </picture>
+    ) : (
+      <div class="art-ink" set:html={svg} />
+    )
+  }
 </figure>
 
 <style>
@@ -82,5 +154,159 @@ const svg = ART[name].replace(
     width: 100%;
     height: auto;
     overflow: visible;
+  }
+
+  /* ── the official asset ──────────────────────────────────────────────────── */
+
+  /* A raster asset brings its own tonal mass, so the placeholder's wash goes.
+     The frame keeps only its proportion: `aspect-ratio` is what reserves the
+     space before the bytes arrive, which is the whole of the CLS story (§49). */
+  .art--raster {
+    aspect-ratio: var(--art-ratio);
+    overflow: hidden;
+    background-image: none;
+  }
+
+  .art--raster picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .art--raster .art-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* §27/§28: the source images may differ in proportion; the frame does not.
+       Cover plus a per-image position is what reconciles the two. */
+    object-fit: cover;
+    object-position: var(--art-pos);
+  }
+
+  /* §9: the hero artwork does not start at a hard edge. It arrives out of the
+     paper — transparent, then half, then whole. A mask rather than a gradient
+     painted in the canvas colour, so it stays correct in all three themes
+     without hard-coding #f0eee8.
+     The same gradient closes again over the last 3.5% on the right: the
+     artwork's own paper ground is a shade warmer than the canvas (#f3ebdf
+     against #f0eee8), and without it the frame ends on a visible vertical step.
+     Both edges in one gradient, because a single `to right` ramp can say both
+     and needs no mask compositing. */
+  .art--hero.art--raster .art-img {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(0, 0, 0, 0.22) 7%,
+      rgba(0, 0, 0, 0.68) 20%,
+      #000 38%,
+      #000 96.5%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(0, 0, 0, 0.22) 7%,
+      rgba(0, 0, 0, 0.68) 20%,
+      #000 38%,
+      #000 96.5%,
+      transparent 100%
+    );
+  }
+
+  /* The horizontal and vertical edges of the same picture, as a second mask on
+     the wrapper — masks on nested elements multiply, which is how the top and
+     bottom get a 3% feather without `mask-composite` and its vendor-prefix
+     differences. Together the two masks leave no straight line anywhere on the
+     hero frame. */
+  .art--hero.art--raster picture {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 3%,
+      #000 97%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 3%, #000 97%, transparent 100%);
+  }
+
+  /* §23/§30: the /research and /about bands run the full content width, and the
+     artwork brings its own paper ground — a shade warmer than the canvas. Left
+     alone, the band ends on four hard edges and reads as a plate pasted onto the
+     page, which is the one thing this frame is not allowed to be. So the band is
+     feathered into the paper instead: horizontal on the innermost element and
+     vertical on the wrapper, because masks on nested elements multiply and that
+     avoids `mask-composite` and its vendor-prefix differences.
+     The hero uses the same mechanism for the same reason; it only fades on one
+     side, because the other side is where its text begins.
+
+     The two horizontal edges are deliberately asymmetric, and the reason is
+     measured rather than aesthetic. Column-wise ink profiling of both Owner
+     assets puts the first ink at 45.3% (research) and 29.1% (about), so the left
+     9% ramps across nothing but the artwork's own blank paper and can stay wide.
+     The right edge is the opposite: it *is* content — the final column of
+     `about.webp` measures 91.9% of that image's peak column deviation, and
+     `research.webp` reaches 52.4% only 3% in. A 9% ramp there was fading real
+     subject, which is what the owner saw as a washed-out right side. It is
+     pulled back to the hero's already-validated 3.5% (96.5%), the narrowest
+     value that still hides the warmer paper step. */
+  .art--band.art--raster .art-img,
+  .art--band:not(.art--raster) .art-ink :global(svg) {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      #000 9%,
+      #000 96.5%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 96.5%, transparent 100%);
+  }
+
+  .art--band.art--raster picture,
+  .art--band:not(.art--raster) .art-ink {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 13%,
+      #000 87%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 13%, #000 87%, transparent 100%);
+  }
+
+  /* §44: Night is not this round's subject — it only has to not break. These are
+     light-canvas artworks, and on the dark ground they glare. Easing them back a
+     few percent takes the edge off without muddying them and without a second set
+     of files. Nothing here is tuned: Night was checked, not designed. */
+  [data-theme='night'] .art--raster .art-img {
+    opacity: 0.95;
+    filter: brightness(0.92);
+  }
+
+  /* §26/§27: a phone frame is a different crop, not a scaled-down one. Each slot
+     declares its own mobile frame and position in `ART_PLACEMENT`; both fall back
+     to the desktop values, so a slot that declares neither is unaffected and the
+     desktop composition is never re-derived from a phone rule. */
+  @media (max-width: 899px) {
+    .art--raster {
+      aspect-ratio: var(--art-ratio-sm);
+    }
+
+    .art--raster .art-img {
+      object-position: var(--art-pos-sm);
+    }
+  }
+
+  /* §45/§46: on a phone the hero artwork is full width and simply crops to the
+     frame. The desktop left fade is dropped — there is no text beside it to fade
+     towards, and keeping it would eat a third of a small image. */
+  @media (max-width: 899px) {
+    .art--hero.art--raster .art-img {
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+
+    .art--hero.art--raster {
+      aspect-ratio: 4 / 3;
+    }
   }
 </style>

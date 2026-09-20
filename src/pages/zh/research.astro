@@ -1,27 +1,37 @@
 ---
 /**
- * Research (Chinese) — v1.6.
+ * Research (Chinese) — v2.1, a page of questions rather than a method statement.
  *
- * The homepage now shows three research rows and nothing more; the full record
- * lives here, which is where a reader who wants the diagrams has actually
- * chosen to go:
+ * What changed. v1.6 treated this route as the full record of a research
+ * programme: the five directions (each a core question plus four bulleted
+ * current interests), then a complete mathematical-biology figure set — a cell
+ * landscape, an expression matrix, a bio network and a phase portrait — then a
+ * standalone conceptual equation, then the dated lab-note log. Every part was
+ * honest and every part was internal design: it answered "how would you build
+ * this" for a reader who came to find out what the questions are (§22–§28).
  *
- *   research areas        the five directions, active and concept tiered
- *   mathematical biology  the full figure set (landscape, matrix, network,
- *                         phase portrait) plus the concept loop
- *   conceptual model      the state-transition expression, in full
- *   lab notes             the complete dated log
+ * v2.1 keeps four things and stops:
  *
- * The tier split is a truth claim, not a style choice: a direction tied to
- * inspectable code is never rendered as the twin of a written concept. TaiYi
- * Lingjing appears in the concept tier and stays "Concept / Not Started".
+ *   · a page artwork band — the research field, the same paper and ink as the
+ *     homepage, with neither the hero's profile nor a project's composition
+ *     (§23);
+ *   · five directions, each one to three sentences, stated as a problem rather
+ *     than as a method (§24);
+ *   · the two tiers, because "tied to code you can open" and "a written
+ *     direction whose system does not exist" are different claims and are never
+ *     rendered as equally finished (§28);
+ *   · the lab notes, which are a short record of what changed in public — no
+ *     roadmap, no internal design (§36–§38).
+ *
+ * Removed: the figure set, the equation, the interest lists, the framework
+ * vocabulary and the speculative system design.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import ResearchArea from '../../components/ResearchArea.astro';
-import MathematicalBiology from '../../components/MathematicalBiology.astro';
-import EquationNote from '../../components/EquationNote.astro';
 import LabNotes from '../../components/LabNotes.astro';
+import Artwork from '../../components/Artwork.astro';
+import { ARTWORK_LABELS, ART_ALT } from '../../data/artwork';
 import { getResearch } from '../../data/research';
 import { useT } from '../../i18n/ui';
 
@@ -30,9 +40,10 @@ const t = useT(lang);
 const areas = getResearch(lang);
 
 /**
- * 层级划分随列表一起迁移。它原先在首页，若只搬列表而丢掉划分，就等于抹掉了一个
- * 事实判断：有可检视代码的方向，会被渲染成与书面概念同等完成度。
- * active 指可以打开代码的方向；concept 指目标系统尚不存在的方向。
+ * 层级划分随列表一起保留。它是事实判断而非样式选择：有可检视代码的方向，
+ * 不会被渲染成与书面概念同等完成度。active 指可以打开代码的方向；
+ * concept 指目标系统尚不存在的方向（太一·灵境始终属于后者，且始终标注为
+ * 「概念 · 尚未开始」）。
  */
 const activeAreas = areas.filter((area) => area.tier === 'active');
 const conceptAreas = areas.filter((area) => area.tier === 'concept');
@@ -59,6 +70,18 @@ const zhPath = '/zh/research/';
       lead={t('research.lead')}
     />
 
+    <!-- 页面主视觉：与首页同一张纸、同一种墨，但不重复首页的人物侧脸，
+         也不重复任何项目的构图。 -->
+    <div class="research-band">
+      <Artwork
+        name="research"
+        label={ARTWORK_LABELS.research[lang]}
+        alt={ART_ALT.research[lang]}
+      />
+    </div>
+  </section>
+
+  <section class="shell section-compact">
     <div class="research-body">
       <div class="research-tier">
         <p class="research-tier-label mono">{t('research.active')}</p>
@@ -76,20 +99,16 @@ const zhPath = '/zh/research/';
     </div>
   </section>
 
-  <!-- 数学 × 生物：完整图集从首页迁到这里。 -->
-  <MathematicalBiology lang={lang} />
-
-  <div class="shell">
-    <EquationNote lang={lang} />
-  </div>
-
-  <!-- 研究札记：完整日志从首页迁到这里。 -->
   <LabNotes lang={lang} />
 </BaseLayout>
 
 <style>
+  .research-band {
+    margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
+  }
+
   .research-body {
-    margin-top: clamp(2rem, 4vw, 3.5rem);
+    margin-top: clamp(1rem, 2vw, 1.5rem);
   }
 
   .research-tier + .research-tier {

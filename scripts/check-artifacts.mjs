@@ -1,7 +1,7 @@
 /**
  * Artifact gate.
  *
- * The Selected Artifacts room only works if every item in it can be opened and
+ * The Selected Public Work list only works if every item in it can be opened and
  * checked by a stranger. This gate enforces that, and enforces the two things
  * that would quietly ruin it: a fabricated artifact, and an artifact that leaks
  * something private while claiming to be real.
@@ -13,7 +13,15 @@
  *   4. no placeholder markers — no TODO, no lorem, no example.com;
  *   5. no credential, token, private host or private contact in a body;
  *   6. ids are unique and every `projectSlug` maps to a real project;
- *   7. the built pages render each artifact together with its source link.
+ *   7. the built pages render between one and three artifacts, each with its
+ *      source link and snapshot date, and never a raw repository tree, terminal
+ *      transcript or metric dump.
+ *
+ * Rule 7 used to read "render every artifact". v2.1's final closure cut the room
+ * from a five-tile mosaic to a three-row list, and the reduction is only real if
+ * something holds it there — so the gate now checks both directions: nothing
+ * rendered that is not in the table, and nothing from the table rendered in a
+ * shape the page is not allowed to print.
  *
  * Usage: node scripts/check-artifacts.mjs
  */
@@ -247,8 +255,25 @@ entries.forEach((entry, index) => {
 /* -------------------------------------------------------------------------- */
 
 // v1.6: the artifact room is no longer a homepage section. The homepage answers
-// "what have you built"; the evidence room answers "show me the evidence", and
+// "what have you built"; the evidence list answers "show me the evidence", and
 // that question belongs to /projects. Both locales carry it there.
+//
+// v2.1 FINAL CLOSURE: /projects prints a three-row "Selected Public Work" list
+// rather than a five-tile mosaic of trees and transcripts. The table in
+// `src/data/artifacts.ts` is untouched — it is still the whole record, and rules
+// 1–6 still check every entry in it. What changed is how much of it the page is
+// allowed to print, so this section checks the new shape: a bounded selection,
+// each row carrying its provenance, and no raw body anywhere.
+const MAX_RENDERED = 3;
+
+/** Astro escapes text nodes this way; a body that rendered would appear escaped. */
+const escapeHtml = (value) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
 const pages = [join(dist, 'projects', 'index.html'), join(dist, 'zh', 'projects', 'index.html')].filter(
   (p) => existsSync(p),
 );
@@ -257,24 +282,67 @@ checks += 1;
 if (pages.length === 0) {
   fail('dist has no built projects pages — run npm run build first');
 } else {
+  const bodies = entries
+    .map((entry) => ({ id: field(entry, 'id'), body: field(entry, 'body') }))
+    .filter((e) => e.body && e.body.trim().length > 0);
+
   for (const page of pages) {
     const html = readFileSync(page, 'utf8');
-    for (const id of seenIds) {
-      checks += 1;
-      if (!html.includes(id)) {
-        fail(`${relative(root, page)} does not render artifact "${id}"`);
-      }
+    const rel = relative(root, page);
+
+    /* Which artifacts the page actually rendered, read off the markup rather
+       than assumed from the component's source — a selection that is not
+       rendered is not evidence, and an id that is rendered but absent from the
+       table is a fabricated one. */
+    const rendered = [...html.matchAll(/data-artifact="([^"]+)"/g)].map((m) => m[1]);
+
+    checks += 1;
+    if (rendered.length === 0) fail(`${rel} renders no artifact at all`);
+
+    checks += 1;
+    if (rendered.length > MAX_RENDERED) {
+      fail(
+        `${rel} renders ${rendered.length} artifacts — the cap is ${MAX_RENDERED}. ` +
+          `The list is a footnote to the four projects, not a second page.`,
+      );
     }
+
+    for (const id of rendered) {
+      checks += 1;
+      if (!seenIds.has(id)) fail(`${rel} renders "${id}", which is not in the artifact table`);
+    }
+
     for (const entry of entries) {
+      const id = field(entry, 'id');
+      if (!rendered.includes(id)) continue;
+
       const url = field(entry, 'sourceUrl');
-      if (!url) continue;
       checks += 1;
-      if (!html.includes(url)) {
-        fail(`${relative(root, page)} does not link the source of "${field(entry, 'id')}" (${url})`);
+      if (url && !html.includes(url)) {
+        fail(`${rel} does not link the source of "${id}" (${url})`);
+      }
+
+      const date = field(entry, 'date');
+      checks += 1;
+      if (date && !html.includes(date)) {
+        fail(`${rel} does not print the snapshot date of "${id}" (${date})`);
       }
     }
+
+    /* §35, enforced: a repository tree, a terminal transcript and a metric dump
+       are all things the repository can be opened for. Printing them here is
+       what made the room 44% of the page. */
+    for (const { id, body } of bodies) {
+      checks += 1;
+      if (html.includes(escapeHtml(body))) {
+        fail(
+          `${rel} renders the raw body of "${id}" — trees, terminal transcripts and metric dumps do not belong on /projects`,
+        );
+      }
+    }
+
+    notes.push(`${rel}: ${rendered.length} artifact(s) rendered, 0 raw bodies`);
   }
-  notes.push(`${pages.length} projects page(s) checked for artifact render + source links`);
 }
 
 /* And the homepage must NOT carry it any more — that is the whole point of the
