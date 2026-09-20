@@ -43,6 +43,7 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
   ogImage="/og/about.png"
   type="profile"
   jsonLd={profileLd}
+  minimalFooter={true}
   backgroundMode="about"
   preloadArtwork="about"
 >
@@ -53,8 +54,11 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
       <p class="about-headline">{about.headline}</p>
     </header>
 
-    <!-- Page artwork: the same paper and ink as the homepage, without the
-         hero's profile and without a product screen. -->
+    <!-- §26: the desk is an environment, not a plate. It stays where v2.1 put
+         it — right-aligned under the header — but it is no longer a rectangle:
+         `art--accent` fades its left edge into the paper and drops it to 0.18,
+         so it reads as the room the page is set in rather than as a picture
+         placed on it. -->
     <div class="about-band">
       <Artwork name="about" label={ARTWORK_LABELS.about[lang]} alt={ART_ALT.about[lang]} />
     </div>
@@ -113,13 +117,21 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameEn} — About`);
     max-width: 28ch;
   }
 
-  /* §30: the same downgrade as /research — the desk is an environment, not the
-     page's largest object. Capped and right-aligned; ratio and position
-     untouched, so the crop is identical and only the size changed. */
+  /* §26: a right-side environment rather than a centred rectangle. v2.1 capped
+     this at 56rem and right-aligned it; v2.2.1 lets it run a little wider and
+     out towards the page edge, and `art--accent` supplies the fade and the
+     0.18 weight. The frame's ratio and object position are untouched, so the
+     crop is the same 25%–100% window — only how much of it is inked changed. */
   .about-band {
     margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
-    max-width: 56rem;
+    max-width: 62rem;
     margin-left: auto;
+  }
+
+  @media (min-width: 1024px) {
+    .about-band {
+      margin-right: calc(-1 * clamp(1rem, 3vw, 3.5rem));
+    }
   }
 
   .about-intro {

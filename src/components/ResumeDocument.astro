@@ -185,7 +185,13 @@ const eyebrow = lang === 'zh' ? '简历' : 'Resume';
   .resume {
     padding-top: clamp(1.5rem, 3vw, 2.5rem);
     padding-bottom: clamp(3rem, 6vw, 5rem);
-    max-width: 60rem;
+    /* §32: the desktop column was 60rem, which measured as an 848px content box
+       inside a 1440px viewport — a 240px margin either side and a further
+       ~110px of unused column, i.e. the "right side is too empty" the owner
+       reported. 66rem puts the content box at 944px, inside §32's 900–1040
+       band, and still leaves 192px of margin at 1440 so the page does not read
+       as a wall of text. Measured, not derived: see the report's §32 entry. */
+    max-width: 66rem;
   }
 
   .resume-bar {
@@ -236,7 +242,7 @@ const eyebrow = lang === 'zh' ? '简历' : 'Resume';
 
   .resume-head {
     padding-top: clamp(2rem, 4vw, 3rem);
-    max-width: 52ch;
+    max-width: 60ch;
   }
 
   .resume-name {
@@ -274,7 +280,7 @@ const eyebrow = lang === 'zh' ? '简历' : 'Resume';
     font-size: 0.9375rem;
     line-height: 1.72;
     color: var(--muted);
-    max-width: 68ch;
+    max-width: 78ch;
     margin-bottom: 0.75rem;
   }
 
@@ -382,7 +388,7 @@ const eyebrow = lang === 'zh' ? '简历' : 'Resume';
     font-size: 0.9rem;
     line-height: 1.7;
     color: var(--muted);
-    max-width: 66ch;
+    max-width: 76ch;
   }
 
   .resume-entry-lines li::before {
@@ -443,7 +449,7 @@ const eyebrow = lang === 'zh' ? '简历' : 'Resume';
     font-size: 0.875rem;
     line-height: 1.7;
     color: var(--muted);
-    max-width: 68ch;
+    max-width: 78ch;
   }
 
   /* ── Projects & outputs ──────────────────────────────────────────── */
@@ -461,7 +467,7 @@ const eyebrow = lang === 'zh' ? '简历' : 'Resume';
 
   .resume-projects .resume-value {
     margin-top: 0.25rem;
-    max-width: 62ch;
+    max-width: 70ch;
     line-height: 1.7;
   }
 
@@ -475,7 +481,7 @@ const eyebrow = lang === 'zh' ? '简历' : 'Resume';
     font-size: 0.9375rem;
     line-height: 1.6;
     color: var(--ink);
-    max-width: 68ch;
+    max-width: 78ch;
   }
 
   .resume-output-status {

@@ -45,9 +45,10 @@ const en = {
 
   /* v2.1 (§10–§14): /projects is a curated directory of public entries, not a
      filterable catalogue. The lead says how to read the list, not how much
-     there is. */
+     there is — and since v2.2.1 (§35) it no longer promises to say "what it is
+     for", because the entry no longer carries a paragraph saying so. */
   'work.public.lead':
-    'A short, curated list. Each entry says what the project is, what it is for, and how much of it can be opened today.',
+    'A short, curated list. Each entry says what the project is and how much of it is public today.',
   'work.other': 'Other work',
   'work.other.lead': 'Specification, architecture and concept work — nothing public to open yet.',
 
@@ -56,8 +57,12 @@ const en = {
 
   'research.eyebrow': 'What I am exploring',
 
+  /* §15–§16: the old lead explained the page's own editorial rules — "Five
+     directions I keep returning to. Each one is stated as a question, not as a
+     method." A visitor does not need to be told how many directions there are,
+     or why the page withholds methods. This says what the work is about. */
   'research.lead':
-    'Five directions I keep returning to. Each one is stated as a question, not as a method.',
+    'Exploring long-term questions across biological systems, computational models and intelligent systems.',
 
   'research.projects': 'Related projects',
 
@@ -66,8 +71,9 @@ const en = {
 
   'oss.eyebrow': 'Open Source',
   'oss.title': 'Open Source & Engineering',
-  'oss.lead':
-    'Public repositories under the same account. Language, license and update date are checked in from GitHub metadata — no star counts, no runtime API calls.',
+  /* §48: v1.6 explained the implementation — where the metadata came from and
+     what the build does not call. That is a note to a maintainer. One line. */
+  'oss.lead': 'Public repositories and selected open-source work.',
   'oss.all': 'View GitHub profile',
   'oss.language': 'Language',
   'oss.license': 'License',
@@ -230,7 +236,9 @@ const zh: Dict = {
 
   'research.eyebrow': '正在探索',
 
-  'research.lead': '五个持续投入的方向。每个方向只给出问题本身，不展开方法。',
+  /* §15–§16：原句是「五个持续投入的方向。每个方向只给出问题本身，不展开方法。」
+     访客既不需要知道方向的数量，也不需要被告知本站为什么不展开方法。 */
+  'research.lead': '探索生命系统、计算模型与智能系统之间值得长期研究的问题。',
 
   'research.projects': '关联项目',
 
@@ -239,7 +247,8 @@ const zh: Dict = {
 
   'oss.eyebrow': '开源',
   'oss.title': '开源与工程',
-  'oss.lead': '同一账号下的公开仓库。语言、许可证与更新日期来自已签入的 GitHub 元数据——不显示 star 数，不做运行时 API 调用。',
+  /* §48：原句在向访客解释实现细节，那是写给维护者的。收成一句。 */
+  'oss.lead': '公开仓库与部分开源工作。',
   'oss.all': '查看 GitHub 主页',
   'oss.language': '语言',
   'oss.license': '许可证',

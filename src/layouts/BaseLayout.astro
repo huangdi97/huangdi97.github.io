@@ -34,19 +34,21 @@ export interface Props {
    */
   minimalFooter?: boolean;
   /**
-   * How much atmosphere this page gets (v2.2 §33–§34).
+   * How much atmosphere this page gets (§33–§34, re-layered in v2.2.1).
    *
-   * Replaces the v1.7 `canvas` boolean. That flag could only say on or off, and
-   * "off" was the homepage's answer — which is exactly the state the owner
-   * reported as broken, because with the canvas off and the artwork still
-   * loading there was nothing behind the words at all. A mode says *how much*
-   * instead, and every page now has some.
+   * A mode is a whole variant, not just a density: the mark set, the placement
+   * of every mark and the depth of the wash all move with it, because a site
+   * whose pages differ only in opacity does not have a hierarchy — it has one
+   * background with the dial nudged. `home` is the default, which is what the
+   * homepage and the project case studies get.
    *
-   *   default   homepage, /projects and case studies
-   *   research  the richest mode — /research
-   *   about     quieter, notebook-leaning — /about
-   *   resume    notation only — /resume
-   *   minimal   wash and texture, no marks — 404
+   *   home        medium       homepage and case studies
+   *   projects    medium-low   the curated directory — /projects
+   *   research    medium-high  the richest field — /research
+   *   about       medium-low   quieter, notebook-leaning — /about
+   *   resume      very low     one notation fragment — /resume
+   *   opensource  low          reserved; no route mounts it today
+   *   minimal     wash + grain only, no marks — 404
    */
   backgroundMode?: BackgroundMode;
   /**
@@ -80,7 +82,7 @@ const {
   noindex = false,
   mainClass,
   minimalFooter = false,
-  backgroundMode = 'default',
+  backgroundMode = 'home',
   preloadArtwork,
 } = Astro.props;
 

@@ -13,15 +13,15 @@
  *   4. no placeholder markers — no TODO, no lorem, no example.com;
  *   5. no credential, token, private host or private contact in a body;
  *   6. ids are unique and every `projectSlug` maps to a real project;
- *   7. the built pages render between one and three artifacts, each with its
- *      source link and snapshot date, and never a raw repository tree, terminal
- *      transcript or metric dump.
+ *   7. the built pages render **no** artifact row, no artifact room and no raw
+ *      repository tree, terminal transcript or metric dump.
  *
- * Rule 7 used to read "render every artifact". v2.1's final closure cut the room
- * from a five-tile mosaic to a three-row list, and the reduction is only real if
- * something holds it there — so the gate now checks both directions: nothing
- * rendered that is not in the table, and nothing from the table rendered in a
- * shape the page is not allowed to print.
+ * Rule 7 has been tightened twice, in the same direction both times. v1.6 moved
+ * the room off the homepage; v2.1's final closure cut it from a five-tile mosaic
+ * to a three-row list; v2.2.1 (§42–§44) removes it from /projects entirely, so
+ * the ceiling is now zero and the reduction is held by a check rather than by
+ * the component's source. Rules 1–6 are unchanged and still validate every entry
+ * in the table, which remains the whole record.
  *
  * Usage: node scripts/check-artifacts.mjs
  */
@@ -258,13 +258,20 @@ entries.forEach((entry, index) => {
 // "what have you built"; the evidence list answers "show me the evidence", and
 // that question belongs to /projects. Both locales carry it there.
 //
-// v2.1 FINAL CLOSURE: /projects prints a three-row "Selected Public Work" list
-// rather than a five-tile mosaic of trees and transcripts. The table in
-// `src/data/artifacts.ts` is untouched — it is still the whole record, and rules
-// 1–6 still check every entry in it. What changed is how much of it the page is
-// allowed to print, so this section checks the new shape: a bounded selection,
-// each row carrying its provenance, and no raw body anywhere.
-const MAX_RENDERED = 3;
+// v2.1 FINAL CLOSURE: /projects printed a three-row "Selected Public Work" list
+// rather than a five-tile mosaic of trees and transcripts.
+//
+// v2.2.1 (§42–§44): /projects prints none of it. The owner's read was that the
+// inverted block was a second website bolted onto a paper page, that it put the
+// page's information density back up, and that it duplicated what the four
+// entries already say — so §42 removes the block outright and §44 allows at most
+// one line of exit in its place.
+//
+// The table is untouched: rules 1–6 still check every entry in
+// `src/data/artifacts.ts`, which remains the record. What this section now
+// asserts is the *absence* — zero rows, zero raw bodies, on both locales — so
+// the block cannot quietly return one row at a time.
+const MAX_RENDERED = 0;
 
 /** Astro escapes text nodes this way; a body that rendered would appear escaped. */
 const escapeHtml = (value) =>
@@ -291,42 +298,24 @@ if (pages.length === 0) {
     const rel = relative(root, page);
 
     /* Which artifacts the page actually rendered, read off the markup rather
-       than assumed from the component's source — a selection that is not
-       rendered is not evidence, and an id that is rendered but absent from the
-       table is a fabricated one. */
+       than assumed from the component's source — an id that is rendered but
+       absent from the table would be a fabricated one. */
     const rendered = [...html.matchAll(/data-artifact="([^"]+)"/g)].map((m) => m[1]);
-
-    checks += 1;
-    if (rendered.length === 0) fail(`${rel} renders no artifact at all`);
 
     checks += 1;
     if (rendered.length > MAX_RENDERED) {
       fail(
-        `${rel} renders ${rendered.length} artifacts — the cap is ${MAX_RENDERED}. ` +
-          `The list is a footnote to the four projects, not a second page.`,
+        `${rel} renders ${rendered.length} artifact(s) — the cap is ${MAX_RENDERED}. ` +
+          '§42 removes the block from /projects; the table stays the record.',
       );
     }
+
+    checks += 1;
+    if (/id="artifacts"/.test(html)) fail(`${rel} renders the inverted artifact room again`);
 
     for (const id of rendered) {
       checks += 1;
       if (!seenIds.has(id)) fail(`${rel} renders "${id}", which is not in the artifact table`);
-    }
-
-    for (const entry of entries) {
-      const id = field(entry, 'id');
-      if (!rendered.includes(id)) continue;
-
-      const url = field(entry, 'sourceUrl');
-      checks += 1;
-      if (url && !html.includes(url)) {
-        fail(`${rel} does not link the source of "${id}" (${url})`);
-      }
-
-      const date = field(entry, 'date');
-      checks += 1;
-      if (date && !html.includes(date)) {
-        fail(`${rel} does not print the snapshot date of "${id}" (${date})`);
-      }
     }
 
     /* §35, enforced: a repository tree, a terminal transcript and a metric dump
@@ -341,17 +330,17 @@ if (pages.length === 0) {
       }
     }
 
-    notes.push(`${rel}: ${rendered.length} artifact(s) rendered, 0 raw bodies`);
+    notes.push(`${rel}: 0 artifact rows, 0 raw bodies (table holds ${entries.length})`);
   }
 }
 
-/* And the homepage must NOT carry it any more — that is the whole point of the
+/* And the homepage must not carry it either — that is the whole point of the
    v1.6 reduction, and it is exactly the kind of thing that creeps back. */
 for (const home of [join(dist, 'index.html'), join(dist, 'zh', 'index.html')]) {
   if (!existsSync(home)) continue;
   checks += 1;
   if (readFileSync(home, 'utf8').includes('id="artifacts"')) {
-    fail(`${relative(root, home)} renders the artifact room again — it belongs on /projects`);
+    fail(`${relative(root, home)} renders the artifact room again — §42 keeps it off every public page`);
   }
 }
 

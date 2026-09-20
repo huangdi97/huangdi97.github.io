@@ -120,45 +120,41 @@ export const ART_PLACEMENT: Record<string, ArtworkPlacement> = {
   morn: { position: '50% 50%', ratio: '3 / 2' },
   biopulse: { position: '52% 50%', ratio: '3 / 2' },
 
-  /* v2.1 FINAL CLOSURE: the two page bands, now carrying the owner's official
-     raster artwork. Both sources are 1774×887 — exactly 2:1 — with the subject
+  /* v2.2.1: the two page drawings stop being bands and become side accents
+     (§19–§21, §26). Both sources are 1774×887 — exactly 2:1 — with the subject
      mass on the right and a wide empty left margin, so the frame and the
-     position were both chosen against the picture rather than assumed.
+     position are still chosen against the picture rather than assumed.
 
      Measured, not guessed: a per-column luminance-variance profile puts the
      first real ink at 45.3% across for /research and 29.1% for /about, which is
      what makes the left margin safe to spend.
 
-     The frame is 8:5 rather than the source's 2:1. A 2:1 frame crops nothing,
-     so `object-position` would be a no-op and the band would be a flat 1088×544
-     strip of mostly empty paper. 8:5 spends 20% of the width — all of it the
-     dead left margin — and the position is 100% so that *nothing* is taken from
-     the right, where every named element sits: for /research the DNA helix, the
-     protein ribbon and the molecular structures; for /about the book stack and
-     the plant. A 3:2 or 4:3 frame would have cropped that right edge.
-
-     Checked by rendering the crop (`npm run artwork:preview`) and looking at it,
-     per §18/§22. The brief's opening values — 70% and 72% — were tried first and
-     both clipped the DNA helix, which §18 forbids; 100% is the fine-tune. */
+     The frame is now 3:2 rather than 8:5. In the two-column hero the drawing
+     occupies a ~590px column, so a taller frame is what makes it read as an
+     environment beside the copy rather than as a strip above it; and 3:2 at
+     `100% 50%` shows source 25%–100%, which contains every named element —
+     for /research the neural network, the DNA helix, the protein ribbon and the
+     molecular structures; for /about the notebook, the cup, the desk surface,
+     the flask and the book stack. The frame's own left fade then removes the
+     25%–40% band, which is the sources' blank paper. */
   research: {
     position: '100% 50%',
-    ratio: '8 / 5',
+    ratio: '3 / 2',
     /* §27: the phone frame is tighter so the network reads at 342px wide. 4:3 at
        84% shows 28.0%–94.6% of the source — the neural network, both equations,
        the log-probability, the cell forms and the body of the helix all survive;
-       the outer 5.4% is the helix's tail and molecular edge, which the band's
-       own right-edge feather softens anyway. */
+       the outer 5.4% is the helix's tail and molecular edge, which the accent's
+       own left fade softens anyway. */
     mobilePosition: '84% 50%',
     mobileRatio: '4 / 3',
   },
   about: {
     position: '100% 50%',
-    ratio: '8 / 5',
+    ratio: '3 / 2',
     /* §27: /about carries less dead margin (ink starts at 29.1%), so its phone
        crop is gentler than /research's. 3:2 at 90% shows 22.5%–97.5% — the
        notebook, the cup, the desk surface, the flask and the book stack are all
-       inside the frame. §22's "do not end up with only the wall formulas" is
-       the reason the window stays low and wide. */
+       inside the frame. */
     mobilePosition: '90% 50%',
     mobileRatio: '3 / 2',
   },
@@ -190,7 +186,16 @@ export const ART_PLACEMENT: Record<string, ArtworkPlacement> = {
  */
 const ROW_SIZES = '(min-width: 1200px) 662px, (min-width: 900px) 59vw, calc(100vw - 3rem)';
 export const ENTRY_SIZES = '(min-width: 1200px) 540px, (min-width: 760px) 46vw, calc(100vw - 3rem)';
-export const BAND_SIZES = '(min-width: 900px) 896px, calc(100vw - 3rem)';
+/**
+ * The two page accents (v2.2.1).
+ *
+ * v2.1 measured these as a full-width band, so one `sizes` covered both. They
+ * now sit in one column of a two-column hero — 54% of the 1200px shell less its
+ * gutters, i.e. about 590px — so the old 896px string would have had the
+ * browser commit to the 960px rung for a 590px hole. Measured against the
+ * rendered box rather than derived, and verified in the raster-loading QA.
+ */
+export const ACCENT_SIZES = '(min-width: 1024px) 590px, calc(100vw - 3rem)';
 
 export const ART_SIZES: Record<string, string> = {
   hero: '(min-width: 1200px) 632px, (min-width: 900px) 52vw, calc(100vw - 3rem)',
@@ -198,8 +203,8 @@ export const ART_SIZES: Record<string, string> = {
   hycell: ROW_SIZES,
   morn: ROW_SIZES,
   biopulse: ROW_SIZES,
-  research: BAND_SIZES,
-  about: BAND_SIZES,
+  research: ACCENT_SIZES,
+  about: ACCENT_SIZES,
 };
 
 /**

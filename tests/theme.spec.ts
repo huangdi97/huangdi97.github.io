@@ -259,16 +259,25 @@ test.describe('footer follows the theme', () => {
     expect(await activeTheme(page)).toBe('white');
   });
 
-  test('the homepage footer is minimal and repeats no contact', async ({ page }) => {
-    await visit(page, '/zh/');
-    const footer = page.locator('footer.site-footer');
+  test('the pages that carry their own contact keep a minimal footer', async ({ page }) => {
+    /* v1.7 made the homepage footer minimal — identity, preferences and
+       copyright only — because the homepage already lists the four contact
+       entries directly above it. v2.2.1 (§49) extends that to the other two
+       pages that carry a contact surface of their own: /about closes on a
+       contact section, and /resume prints the details in its head and again in
+       its contact block. On all three the footer row was a third copy of the
+       same four links. */
+    for (const route of ['/zh/', '/zh/about/', '/zh/resume/']) {
+      await visit(page, route);
+      const footer = page.locator('footer.site-footer');
 
-    // Identity, the two preferences and the copyright — nothing else.
-    await expect(footer).toContainText('HAO LEI');
-    await expect(footer.locator('[data-lang-switch]').first()).toBeVisible();
-    await expect(footer.locator('[data-theme-option]')).toHaveCount(3);
+      // Identity, the two preferences and the copyright — nothing else.
+      await expect(footer).toContainText('HAO LEI');
+      await expect(footer.locator('[data-lang-switch]').first()).toBeVisible();
+      await expect(footer.locator('[data-theme-option]')).toHaveCount(3);
 
-    // No contact row: the band directly above the footer already carries it.
-    await expect(footer.locator('[data-contact-id]')).toHaveCount(0);
+      // No contact row: the surface above the footer already carries it.
+      await expect(footer.locator('[data-contact-id]'), `footer on ${route}`).toHaveCount(0);
+    }
   });
 });

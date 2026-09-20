@@ -56,6 +56,7 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
   ogImage="/og/about.png"
   type="profile"
   jsonLd={profileLd}
+  minimalFooter={true}
   backgroundMode="about"
   preloadArtwork="about"
 >
@@ -66,8 +67,9 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
       <p class="about-headline">{about.headline}</p>
     </header>
 
-    <!-- 页面主视觉：与首页同一张纸、同一种墨，但不重复首页的人物侧脸，
-         也不是产品界面。 -->
+    <!-- §26：书桌是「环境」，不是「一块板」。位置沿用 v2.1——右对齐放在标题
+         之下——但不再是矩形：`art--accent` 把左缘溶进纸面并降到 0.18，
+         读起来是「页面所处的房间」，而不是「页面上贴的一张图」。 -->
     <div class="about-band">
       <Artwork name="about" label={ARTWORK_LABELS.about[lang]} alt={ART_ALT.about[lang]} />
     </div>
@@ -126,10 +128,20 @@ const profileLd = profilePageJsonLd(lang, path, `${SITE.nameZh} — 关于`);
     max-width: 28ch;
   }
 
+  /* §26：右侧环境，而不是居中的矩形。v2.1 把它限制在 56rem 并右对齐；本轮
+     放宽一点并向页面右缘外溢，溶接与 0.18 的权重由 `art--accent` 提供。
+     画框比例与 object-position 未动，裁切窗口仍是源图 25%–100%，
+     变的只是「有多少被着墨」。 */
   .about-band {
     margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
-    max-width: 56rem;
+    max-width: 62rem;
     margin-left: auto;
+  }
+
+  @media (min-width: 1024px) {
+    .about-band {
+      margin-right: calc(-1 * clamp(1rem, 3vw, 3.5rem));
+    }
   }
 
   .about-intro {

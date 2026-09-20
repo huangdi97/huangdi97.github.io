@@ -2,7 +2,7 @@ import type { Lang } from '../i18n/ui';
 import { SITE } from '../config/site';
 
 /**
- * About-page copy (v2.1).
+ * About-page copy (v2.1, trimmed in v2.2.1).
  *
  * What changed. v1.6 ran this page as a statement of working method: after the
  * introduction it printed a six-card grid titled "What I work on" in which each
@@ -17,6 +17,21 @@ import { SITE } from '../config/site';
  * process rail: the technique vocabulary, the staged workflow and the
  * design-philosophy paragraph. `focus` is now a list of directions rather than
  * a grid of methods, and `approachTitle` / `approachIntro` are gone.
+ *
+ * v2.2.1 (§28) — "check for a long personal methodology or an over-technical
+ * route description; shorten if present". Two survived:
+ *
+ *   · "Usually as one engineer rather than a team of five." A claim about the
+ *     maker rather than about the work, and the one sentence on the page that
+ *     asked to be read as a boast. Gone.
+ *   · the closing clause of the third paragraph — "mathematics supplies the
+ *     language, and learning covers the parts we cannot yet write as
+ *     equations". That is the design-philosophy sentence v2.1 said it had
+ *     removed, and it had grown back. The paragraph now states the interest and
+ *     stops.
+ *
+ * The structure is untouched: three intro paragraphs, five one-line
+ * directions, the path rail, scope and contact.
  */
 export type AboutModel = {
   headline: string;
@@ -42,8 +57,8 @@ const en: AboutModel = {
   headline: 'AI systems engineer working across agents, scientific computing and life-science applications.',
   intro: [
     'I build AI systems at the intersection of science, health and autonomous software. Most of it starts the same way: a question that is currently answered by hand, and a system that should answer it better.',
-    'The work runs from zero to one — a problem that exists only as a description, and something at the end that another person can run. Usually as one engineer rather than a team of five.',
-    'I am drawn to living systems that can be written down as problems of state, dynamics and intervention: mathematics supplies the language, and learning covers the parts we cannot yet write as equations.',
+    'The work runs from zero to one — a problem that exists only as a description, and something at the end that another person can run.',
+    'I am drawn to living systems that can be described as problems of state, dynamics and intervention.',
   ],
   focusTitle: 'What I am working on now',
   focus: [
@@ -71,8 +86,8 @@ const zh: AboutModel = {
   headline: '构建 AI 系统的工程师，工作横跨智能体、科学计算与生命科学应用。',
   intro: [
     '我在科学、健康与自主软件的交叉地带构建 AI 系统。它们大多以同样的方式开始：一个目前还靠人工回答的问题，以及一个本该回答得更好的系统。',
-    '做的是从 0 到 1 的事——一个仅存在于描述中的问题，最后变成别人真的能跑起来的东西。通常由我一个人完成，而不是一个五人团队。',
-    '我尤其关注那些可以被描述为状态、动力学与干预问题的生命系统：数学提供语言，而学习补足那些我们还无法写成方程的部分。',
+    '做的是从 0 到 1 的事——一个仅存在于描述中的问题，最后变成别人真的能跑起来的东西。',
+    '我尤其关注那些可以被描述为状态、动力学与干预问题的生命系统。',
   ],
   focusTitle: '当前关注方向',
   focus: [

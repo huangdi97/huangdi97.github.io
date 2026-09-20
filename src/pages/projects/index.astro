@@ -1,32 +1,31 @@
 ---
 /**
- * Projects index (English) — v2.1.
+ * Projects index (English) — v2.2.1.
  *
  * The locale mirror of /zh/projects. English is not the reviewed locale, but it
  * must build and must not diverge structurally: a visitor who switches language
  * should not land in a different information architecture.
  *
- * See `src/pages/zh/projects/index.astro` for what changed and why: a curated
- * directory of public entries with the project's own artwork, a light "other
- * work" index, and one reduced evidence list — three rows, each quoting a public
- * repository, in place of the five-tile room that used to take 44% of the page.
+ * See `src/pages/zh/projects/index.astro` for the full argument. In short, v2.2
+ * had re-grown two things the owner asked to be rid of: an "other work" index
+ * that published three unfinished projects, and a full-width inverted artifact
+ * room that read as a different website bolted onto this one. Both are gone
+ * from the public page. What is left is four entries — name, one line, status,
+ * one link — the open-source list, and a single text link out.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import ProjectEntry from '../../components/ProjectEntry.astro';
-import SelectedArtifacts from '../../components/SelectedArtifacts.astro';
 import OpenSourceList from '../../components/OpenSourceList.astro';
 import { SITE } from '../../config/site';
 import { useT } from '../../i18n/ui';
-import { getProjects, projectHref } from '../../lib/projects';
-import { projectStatus } from '../../lib/projectStatus';
+import { getProjects } from '../../lib/projects';
 
 const lang = 'en' as const;
 const t = useT(lang);
 
 const all = await getProjects(lang);
 const featured = all.filter((project) => project.data.featured);
-const others = all.filter((project) => !project.data.featured);
 
 const path = '/projects/';
 const enPath = '/projects/';
@@ -40,8 +39,8 @@ const collectionLd = {
   inLanguage: 'en',
   mainEntity: {
     '@type': 'ItemList',
-    numberOfItems: all.length,
-    itemListElement: all.map((p, i) => ({
+    numberOfItems: featured.length,
+    itemListElement: featured.map((p, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       name: p.data.title,
@@ -53,12 +52,13 @@ const collectionLd = {
 
 <BaseLayout
   title="Projects"
-  description="Curated projects in AI health, computational biology, agent systems and local-first infrastructure. Each entry says what it is, what it is for, and how much is public today."
+  description="Curated projects in AI health, computational biology, agent systems and local-first infrastructure. Each entry says what it is and how much is public today."
   lang={lang}
   path={path}
   enPath={enPath}
   zhPath={zhPath}
   ogImage="/og/projects.png"
+  backgroundMode="projects"
   jsonLd={collectionLd}
 >
   <section class="shell section">
@@ -74,35 +74,6 @@ const collectionLd = {
     </div>
   </section>
 
-  <!-- Other work: no public repository and no official artwork, so a light index
-       rather than a second grid of cards. -->
-  <section class="shell section-tight">
-    <h2 class="other-title">{t('work.other')}</h2>
-    <p class="other-lead">{t('work.other.lead')}</p>
-
-    <ul class="other-list">
-      {
-        others.map((project) => {
-          const status = projectStatus(project.data.slug, lang, t);
-          return (
-            <li class="other-item">
-              <a class="other-name" href={projectHref(lang, project.data.slug)}>
-                {project.data.title}
-              </a>
-              <span class="other-line">{project.data.publicLine}</span>
-              {status && <span class="other-status">{status}</span>}
-            </li>
-          );
-        })
-      }
-    </ul>
-  </section>
-
-  <!-- Selected public work: three rows, each quoted from a public repository,
-       each with the file it was read from. The repository trees, terminal
-       transcripts and metric dumps are no longer printed here. -->
-  <SelectedArtifacts lang={lang} />
-
   <section class="shell section">
     <SectionHeading
       eyebrow={t('oss.eyebrow')}
@@ -114,6 +85,20 @@ const collectionLd = {
 
     <OpenSourceList lang={lang} />
   </section>
+
+  <!-- §43–§44: the page's one exit, and it is a line rather than a block.
+       Nothing was deleted — `src/data/artifacts.ts` is untouched and still
+       exports the three artifacts, and `SelectedArtifacts.astro` still exists
+       in the tree. What is gone is the *mount*: a full-width inverted room on a
+       directory page. It currently renders nowhere, which the artifact gate
+       asserts rather than assumes. -->
+  <p class="shell work-exit">
+    <a class="link-arrow" href={SITE.github} target="_blank" rel="noopener noreferrer">
+      {t('artifacts.title')}
+      <span class="arrow" aria-hidden="true">→</span>
+      <span class="sr-only"> ({t('a11y.external')})</span>
+    </a>
+  </p>
 </BaseLayout>
 
 <style>
@@ -131,68 +116,7 @@ const collectionLd = {
     }
   }
 
-  .other-title {
-    font-size: clamp(1.25rem, 2vw, 1.5rem);
-    letter-spacing: -0.022em;
-    font-weight: 500;
-    margin: 0;
-  }
-
-  .other-lead {
-    margin: 0.625rem 0 0;
-    font-size: 0.9375rem;
-    color: var(--muted);
-    max-width: 62ch;
-  }
-
-  .other-list {
-    list-style: none;
-    margin: clamp(1.5rem, 3vw, 2rem) 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* A light index, not a second grid of cards: one hairline per row, the name
-     in ink, the line muted, the status quiet in the mono face. */
-  .other-item {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.25rem;
-    padding-block: 1rem;
-    border-top: 1px solid var(--line);
-  }
-
-  @media (min-width: 760px) {
-    .other-item {
-      grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) auto;
-      gap: 0.25rem 1.5rem;
-      align-items: baseline;
-    }
-  }
-
-  .other-name {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--ink);
-  }
-
-  .other-name:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 5px;
-  }
-
-  .other-line {
-    font-size: 0.9375rem;
-    color: var(--muted);
-  }
-
-  .other-status {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.08em;
-    color: var(--faint);
-    white-space: nowrap;
+  .work-exit {
+    margin: 0 auto clamp(3rem, 6vw, 5rem);
   }
 </style>

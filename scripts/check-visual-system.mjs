@@ -178,6 +178,12 @@ const RETIRED = [
   ['HeroComposition', HERO_C],
   ['MidComposition', MID_C],
   ['LowerComposition', LOWER_C],
+  /* v2.2.1 (§42–§43): the inverted "Selected Public Work" room is off /projects.
+     The component is not deleted — §43 keeps the artifact table and the round
+     keeps the authored work — so the guard is the same one the v1.7 canvas gets:
+     nothing under `src/` may import it. If this ever goes green again, the black
+     block has come back onto a paper page. */
+  ['SelectedArtifacts', join(src, 'components', 'SelectedArtifacts.astro')],
 ];
 
 const srcFiles = walk(src, ['.astro', '.ts', '.mjs']);
@@ -262,9 +268,10 @@ if (!existsSync(BACKGROUND)) {
     fail('the editorial background uses a robot / brain / circuit-head shorthand for AI');
   }
 
-  /* §74: a handful of groups, and every group says which science it is. Six
-     fragments exist; no single page mounts more than five of them, which is the
-     check below the mode table. */
+  /* §74: a handful of groups, and every group says which science it is. Five
+     fragments exist — the DNA helix was retired in v2.2.1 because §17's Group D
+     is *one* biology fragment and the cell contour is it. No single page mounts
+     more than four of them, which is the check below the variant table. */
   const groupNames = [...new Set([...code.matchAll(/data-bg-group="([a-z]+)"/g)].map((m) => m[1]))];
   checks += 1;
   if (groupNames.length < 3 || groupNames.length > 6) {
@@ -281,31 +288,84 @@ if (!existsSync(BACKGROUND)) {
     if (!bgKinds.has(kind)) fail(`the editorial background has no "${kind}" fragment`);
   }
 
-  /* §34: five modes, each a documented density. A sixth mode added without a
-     matching entry in the page map would silently fall back to `default`. */
-  const groupsBlock = /const GROUPS[\s\S]*?\n\};/.exec(code)?.[0] ?? '';
+  /* §50–§52: seven variants, each a documented density *and* a documented set of
+     marks. A variant that only moved a multiplier is the v2.2 failure this round
+     exists to fix, so the table is parsed rather than merely counted. */
+  const groupsBlock = /const VARIANTS[\s\S]*?\n\};/.exec(code)?.[0] ?? '';
   checks += 1;
-  if (!groupsBlock) fail('the editorial background has no GROUPS map');
-  for (const mode of ['default', 'research', 'about', 'resume', 'minimal']) {
+  if (!groupsBlock) fail('the editorial background has no VARIANTS map');
+
+  const VARIANTS = ['home', 'projects', 'research', 'about', 'resume', 'opensource', 'minimal'];
+  for (const mode of VARIANTS) {
     checks += 1;
     if (!new RegExp(`\\b${mode}:`).test(groupsBlock)) {
-      fail(`the editorial background defines no "${mode}" mode`);
+      fail(`the editorial background defines no "${mode}" variant`);
+    }
+    /* And every one of them has a density block, or it silently inherits
+       `home`'s — which is the "one background, dial nudged" failure again. */
+    checks += 1;
+    if (!new RegExp(`data-bg-mode='${mode}'\\]\\s*\\{[^}]*--ebg-scale`).test(source)) {
+      fail(`the "${mode}" variant declares no --ebg-scale`);
     }
   }
   checks += 1;
   if (!/minimal:\s*\[\]/.test(groupsBlock)) {
-    fail('the "minimal" mode must mount no marks — that is the whole of what it means');
+    fail('the "minimal" variant must mount no marks — that is the whole of what it means');
   }
 
-  /* §74's ceiling is per page, not per file: the library may hold six fragments
-     as long as no mode mounts more than five of them. */
-  const perMode = [...groupsBlock.matchAll(/\b[a-z]+:\s*\[([^\]]*)\]/g)].map((m) =>
-    m[1].split(',').map((s) => s.trim()).filter(Boolean),
+  /* §8's desktop ceiling is four groups per page, and §54's phone rule is two.
+     The table is the only place a fifth could appear. */
+  const perVariant = [...groupsBlock.matchAll(/\b[a-z]+:\s*\[([^\]]*)\]/g)].map((m) =>
+    m[1]
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
   );
-  for (const list of perMode) {
+  for (const list of perVariant) {
     checks += 1;
-    if (list.length > 5) {
-      fail(`a background mode mounts ${list.length} fragments — §74 keeps a page to five at most`);
+    if (list.length > 4) {
+      fail(`a background variant mounts ${list.length} fragments — §8 keeps a page to four at most`);
+    }
+  }
+
+  /* §51: "no site-wide identical background". Two variants may legitimately
+     mount the same *set* of marks — /home and /projects both want a curve and a
+     node group — so the axis that has to be unique is density. Seven variants,
+     seven distinct `--ebg-scale` values, or the "variant" is a name. */
+  const scales = [...source.matchAll(/data-bg-mode='([a-z]+)'\]\s*\{[^}]*--ebg-scale:\s*([0-9.]+)/g)].map(
+    (m) => [m[1], Number(m[2])],
+  );
+  checks += 1;
+  if (scales.length !== VARIANTS.length) {
+    fail(`only ${scales.length} of ${VARIANTS.length} variants declare a density`);
+  } else {
+    const byValue = new Map();
+    for (const [mode, value] of scales) {
+      if (byValue.has(value)) {
+        fail(
+          `the "${mode}" variant is as dense as "${byValue.get(value)}" (${value}) — §51 wants a hierarchy, not one dial`,
+        );
+      } else {
+        byValue.set(value, mode);
+      }
+    }
+    notes.push(
+      `variant density: ${scales.map(([m, v]) => `${m} ${v}`).join(', ')}`,
+    );
+  }
+
+  /* §51 again, on the other axis: the variants must also be placed differently.
+     Every variant that mounts a group must override its position, or the
+     composition is the same composition moved down the page. */
+  const variantBlocks = [...source.matchAll(/data-bg-mode='([a-z]+)'\][^{]*\{([^}]*)\}/g)];
+  for (const mode of VARIANTS) {
+    if (mode === 'home' || mode === 'minimal') continue; // `home` owns the base rules
+    checks += 1;
+    const overrides = variantBlocks.filter(
+      ([, name, body]) => name === mode && /\b(top|left|right)\s*:/.test(body),
+    );
+    if (overrides.length === 0) {
+      fail(`the "${mode}" variant places no mark — it inherits the home composition (§51)`);
     }
   }
 
@@ -358,29 +418,48 @@ const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : '';
  * its artwork arrives. A background nobody can see would fail this round the
  * same way an over-inked one would.
  */
-const BG_TOKENS = ['bg-texture', 'bg-mark', 'bg-graph', 'bg-bio', 'bg-grid'];
+const BG_TOKENS = ['bg-texture', 'bg-mark', 'bg-curve', 'bg-graph', 'bg-bio', 'bg-grid'];
 
+/**
+ * v2.2.1 bands.
+ *
+ * Three of them moved, and each for a stated reason rather than to make the
+ * numbers pass:
+ *
+ *   texture  the owner's §3 caps the grain at 0.025 ("do not go far past the
+ *            threshold of visibility"). The old ceiling was 0.045, i.e. the
+ *            brief's limit was 80% above the ceiling the gate allowed.
+ *   curve    new. §18 gives the curve its own band (0.05–0.08 at research
+ *            weight) and v2.2 had it sharing `graph`, which collapsed two of
+ *            the four bands into one.
+ *   mark /   nudged down with the wash so that the hierarchy
+ *   graph    grid < mark < curve < graph still holds after `curve` is inserted
+ *   bio      between mark and graph.
+ */
 const BG_BUDGET = {
   paper: {
-    'bg-texture': [0.02, 0.045],
-    'bg-mark': [0.025, 0.05],
-    'bg-graph': [0.03, 0.06],
-    'bg-bio': [0.03, 0.06],
-    'bg-grid': [0.02, 0.04],
+    'bg-texture': [0.012, 0.028],
+    'bg-mark': [0.03, 0.05],
+    'bg-curve': [0.04, 0.06],
+    'bg-graph': [0.05, 0.07],
+    'bg-bio': [0.042, 0.062],
+    'bg-grid': [0.022, 0.04],
   },
   white: {
-    'bg-texture': [0.015, 0.04],
-    'bg-mark': [0.02, 0.045],
-    'bg-graph': [0.02, 0.05],
-    'bg-bio': [0.02, 0.05],
-    'bg-grid': [0.015, 0.035],
+    'bg-texture': [0.01, 0.024],
+    'bg-mark': [0.028, 0.045],
+    'bg-curve': [0.034, 0.052],
+    'bg-graph': [0.04, 0.058],
+    'bg-bio': [0.036, 0.054],
+    'bg-grid': [0.02, 0.036],
   },
   night: {
-    'bg-texture': [0.03, 0.06],
-    'bg-mark': [0.04, 0.08],
-    'bg-graph': [0.04, 0.08],
-    'bg-bio': [0.04, 0.08],
-    'bg-grid': [0.03, 0.06],
+    'bg-texture': [0.015, 0.032],
+    'bg-mark': [0.045, 0.07],
+    'bg-curve': [0.055, 0.08],
+    'bg-graph': [0.06, 0.085],
+    'bg-bio': [0.055, 0.08],
+    'bg-grid': [0.035, 0.055],
   },
 };
 
@@ -436,22 +515,31 @@ for (const [theme, tokens] of Object.entries(BG_BUDGET)) {
   }
 }
 
-/* Hierarchy, on every theme: ticks under notation, notation under the curves
-   and the network, and biology never louder than the loudest graph mark. A
+/* Hierarchy, on every theme: ticks under notation, notation under the curves,
+   the curves under the network, and biology never louder than the network. A
    background where everything is inked the same reads as a pattern, which is
-   the failure §75 names. */
+   the failure §75 names — and with `bg-curve` added in v2.2.1 there are now four
+   mark weights to keep apart, which is what makes §18's four bands possible. */
 for (const theme of ['paper', 'white', 'night']) {
   const slice = themeSlice(theme);
   if (!slice) continue;
   const read = (token) => Number(new RegExp(`--${token}:\\s*([0-9.]+)`).exec(slice)?.[1] ?? 0);
-  const [mark, graph, bio, grid] = [read('bg-mark'), read('bg-graph'), read('bg-bio'), read('bg-grid')];
+  const [mark, curve, graph, bio, grid] = [
+    read('bg-mark'),
+    read('bg-curve'),
+    read('bg-graph'),
+    read('bg-bio'),
+    read('bg-grid'),
+  ];
 
   checks += 1;
   if (!(grid < mark)) fail(`[${theme}] ticks (${grid}) are not quieter than notation (${mark})`);
   checks += 1;
-  if (!(mark < graph)) fail(`[${theme}] notation (${mark}) is not quieter than the graph marks (${graph})`);
+  if (!(mark < curve)) fail(`[${theme}] notation (${mark}) is not quieter than the curve (${curve})`);
   checks += 1;
-  if (!(bio <= graph)) fail(`[${theme}] biology (${bio}) is louder than the graph marks (${graph})`);
+  if (!(curve < graph)) fail(`[${theme}] the curve (${curve}) is not quieter than the network (${graph})`);
+  checks += 1;
+  if (!(bio <= graph)) fail(`[${theme}] biology (${bio}) is louder than the network (${graph})`);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -775,14 +863,57 @@ for (const rel of ['dist/projects/index.html', 'dist/zh/projects/index.html']) {
     if (pattern.test(html)) fail(`${rel} still renders ${what}`);
   }
 
-  /* The three projects with no public artwork are indexed as text rather than
-     given an invented drawing (§36, §51). */
+  /* §38–§41: the "other work" index is gone from the public page. The three
+     unfinished projects still exist as content — their files, their case pages
+     and their evidence are untouched — but a public directory does not list
+     them, and this is what keeps them from creeping back one row at a time. */
   const other = (html.match(/class="other-item"/g) ?? []).length;
   checks += 1;
-  if (other !== 3) fail(`${rel} indexes ${other} other projects — the expected set is three`);
+  if (other !== 0) {
+    fail(`${rel} indexes ${other} other-work project(s) — §39 hides the section entirely`);
+  }
+
+  /* §42–§44: the inverted artifact room is off the page, and its data is not
+     printed anywhere else on it either. `src/data/artifacts.ts` is untouched —
+     the artifact gate still checks every entry — so the only thing to assert
+     here is that /projects renders none of it. */
+  checks += 1;
+  if (/id="artifacts"/.test(html)) fail(`${rel} renders the inverted artifact room again`);
+  checks += 1;
+  const renderedArtifacts = (html.match(/data-artifact="/g) ?? []).length;
+  if (renderedArtifacts !== 0) {
+    fail(`${rel} prints ${renderedArtifacts} artifact row(s) — §42 removes the block from /projects`);
+  }
+  checks += 1;
+  if (/class="artifact-room/.test(html)) {
+    fail(`${rel} still carries the artifact-room surface`);
+  }
+
+  /* §44: at most one line of exit, and it is a link rather than a block. */
+  const exits = (html.match(/class="work-exit"/g) ?? []).length;
+  checks += 1;
+  if (exits > 1) fail(`${rel} renders ${exits} exit links — §44 allows one`);
+
+  /* §34: the entry's five fields, and nothing that reads like a paragraph. */
+  checks += 1;
+  if (/class="entry-intro"/.test(html)) {
+    fail(`${rel} prints a project description paragraph again — §34 caps an entry at five fields`);
+  }
+  checks += 1;
+  if (!/class="entry-status"/.test(html)) fail(`${rel} prints no status line`);
+
+  /* §46: the open-source rows are four fields, so none of the metadata column
+     labels may be rendered. */
+  for (const [pattern, what] of [
+    [/class="oss-facts"/, 'the open-source metadata block'],
+    [/class="oss-snapshot"/, 'the metadata snapshot date'],
+  ]) {
+    checks += 1;
+    if (pattern.test(html)) fail(`${rel} still renders ${what} — §47 removes it`);
+  }
 }
 
-/* ---- /research and /about: a page artwork band each (§23, §30) ------------- */
+/* ---- /research and /about: a side accent each (§19–§21, §26) -------------- */
 for (const [rel, slot] of [
   ['dist/research/index.html', 'research'],
   ['dist/zh/research/index.html', 'research'],
@@ -800,6 +931,17 @@ for (const [rel, slot] of [
   checks += 1;
   if (!new RegExp(`data-artwork="${slot}"`).test(html)) {
     fail(`${rel} has no "${slot}" page artwork`);
+  }
+
+  /* v2.2.1: the drawing is no longer a band the page is read around. It is a
+     masked, low-opacity accent, and the modifier class is how the page says so. */
+  checks += 1;
+  if (!/class="art[^"]*art--accent/.test(html)) {
+    fail(`${rel} does not render its drawing as a background accent (§19–§21, §26)`);
+  }
+  checks += 1;
+  if (/art--band/.test(html)) {
+    fail(`${rel} still renders the retired full-width artwork band`);
   }
 
   const svg = new RegExp(`data-artwork="${slot}"[\\s\\S]*?<svg[^>]*>`).exec(html)?.[0] ?? '';
@@ -1014,14 +1156,15 @@ console.log(`Visual gate passed (${checks} checks).`);
 console.log('  • 4 visual types separated: artwork / conceptual science / editorial background / public surface');
 console.log(`  • ${projectFiles.length} project file(s), public fields checked against evidence`);
 console.log('  • background: inline SVG + CSS only, no JS, no animation, deterministic, math + biology + AI');
-console.log('  • background: 5 groups, 5 modes, opacity floors and ceilings held on all 3 themes');
+console.log('  • background: 5 groups, 7 variants, 4 distinct mark weights, floors and ceilings held on all 3 themes');
 console.log('  • background: document-level, inert, behind every word, never labels itself');
 console.log('  • v1.7 canvas: retired — imported by nothing, mounted on no page');
+console.log('  • inverted artifact room: retired — imported by nothing, printed on no page');
 console.log('  • raster: one eager drawing per page, one preload, srcset everywhere, ≤ 250 KB eager');
-console.log('  • raster: no source artwork reachable, paper texture under 30 KB');
+console.log('  • raster: no source artwork reachable, paper texture isotropic and under 30 KB');
 console.log('  • homepage: five drawings (hero + four project rows), four stacked rows');
 console.log('  • homepage: no page-wide canvas, no cards, no index numbers, no pills');
-console.log('  • /projects: four illustrated entries, no filter bar, no words-first cover');
-console.log('  • /research: page artwork, five directions, no figure set, no equation');
-console.log('  • /about: page artwork, directions list, path rail, no method grid');
+console.log('  • /projects: four illustrated entries, five fields each, no filter bar, no other-work index, no artifact room');
+console.log('  • /research: masked accent, five directions, no figure set, no equation');
+console.log('  • /about: masked accent, directions list, path rail, no method grid');
 for (const note of notes) console.log(`  • ${note}`);

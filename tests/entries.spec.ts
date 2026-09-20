@@ -8,8 +8,16 @@
  *
  * v2.1 (§10–§14) reverses that. Every featured entry leads with the project's
  * own artwork — the same file the homepage shows — and the words are cut to a
- * name, one positioning line, a short public introduction and one status. The
- * two rules that mattered in the cover era survive and are still asserted here:
+ * name, one positioning line, one status and one link.
+ *
+ * v2.2.1 (§34–§35) cuts once more: the "short public introduction" the entry
+ * used to carry is gone, because the four entries had grown back into
+ * specifications. The contract asserted here is therefore the *floor*, not a
+ * word budget — an entry read with its images removed is still a named,
+ * positioned, status-bearing project, and the description that left the page is
+ * still on the project's own case page.
+ *
+ * The two rules that mattered in the cover era survive:
  *
  *   1. the image never stands in for the words — an entry read with its images
  *      removed is still a description;
@@ -74,13 +82,9 @@ test.describe('project entries on /projects', () => {
         await expect(line).toBeVisible();
         expect(((await line.innerText()) ?? '').trim().length).toBeGreaterThan(6);
 
-        // 3. A short public introduction — present, but still a paragraph
-        //    rather than a specification (§13).
-        const intro = entry.locator('.entry-intro');
-        await expect(intro).toBeVisible();
-        const introText = ((await intro.innerText()) ?? '').trim();
-        expect(introText.length, `entry #${i + 1} intro`).toBeGreaterThan(40);
-        expect(introText.length, `entry #${i + 1} intro`).toBeLessThan(340);
+        // 3. §35: no public introduction. The description moved to the case
+        //    page; what is left on the directory is what the entry *is*.
+        await expect(entry.locator('.entry-intro')).toHaveCount(0);
 
         // 4. Exactly one status, and one project link. The link is matched by
         //    class rather than by its label, which differs per locale.
@@ -103,15 +107,32 @@ test.describe('project entries on /projects', () => {
     test(`${home} entries are words as well as images`, async ({ page }) => {
       await visit(page, home);
 
-      // Strip the drawings: what is left must still describe the project.
-      const withoutArt = await entries(page)
+      /* Strip the drawings: what is left must still say which project this is,
+         how it is positioned, and where it stands. v2.2.1 makes this a *parts*
+         assertion rather than a character budget — the entry is deliberately
+         four fields now (§34), so counting characters would measure the wrong
+         thing and would fail the moment §35 is honoured. */
+      const parts = await entries(page)
         .first()
         .evaluate((el) => {
           const clone = el.cloneNode(true) as HTMLElement;
           clone.querySelectorAll('svg, img').forEach((node) => node.remove());
-          return (clone.textContent ?? '').trim();
+          const read = (selector: string) =>
+            (clone.querySelector(selector)?.textContent ?? '').trim();
+          return {
+            name: read('.entry-name'),
+            line: read('.entry-line'),
+            status: read('.entry-status'),
+            link: read('.entry-link'),
+            text: (clone.textContent ?? '').trim(),
+          };
         });
-      expect(withoutArt.length).toBeGreaterThan(80);
+
+      expect(parts.name.length, 'name survives the images').toBeGreaterThan(1);
+      expect(parts.line.length, 'positioning survives the images').toBeGreaterThan(6);
+      expect(parts.status.length, 'status survives the images').toBeGreaterThan(2);
+      expect(parts.link.length, 'link survives the images').toBeGreaterThan(2);
+      expect(parts.text.length, 'the entry is still readable').toBeGreaterThan(30);
     });
 
     test(`${home} carries no card apparatus`, async ({ page }) => {

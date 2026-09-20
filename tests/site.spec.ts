@@ -218,20 +218,44 @@ test.describe('homepage', () => {
 
   /**
    * §22–§28: /research is a page of questions, not a statement of method. In
-   * v1.6 it carried the five directions *and* a complete mathematical-biology
-   * figure set, a standalone conceptual equation and the full lab-note log.
-   * v2.1 keeps the artwork band, five one-to-three-sentence directions, the two
-   * tiers and the notes — and nothing that answers "how would you build this".
+   * v1.6 it carried the directions *and* a complete mathematical-biology figure
+   * set, a standalone conceptual equation and the full lab-note log. v2.1 keeps
+   * the directions, the two tiers and the notes — and nothing that answers "how
+   * would you build this".
+   *
+   * v2.2.1 (§18) removes one more thing: the sentence that announced how many
+   * directions there are and explained why the page does not open them up. A
+   * visitor needs neither. The list is still a list; what is gone is the page
+   * telling the reader how to read it.
    */
-  test('research states five directions as questions, not as methods', async ({ page }) => {
+  test('research states its directions as questions, and never counts them', async ({ page }) => {
     await visit(page, '/research/');
 
-    // The page artwork, labelled like every other drawing on the site.
+    // The page artwork is still there and still labelled like every other
+    // drawing on the site — demoted to an accent (§19–§21), not removed.
     await expectArtworkLabelled(page.locator('[data-artwork="research"]'));
 
-    // Five directions, one paragraph each.
-    await expect(page.locator('.research-area')).toHaveCount(5);
-    await expect(page.locator('.research-area .area-summary')).toHaveCount(5);
+    // The directions are still one paragraph each. The count is a structural
+    // fact this suite is allowed to know; what the page may not do is state it.
+    const areas = page.locator('.research-area');
+    const areaCount = await areas.count();
+    expect(areaCount, 'the direction list still renders').toBeGreaterThan(0);
+    await expect(page.locator('.research-area .area-summary')).toHaveCount(areaCount);
+
+    /* §18: neither the count nor the explanation of method may appear in the
+       rendered copy. Both locales are listed because the English route is the
+       one under test and the Chinese page shares the same component. */
+    const copy = await page.locator('main').innerText();
+    for (const phrase of [
+      '五个方向',
+      '五个持续投入的方向',
+      '不展开方法',
+      'Five directions',
+      'five directions',
+      'Five research directions',
+    ]) {
+      expect(copy, `"${phrase}" must not be stated on the page`).not.toContain(phrase);
+    }
 
     // The figure set, the interest lists and the standalone equation are gone.
     await expect(page.locator('.area-list')).toHaveCount(0);
@@ -398,9 +422,14 @@ test.describe('homepage', () => {
 
 test.describe('projects', () => {
   /**
-   * §10–§14: /projects is a curated directory, not a filterable catalogue. Each
-   * entry carries an image, a name, one positioning line, a short public
-   * introduction, one status and one link — and there is no filter bar.
+   * §33–§36: /projects is a curated directory, not a filterable catalogue. Each
+   * entry carries an image, a name, one positioning line, one status and one
+   * link — and there is no filter bar.
+   *
+   * v2.2.1 removes the public introduction the entry used to print (§35). The
+   * longer description is not deleted from the content collection — it lives on
+   * the project's own case page, which is where a reader who wants it has
+   * already decided to go.
    */
   test('is a curated directory of entries, with no filter bar', async ({ page }) => {
     await visit(page, '/projects/');
@@ -413,7 +442,7 @@ test.describe('projects', () => {
       await expect(entry).toHaveCount(1);
       await expect(entry.locator('.entry-name')).toBeVisible();
       await expect(entry.locator('.entry-line')).toBeVisible();
-      await expect(entry.locator('.entry-intro')).toBeVisible();
+      await expect(entry.locator('.entry-intro')).toHaveCount(0); // §35
       await expect(entry.locator('.entry-status')).toHaveCount(1);
       await expect(entry.getByRole('link', { name: /View project/ })).toBeVisible();
       await expectArtworkLabelled(entry.locator('[data-artwork]'));
@@ -425,10 +454,16 @@ test.describe('projects', () => {
     await expect(page.locator('[data-cover]')).toHaveCount(0);
     await expect(page.locator('[data-cover-caps]')).toHaveCount(0);
 
-    /* Only the four projects with a real artwork get an entry. The other three
-       are indexed as text rather than given an invented drawing (§36, §51). */
+    /* Only the four projects with a real artwork get an entry. */
     await expect(page.locator('[data-project-entry] [data-artwork]')).toHaveCount(4);
-    await expect(page.locator('.other-list li')).toHaveCount(3);
+
+    /* §39–§41: the three unfinished projects are hidden from this page rather
+       than deleted from the content collection. §44: the inverted evidence room
+       is gone, and what replaced it is one line of text, at most. */
+    await expect(page.locator('.other-list li')).toHaveCount(0);
+    await expect(page.locator('[data-artifact]')).toHaveCount(0);
+    await expect(page.locator('.artifact-room')).toHaveCount(0);
+    await expect(page.locator('.work-exit')).toHaveCount(1);
   });
 
   test('case study renders its public structure', async ({ page }) => {
@@ -525,16 +560,35 @@ test.describe('evidence layer', () => {
     );
   });
 
-  test('open source table shows checked-in license and update metadata on /projects', async ({
-    page,
-  }) => {
-    // v1.6 moved the repository table off the homepage. It is evidence, and
-    // evidence lives beside the case studies.
+  test('open source rows carry four fields and no metadata block', async ({ page }) => {
+    /* §45–§47: this used to be a repository table — name, description, and a
+       four-row metadata block per entry carrying role, language, licence and
+       last-update date, under a line announcing when the metadata had been
+       captured. What is left is the part a visitor cannot get faster by opening
+       the repository: name, one line, language, GitHub →. */
     await visit(page, '/projects/');
-    await expect(page.getByText('Metadata snapshot')).toBeVisible();
-    await expect(page.locator('.oss-fact-k').first()).toBeVisible();
-    // WenNian has no detected LICENSE file — shown as a fact, not hidden.
-    await expect(page.getByText('No license detected').first()).toBeVisible();
+
+    const rows = page.locator('.oss-list li');
+    const count = await rows.count();
+    expect(count, 'the repository list still renders').toBeGreaterThan(0);
+
+    for (let i = 0; i < count; i += 1) {
+      const row = rows.nth(i);
+      await expect(row.locator('.oss-name')).not.toBeEmpty();
+      await expect(row.locator('.oss-desc')).not.toBeEmpty();
+      await expect(row.locator('.oss-lang')).not.toBeEmpty();
+      await expect(row.locator('.oss-go')).toContainText('GitHub');
+      await expect(row.locator('a')).toHaveAttribute('href', /^https:\/\/github\.com\//);
+    }
+
+    // The columns §47 deletes, the snapshot line above them, and the "role"
+    // that was hand-written for each repository.
+    await expect(page.getByText('Metadata snapshot')).toHaveCount(0);
+    await expect(page.locator('.oss-facts')).toHaveCount(0);
+    await expect(page.locator('.oss-snapshot')).toHaveCount(0);
+    await expect(page.locator('.oss-fact-k')).toHaveCount(0);
+    await expect(page.locator('.oss-list').getByText('License')).toHaveCount(0);
+    await expect(page.locator('.oss-list').getByText('Updated')).toHaveCount(0);
   });
 });
 

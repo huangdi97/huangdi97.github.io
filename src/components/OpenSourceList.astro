@@ -1,20 +1,30 @@
 ---
 /**
- * Open Source list — the full repository table (v1.6).
+ * Open Source list — the public repositories, reduced (v2.2.1, §45–§48).
  *
- * Extracted from the homepage when the homepage stopped carrying it. The
- * homepage now says one line ("open source work on GitHub →", via the contact
- * row); the table with role, language, license and last-update metadata lives
- * here, on /projects, next to the case studies it backs.
+ * What it was. A repository *table*: name, description, and a four-row metadata
+ * block per entry carrying role, language, licence and last-update date, under
+ * a snapshot line that announced when the metadata had been captured. Every
+ * field was real and every field was checkable, and together they made the page
+ * read like a repo database rather than like someone's work — §45's complaint.
  *
- * The metadata is a snapshot, and it says so: `OSS_CAPTURED_AT` is rendered
- * under the table rather than hidden, and a repository with no detected
- * LICENSE file shows "No license detected" instead of quietly omitting the
- * row. A missing license is a fact about the project, not a formatting
- * problem.
+ * What §46 leaves is four things per repository:
+ *
+ *     repo name · one-line description · language · GitHub →
+ *
+ * §47 is explicit about the rest: licence, update date, the metadata snapshot
+ * date and the hand-written "role" all go, because "GitHub 自己会显示这些".
+ * Nothing was deleted from `src/data/oss.ts` — the fields are still there and
+ * still hand-checked; the page simply stops printing what the repository's own
+ * page already says better.
+ *
+ * §48 is about the copy above the list. v1.6 explained the implementation —
+ * "语言、许可证与更新日期来自已签入 GitHub 元数据……不做运行时 API 调用" — which
+ * is a note to a maintainer, not to a visitor. It is now one line that says what
+ * the list is.
  */
 import { useT, type Lang } from '../i18n/ui';
-import { OSS_CAPTURED_AT, OSS_HIGHLIGHTS } from '../data/oss';
+import { OSS_HIGHLIGHTS } from '../data/oss';
 
 export interface Props {
   lang: Lang;
@@ -31,35 +41,17 @@ const t = useT(lang);
         <a href={repo.url} class="oss-item" target="_blank" rel="noopener noreferrer">
           <span class="oss-name">{repo.name}</span>
           <span class="oss-desc">{lang === 'zh' ? repo.descriptionZh : repo.descriptionEn}</span>
-          <span class="oss-facts">
-            <span class="oss-fact">
-              <span class="oss-fact-k">{t('oss.role')}</span>
-              <span class="oss-fact-v" data-role={repo.role}>
-                {t(`oss.role.${repo.role}`)}
-              </span>
-            </span>
-            <span class="oss-fact">
-              <span class="oss-fact-k">{t('oss.language')}</span>
-              <span class="oss-fact-v">{repo.language ?? '—'}</span>
-            </span>
-            <span class="oss-fact">
-              <span class="oss-fact-k">{t('oss.license')}</span>
-              <span class="oss-fact-v" data-nolicense={repo.license === null}>
-                {repo.license ?? t('oss.nolicense')}
-              </span>
-            </span>
-            <span class="oss-fact">
-              <span class="oss-fact-k">{t('oss.updated')}</span>
-              <span class="oss-fact-v">{repo.updatedAt}</span>
-            </span>
+          <span class="oss-lang mono">{repo.language ?? '—'}</span>
+          <span class="oss-go mono">
+            GitHub
+            <span aria-hidden="true">↗</span>
+            <span class="sr-only"> ({t('a11y.external')})</span>
           </span>
         </a>
       </li>
     ))
   }
 </ul>
-
-<p class="oss-snapshot mono">{t('oss.snapshot')} — {OSS_CAPTURED_AT}</p>
 
 <style>
   .oss-list {
@@ -69,18 +61,20 @@ const t = useT(lang);
     border-top: 1px solid var(--line);
   }
 
+  /* Four columns, and no metadata block: the row is a line of the list, not a
+     card of facts. */
   .oss-item {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.35rem;
-    padding: 1.25rem 0;
+    padding: 1.125rem 0;
     border-bottom: 1px solid var(--line);
   }
 
   @media (min-width: 900px) {
     .oss-item {
-      grid-template-columns: 14rem minmax(0, 1fr) 15rem;
-      gap: 2rem;
+      grid-template-columns: 13rem minmax(0, 1fr) 6rem auto;
+      gap: 1.5rem;
       align-items: baseline;
     }
   }
@@ -88,6 +82,7 @@ const t = useT(lang);
   .oss-name {
     font-family: var(--font-mono);
     font-size: 0.875rem;
+    color: var(--ink);
   }
 
   .oss-desc {
@@ -95,50 +90,43 @@ const t = useT(lang);
     color: var(--muted);
   }
 
-  .oss-facts {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .oss-fact {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.25rem 0.75rem;
-    font-family: var(--font-mono);
+  .oss-lang {
     font-size: 0.6875rem;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-  }
-
-  .oss-fact-k {
     color: var(--faint);
   }
 
-  .oss-fact-v {
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* A missing license is a fact; present it as one rather than hiding it. */
-  .oss-fact-v[data-nolicense='true'] {
+  .oss-go {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--faint);
-    border-bottom: 1px dotted var(--line-strong);
+    transition: color var(--dur-fast) var(--ease);
   }
 
-  @media (min-width: 900px) {
-    .oss-facts {
-      text-align: right;
-    }
-  }
-
-  /* Role is hand-annotated; flagship work reads first. */
-  .oss-fact-v[data-role='flagship'] {
+  .oss-item:hover .oss-go {
     color: var(--ink);
   }
 
-  .oss-snapshot {
-    margin-top: 1.25rem;
+  @media (min-width: 900px) {
+    .oss-go {
+      justify-self: end;
+    }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 </style>

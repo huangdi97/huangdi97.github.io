@@ -64,9 +64,10 @@ npm run dev          # http://localhost:4321
 | `npm run assets`          | Regenerate OG images and icons from SVG                        |
 | `npm run texture`         | Regenerate the paper texture → `public/texture/paper.webp`     |
 | `npm run artwork:v2`      | Homepage artwork → three WebP rungs per slot + size manifest   |
-| `npm run artwork:pages`   | Inner-page bands → three WebP rungs per slot + size manifest   |
+| `npm run artwork:pages`   | Inner-page accents → three WebP rungs per slot + size manifest |
 | `npm run artwork:preview` | Render an `object-fit: cover` crop without a full build        |
 | `npm run qa:v22`          | 30 acceptance frames + `measurements.json` into `.qa-screens/` |
+| `npm run qa:v221`         | 37 acceptance frames + `measurements.json` into `.qa-screens/` |
 | `npm run verify`          | Link + asset verification over `dist/`                         |
 | `npm run test`            | Playwright browser tests against `dist/`                       |
 
@@ -101,19 +102,20 @@ fixed lattice — so re-running it yields a byte-identical file, and
 ├── public/                     Copied verbatim into dist/ — everything here is public
 │   ├── og/                     OG images (1200×630), one per route + default
 │   ├── images/                 Published artwork — three WebP rungs per slot
-│   ├── texture/paper.webp      Tiling paper texture (256×256, 16 KB)
+│   ├── texture/paper.webp      Tiling paper texture (128×128, 6.5 KB, lossless)
 │   ├── favicon.svg             HL monogram
 │   ├── manifest.webmanifest    PWA manifest
 │   ├── robots.txt
 │   └── CNAME                   Published custom domain
 ├── scripts/
 │   ├── generate-assets.mjs     SVG → PNG asset pipeline (@resvg/resvg-js)
-│   ├── build-paper-texture.mjs Deterministic seamless noise → paper.webp
+│   ├── build-paper-texture.mjs Deterministic seamless noise → paper.webp (self-checking)
 │   ├── optimize-home-images.mjs   Homepage artwork → WebP ladder + manifest
-│   ├── build-page-artwork.mjs     Inner-page bands → WebP ladder + manifest
+│   ├── build-page-artwork.mjs     Inner-page accents → WebP ladder + manifest
 │   ├── preview-artwork-crops.mjs  Render an object-fit: cover crop for review
 │   ├── lib/artwork-ladder.mjs  Shared ladder [640, 960, 1440] + stale-rung pruning
 │   ├── verify-build.mjs        Link + asset checker over dist/
+│   ├── qa-v221-shots.mjs       Acceptance frames + measurements, per round
 │   └── check-*.mjs             The five remaining gates
 ├── src/
 │   ├── components/             Header, MobileNav, Artwork, ProjectEntry, …
@@ -128,7 +130,7 @@ fixed lattice — so re-running it yields a byte-identical file, and
 │   ├── pages/                  English routes (default language)
 │   │   └── zh/                 Chinese routes, mirroring the English tree
 │   └── styles/global.css       Design tokens + typography + primitives
-├── tests/                      Playwright specs (site, entries, theme, background)
+├── tests/                      Playwright specs (site, entries, artifacts, theme, background)
 └── astro.config.mjs
 ```
 
@@ -162,20 +164,27 @@ year: 2026
 status: 'Active'
 category: 'AI Health'
 summary: 'One sentence, no adjectives that cost nothing.'
-description: 'Two sentences used for SEO + card body.'
+description: 'Two sentences: what it is, and how much is public today.' # SEO + case page
+publicLine: 'What the project is, at the level of the whole project.' # the /projects line
 tags: ['Aging clock', 'Agents', 'Digital twin']
 featured: true
 order: 1
 role: 'Design & implementation'
+visual: 'aging-state' # which case-study diagram to draw
 repo: 'https://github.com/huangdi97/example' # omit if not public
-demo: '' # omit if none
-cover: '' # omit to use generated visual
 ---
 
 ## Overview
 
 …
 ```
+
+`title`, `slug`, `year`, `status`, `category`, `summary`, `description`, `publicLine`,
+`role` and `visual` are required; everything else has a default or is optional.
+`publicLine` is the one positioning line `/projects` and the homepage row both print, and
+`description` no longer appears on `/projects` at all — it supplies the case page's meta and
+Open Graph description, and the case-study body expands it. The six `cover*` fields were
+removed in v2.1 with the `ProjectCover` component; do not reintroduce them.
 
 Allowed `status` values: `Active`, `Research`, `Prototype`, `Stable`, `Archived`.
 
@@ -259,34 +268,41 @@ Any future domain only requires editing `public/CNAME` — no code changes.
 `npm run lint`, `npm run typecheck` and `npm run build` come first, then six gates, then
 the browser suite. All of them are blocking in CI, in this order.
 
-| Gate          | Command             | What it owns                                          |
-| ------------- | ------------------- | ----------------------------------------------------- |
-| Verify        | `npm run verify`    | Dead links, missing assets, both locales present      |
-| Theme         | `npm run theme`     | Three themes; every colour a token; contrast ratios   |
-| Artifacts     | `npm run artifacts` | Project evidence rendered, never raw                  |
-| Science       | `npm run science`   | No overclaims; conceptual notation labelled           |
-| Visual        | `npm run visual`    | The background contract and the raster loading policy |
-| Identity      | `npm run identity`  | No private contact data; PDF text and metadata        |
-| Browser tests | `npm run test`      | Playwright — desktop 1440×900 + Pixel 5               |
+| Gate          | Command             | What it owns                                            |
+| ------------- | ------------------- | ------------------------------------------------------- |
+| Verify        | `npm run verify`    | Dead links, missing assets, both locales present        |
+| Theme         | `npm run theme`     | Three themes; every colour a token; contrast ratios     |
+| Artifacts     | `npm run artifacts` | The evidence table is kept but rendered nowhere          |
+| Science       | `npm run science`   | No overclaims; conceptual notation labelled             |
+| Visual        | `npm run visual`    | The background contract and the raster loading policy   |
+| Identity      | `npm run identity`  | No private contact data; PDF text and metadata          |
+| Browser tests | `npm run test`      | Playwright — desktop 1440×900 + Pixel 5                 |
 
 `scripts/verify-build.mjs` walks every generated HTML file, resolves internal links
 against built routes, checks local asset references exist, and confirms each case
 study is present in both locales.
 
 `scripts/check-visual-system.mjs` is the one to read before touching anything visual. It
-asserts against both source and built HTML: that the retired v1.7 canvas is imported
-nowhere; that the background component carries no script, no animation, no
-`Math.random` and no hard-coded opacity; that every `--bg-*` weight sits inside its
-per-theme band; and the raster loading policy — the expected eager count per page, a
-loading hint plus intrinsic size plus `srcset` on every drawing, at most one image
-preload and only where an eager drawing exists, eager bytes at the largest rung under
-250 KB, and no source file published.
+asserts against both source and built HTML: that the retired v1.7 canvas **and the retired
+"Selected Public Work" room** are imported nowhere; that the background component carries no
+script, no animation, no `Math.random` and no hard-coded opacity; that all seven per-page
+variants exist, declare a density of their own, and mount no more than four groups; that every
+`--bg-*` weight sits inside its per-theme band and that the mark kinds stay ordered
+(`grid < mark < curve < graph`, with biology no louder than the network); that `/projects`
+renders four entries, no "other work" index, no artifact room and no entry intro; and the
+raster loading policy — the expected eager count per page, a loading hint plus intrinsic size
+plus `srcset` on every drawing, at most one image preload and only where an eager drawing
+exists, eager bytes at the largest rung under 250 KB, and no source file published.
 
 The browser suite covers homepage render, navigation, project listing, case-study detail,
 language switching with path preservation, mobile hamburger menu, resume print route, 404
-page, external link attributes, no horizontal overflow at 375 px, absence of console
-errors, the background layer's inertness and per-theme bands, and the no-image case for
-three pages.
+page, external link attributes, absence of console errors, and no horizontal overflow at
+375 / 390 / 430 / 768 / 1024 / 1280 / 1920 px. For the background it asserts the layer's
+inertness, the per-theme bands, the density hierarchy across the five marked routes, that a
+390 px screen gets _fewer_ fragments rather than a squashed desktop, and the no-image case for
+three pages. For the contraction it asserts that `/projects` carries four entries and
+four-field repository rows, that the inverted evidence room is gone from both locales, and
+that the three pages which carry their own contact surface keep a minimal footer.
 
 ### Verified viewports
 
@@ -321,27 +337,53 @@ under `prefers-reduced-motion`.
 
 ### The background
 
-Every page sits on a three-layer background, mounted once by `BaseLayout` behind the whole
-document (`src/components/visual/ScientificEditorialBackground.astro`):
+Every page sits on a **four-layer** background, mounted once by `BaseLayout` behind the whole
+document (`src/components/visual/ScientificEditorialBackground.astro`). Four is the whole list
+— there is no fifth layer, no blur, no `backdrop-filter`, no repeating gradient and no second
+raster:
 
-| Layer   | What it is                                                                                                                     |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Wash    | Four very low-alpha radial gradients, all read from `--bg-*` tokens                                                            |
-| Texture | One 256×256 alpha-only WebP tile, repeated — alpha-only, so Night inverts it rather than shipping a second file                |
-| Marks   | At most five inline-SVG fragments: notation, a probability curve, a neural fragment, cell contours, a 5×5 matrix, half a helix |
+| Layer | What it is                                                                                                           |
+| ----- | -------------------------------------------------------------------------------------------------------------------- |
+| A     | `--canvas`, the theme's warm paper                                                                                   |
+| B     | Three radial gradients at **fixed `rem` radii**, all read from `--bg-*` tokens                                       |
+| C     | One **128×128** alpha-only WebP tile, repeated — alpha-only, so Night inverts it rather than shipping a second file  |
+| D     | Two to four inline-SVG groups: a three-line notation note, a probability curve, a neural fragment, cell contours, a ruled-grid fragment |
+
+Layer B is sized in `rem` rather than percentages on purpose. A percentage-sized ellipse on a
+3,300 px document is a 1,200 px-tall ramp, and an 8-bit canvas quantises a 4.8 %-alpha ramp
+over that distance into a dozen visible steps — a set of wide horizontal arcs. A fixed-size
+glow cannot do that, whatever the page length.
 
 It contains **no JavaScript, no animation and no motion**, is `aria-hidden` with
-`pointer-events: none` and nothing focusable, and is deterministic — no `Math.random`, no
-time. It makes exactly one request: the 16 KB texture. `BaseLayout`'s `backgroundMode` prop
-chooses how dense a page's atmosphere is (`default` / `research` / `about` / `resume` /
-`minimal`); **a mode changes density only — never the palette, never the layout.**
+`pointer-events: none` and nothing focusable, and is deterministic — no `Math.random`, no time.
+It makes exactly one request: the 6.5 KB texture.
 
-> `GlobalScientificCanvas.astro` and its three composition components are still in
-> `src/components/`, but **nothing imports them and they must not be revived** — they were
-> the v1.7 page-wide canvas, which read as a research poster behind the text and is exactly
-> what this background replaced. `scripts/check-visual-system.mjs` asserts that no source
-> file imports them, and the browser suite asserts their DOM markers never appear on a
-> built page.
+`BaseLayout`'s `backgroundMode` prop selects one of seven variants — `home` (1) / `projects`
+(0.85) / `research` (1.4) / `about` (0.78) / `resume` (0.5) / `opensource` (0.62, declared and
+reserved) / `minimal` (0, used by the 404). A variant carries its own mark set and its own
+placement, not only a multiplier: **a variant changes density and composition — never the
+palette, never the layout.** Two dials multiply and stay independent — `--ebg-scale` (this
+page) × `--ebg-mobile` (this viewport, 0.7 below 900 px) — and below 900 px a page also *hides*
+groups rather than shrinking them, because a mark shrunk to fit is still a mark competing with
+the text.
+
+The tile is generated by `scripts/build-paper-texture.mjs` from a seeded LCG over a **square**
+noise lattice, so it is isotropic by construction and joins itself. The script **measures
+itself and exits non-zero** if anisotropy leaves `[0.9, 1.1]`, if a seam ratio exceeds `1.01`,
+or if the file exceeds 30 KB — the tile's properties are enforced by the build rather than
+asserted in a document. It is stored **losslessly** because lossy WebP compresses alpha in
+blocks, which is a second, independent banding source; at 128×128 the lossless file is smaller
+than the old lossy 256×256 one it replaced.
+
+> `GlobalScientificCanvas.astro`, its three composition components and
+> `SelectedArtifacts.astro` are still in `src/components/`, but **nothing imports them and they
+> must not be revived.** The first four were the v1.7 page-wide canvas, which read as a research
+> poster behind the text — exactly what this background replaced. `SelectedArtifacts` was the
+> inverted "Selected Public Work" room, removed from `/projects` in v2.2.1 because a full-width
+> dark surface reads as a different site bolted onto a paper page; its data
+> (`src/data/artifacts.ts`) is untouched. `scripts/check-visual-system.mjs` asserts that no
+> source file imports any of them, and the browser suite asserts their DOM markers never appear
+> on a built page.
 
 ### Artwork
 
@@ -352,9 +394,12 @@ else is lazy, and a page emits at most one `<link rel="preload" as="image">`, an
 an eager drawing exists. Rungs a slot no longer references are pruned, because `public/` is
 copied into `dist/` verbatim — an unreferenced file there is a published file.
 
-The drawings are enhancements rather than the page's structure: hero, project rows and
-inner-page bands are feathered into the paper with nested masks, and every page is complete
-and readable with images blocked entirely.
+The drawings are enhancements rather than the page's structure: the hero and the project rows
+are feathered into the paper with nested masks, and every page is complete and readable with
+images blocked entirely. The inner-page plates are demoted further — `/research` and `/about`
+carry theirs as a **side accent**: a `3 / 2` crop, opacity 0.18 (0.14 on Night), and a mask
+that anchors right and dissolves towards the copy, so there is no rectangular edge and no
+picture sitting in the middle of the page.
 
 ---
 

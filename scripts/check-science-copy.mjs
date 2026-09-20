@@ -169,6 +169,17 @@ for (const file of taiyi) {
 /* 4. Formulas in drawings are labelled as conceptual notation                */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Notation a page *presents*, as opposed to notation the background merely
+ * carries. `ΔAGE`, `Fθ` and `ẑ` are live: they appear in the project drawings
+ * on the case pages, which is what this rule is for.
+ *
+ * `Δx =` and `dx/dt` no longer match anything a page renders — the drawing that
+ * used them belongs to the retired v1.7 canvas — and they are kept deliberately.
+ * A marker that matches nothing costs one regex test; deleting it would mean
+ * that if that notation ever comes back onto a page that presents it, the label
+ * rule silently stops applying to it. Dead-but-retained is the safer failure.
+ */
 const FORMULA_MARKERS = [/ΔAGE/i, /Fθ/, /ẑ/, /Δx\s*=/, /dx\/dt/];
 /**
  * Case-insensitive on purpose: every label on the site is uppercased by CSS
@@ -181,12 +192,15 @@ const CONCEPT_LABEL = /conceptual|概念模型|概念标注|概念图/i;
 /**
  * Remove the decorative background layer before looking for formulas.
  *
- * The editorial background (v2.2) carries a handful of notations — dx/dt among
- * them — behind every page, at 0.045 opacity, `aria-hidden`, with no claim
- * attached to them. This rule is about formulas a page *presents*, so scanning
- * the background would fail every route on the site for decoration it never
- * asked anyone to read. Removing the block keeps the rule as strict as it was
- * for real content.
+ * The editorial background carries a three-line margin note — `∂u/∂t`, `∇L(θ)`,
+ * `p(z|x)` in v2.2.1, `dx/dt` and five others before it — behind every page, at
+ * a few percent opacity, `aria-hidden`, with no claim attached to them. This
+ * rule is about formulas a page *presents*, so scanning the background would
+ * fail every route on the site for decoration it never asked anyone to read.
+ * Removing the block keeps the rule as strict as it was for real content.
+ *
+ * The strip is also why the notation above is not in `FORMULA_MARKERS`: those
+ * three strings do appear in every built page, and only here.
  *
  * v2.2 changed the selector, not the argument: the v1.7 canvas it used to strip
  * is no longer mounted anywhere, and the layer that replaced it carries

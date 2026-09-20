@@ -30,8 +30,9 @@ import { glob } from 'astro/loaders';
  * `publicIntro`. The cover belonged to the retired ProjectCover component, and a
  * capability list is the "core capability breakdown" the round takes off the
  * public surface. `groups` existed only for the /projects filter bar, which is
- * gone; `publicIntro` duplicated `description`, and /projects now prints
- * `description` directly, so the two cannot drift.
+ * gone; `publicIntro` duplicated `description`. v2.2.1 then took `description`
+ * off /projects as well, which leaves `publicLine` as the single positioning
+ * line that both the homepage row and the directory print.
  *
  * `repo` is only set when the repository has been verified to exist and to be
  * public. Unverified projects simply omit it and show no repository link.
@@ -54,12 +55,17 @@ const projectSchema = z.object({
   /** One-line thesis — used on the hero, the meta description and /projects. */
   summary: z.string(),
   /**
-   * The short public introduction (v2.1, §13–§14).
+   * The public introduction (v2.1, §13–§14; demoted off /projects in v2.2.1).
    *
    * Two to three lines answering exactly three questions: what it is, what it
    * is roughly for, and how much of it is public today. It is not a mechanism
-   * description, not a capability list and not a roadmap. /projects prints it as
-   * the entry's paragraph; the case-study body expands it.
+   * description, not a capability list and not a roadmap.
+   *
+   * v2.2.1 (§35) removed it from the /projects entry, because the four entries
+   * had grown back into project descriptions and a directory page should be a
+   * directory. It still supplies the case page's meta and Open Graph
+   * description, and the case-study body expands it. `publicLine` is the field
+   * /projects prints now.
    */
   description: z.string(),
   /**

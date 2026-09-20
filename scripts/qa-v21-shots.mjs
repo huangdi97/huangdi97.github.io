@@ -134,11 +134,12 @@ for (const { lang, prefix } of LANGS) {
         slug: entry.dataset.slug,
         height: Math.round(entry.getBoundingClientRect().height),
         art: entry.querySelector('[data-artwork]')?.dataset.artwork ?? '',
-        intro: (entry.querySelector('.entry-intro')?.textContent ?? '').trim().length,
+        line: (entry.querySelector('.entry-line')?.textContent ?? '').trim().length,
         status: (entry.querySelector('.entry-status')?.textContent ?? '').trim(),
       })),
       other: document.querySelectorAll('.other-list li').length,
       artifacts: document.querySelectorAll('[data-artifact]').length,
+      exit: document.querySelectorAll('.work-exit a').length,
     }),
   });
 

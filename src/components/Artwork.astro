@@ -65,18 +65,18 @@ const placement = ART_PLACEMENT[name] ?? { position: '50% 50%', ratio: '4 / 3' }
 const isHero = name === 'hero';
 
 /* §48: the hero is the LCP element and must not be deferred; the four project
-   images sit below the fold and must be. v2.1: the /research and /about bands
-   are their pages' LCP element, so they load eagerly for the same reason. */
-const isPageHero = name === 'research' || name === 'about';
-const loading = isHero || isPageHero ? 'eager' : 'lazy';
-const fetchpriority = isHero || isPageHero ? 'high' : 'auto';
+   images sit below the fold and must be. The /research and /about accents are
+   still the largest thing on their page above the fold, so they stay eager. */
+const isPageAccent = name === 'research' || name === 'about';
+const loading = isHero || isPageAccent ? 'eager' : 'lazy';
+const fetchpriority = isHero || isPageAccent ? 'high' : 'auto';
 
 /* §18/§19: the four project drawings stop being the row's subject this round.
    They keep their place and their meaning, but the frame is feathered on all
    four edges so the drawing arrives out of the paper instead of being a plate
-   pasted onto it — the same treatment the page bands already use, applied where
-   the owner asked for the artwork to "blend in" rather than lead. */
-const isBlend = !isHero && !isPageHero;
+   pasted onto it — the same treatment the page accents already use, applied
+   where the owner asked for the artwork to "blend in" rather than lead. */
+const isBlend = !isHero && !isPageAccent;
 
 /* The descriptor list and the `sizes` string both come from shared data, so the
    `<img>` and the preload emitted by `BaseLayout` cannot disagree (§25). */
@@ -106,7 +106,7 @@ const svg = ART[name].replace('<svg ', `<svg role="img" aria-label="${safeLabel}
     'art',
     `art--${name}`,
     asset && 'art--raster',
-    isPageHero && 'art--band',
+    isPageAccent && 'art--accent',
     isBlend && 'art--blend',
     className,
   ]}
@@ -300,48 +300,49 @@ const svg = ART[name].replace('<svg ', `<svg role="img" aria-label="${safeLabel}
     mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
   }
 
-  /* §23/§30: the /research and /about bands run the full content width, and the
-     artwork brings its own paper ground — a shade warmer than the canvas. Left
-     alone, the band ends on four hard edges and reads as a plate pasted onto the
-     page, which is the one thing this frame is not allowed to be. So the band is
-     feathered into the paper instead: horizontal on the innermost element and
-     vertical on the wrapper, because masks on nested elements multiply and that
-     avoids `mask-composite` and its vendor-prefix differences.
-     The hero uses the same mechanism for the same reason; it only fades on one
-     side, because the other side is where its text begins.
+  /* §19–§21: the /research and /about drawings stop being a band the page has
+     to be read around and become a **side background accent**. Three things
+     change, and each one answers a sentence in the brief:
 
-     The two horizontal edges are deliberately asymmetric, and the reason is
-     measured rather than aesthetic. Column-wise ink profiling of both Owner
-     assets puts the first ink at 45.3% (research) and 29.1% (about), so the left
-     9% ramps across nothing but the artwork's own blank paper and can stay wide.
-     The right edge is the opposite: it *is* content — the final column of
-     `about.webp` measures 91.9% of that image's peak column deviation, and
-     `research.webp` reaches 52.4% only 3% in. A 9% ramp there was fading real
-     subject, which is what the owner saw as a washed-out right side. It is
-     pulled back to the hero's already-validated 3.5% (96.5%), the narrowest
-     value that still hides the warmer paper step. */
-  .art--band.art--raster .art-img,
-  .art--band:not(.art--raster) .art-ink :global(svg) {
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      #000 9%,
-      #000 96.5%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 96.5%, transparent 100%);
+       · it is not a rectangle. One directional mask runs left-to-right, opaque
+         from the right edge until 58% across and then fading to nothing, so the
+         drawing is clear on the right — where both sources put their subject —
+         and dissolves into the paper towards the left, where the copy is. There
+         is no edge anywhere on the frame.
+       · it is not the page's subject. The whole figure sits at 0.18 opacity, so
+         it reads as atmosphere that happens to be drawn rather than as an
+         illustration placed on the page.
+       · it still reserves its space. The frame keeps `aspect-ratio`, so the
+         layout is identical with the bytes blocked — which is what the no-image
+         QA asserts.
+
+     The vertical feather is a second mask on the wrapper: masks on nested
+     elements multiply, which avoids `mask-composite` and its vendor-prefix
+     differences. Same mechanism as the hero's. */
+  .art--accent {
+    opacity: 0.18;
   }
 
-  .art--band.art--raster picture,
-  .art--band:not(.art--raster) .art-ink {
+  [data-theme='night'] .art--accent {
+    opacity: 0.14;
+  }
+
+  .art--accent.art--raster .art-img,
+  .art--accent:not(.art--raster) .art-ink :global(svg) {
+    -webkit-mask-image: linear-gradient(to left, #000 0%, #000 40%, transparent 100%);
+    mask-image: linear-gradient(to left, #000 0%, #000 40%, transparent 100%);
+  }
+
+  .art--accent.art--raster picture,
+  .art--accent:not(.art--raster) .art-ink {
     -webkit-mask-image: linear-gradient(
       to bottom,
       transparent 0%,
-      #000 13%,
-      #000 87%,
+      #000 12%,
+      #000 88%,
       transparent 100%
     );
-    mask-image: linear-gradient(to bottom, transparent 0%, #000 13%, #000 87%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
   }
 
   /* §86: when the raster is blocked, the browser paints the `alt` text at the
@@ -364,7 +365,7 @@ const svg = ART[name].replace('<svg ', `<svg role="img" aria-label="${safeLabel}
      corner is what it is not (§89 — no placeholder content). */
   .art--hero.art--raster .art-img,
   .art--blend.art--raster .art-img,
-  .art--band.art--raster .art-img {
+  .art--accent.art--raster .art-img {
     color: transparent;
   }
 

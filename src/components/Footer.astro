@@ -1,6 +1,7 @@
 ---
 /**
- * Footer — theme-continuous, and (on the homepage) minimal (v1.7).
+ * Footer — theme-continuous, and minimal wherever the page carries its own
+ * contact surface (v1.7, extended in v2.2.1).
  *
  * v1.6 removed the forced `night` class that made every page end in a black
  * block. v1.7 removes two more things from the foot of the page:
@@ -12,8 +13,14 @@
  *      GitHub and Resume in its contact band, and repeating four addresses
  *      inside one screen is not "more contact", it is noise.
  *
- * Inner pages keep the contact row: the footer is the only contact surface
- * /projects, /research and the case studies have, and it is the reason the
+ * v2.2.1 (§49) asks the same question of the whole site, and the answer is that
+ * three pages carry a contact surface of their own: the homepage, /about (which
+ * closes on a contact section) and /resume (which prints the details in its
+ * head and again in its contact block). On those three the footer row was a
+ * third copy of the same four links, so all three now pass `minimal`.
+ *
+ * Everywhere else the contact row stays: on /projects, /research and the case
+ * studies the footer is the only contact surface, and it is the reason the
  * identity gate can assert one fixed order everywhere.
  */
 import { useT, type Lang } from '../i18n/ui';
@@ -24,7 +31,11 @@ import ContactLinks from './ContactLinks.astro';
 
 export interface Props {
   lang: Lang;
-  /** Homepage prototype: identity, preferences and copyright only. */
+  /**
+   * Identity, preferences and copyright only — no contact row. Set on the three
+   * pages that already carry their own contact surface (§49): `/`, `/about/`
+   * and `/resume/`.
+   */
   minimal?: boolean;
 }
 

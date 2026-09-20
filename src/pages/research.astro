@@ -1,16 +1,21 @@
 ---
 /**
- * Research (English) — v2.1, a page of questions rather than a method statement.
+ * Research (English) — v2.2.1, an editorial hero rather than a band.
  *
- * See the Chinese mirror for the full argument. In short: v1.6 treated this
- * route as the full record of a research programme — five directions with
- * bulleted interest lists, a complete mathematical-biology figure set, a
- * standalone conceptual equation and the dated lab-note log. Every part was
- * honest and every part was internal design (§22–§28).
+ * See the Chinese mirror for the full argument. In short, v2.1 kept the
+ * artwork band and put it above the copy, which produced the page the owner
+ * rejected: a title on the left, one complete drawing in the middle, a lot of
+ * empty paper, and scientific marks that could not be seen.
  *
- * v2.1 keeps the artwork band, five one-to-three-sentence directions, the two
- * tiers and the lab notes, and removes the figure set, the equation and the
- * interest lists.
+ * §14 replaces that with an editorial composition — the copy in the left 46%,
+ * a scientific field in the right 54% — and §19–§21 demote the raster from "the
+ * page's picture" to a side accent: partial crop, low opacity, masked so the
+ * right stays clear and the drawing dissolves towards the copy. §22 tightens
+ * the hero to 520–680px so the five directions enter the first screen.
+ *
+ * The page's information architecture is unchanged: five directions in two
+ * tiers, then the lab notes. §23 keeps each direction to a title, one or two
+ * sentences and an optional project reference.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SectionHeading from '../components/SectionHeading.astro';
@@ -42,7 +47,7 @@ const zhPath = '/zh/research/';
 
 <BaseLayout
   title="Research"
-  description="Five research directions: AI for scientific discovery, agentic systems, AI for health and computational biology, simulation and digital twins, and local-first personal intelligence."
+  description="Long-term questions across biological systems, computational models and intelligent systems — AI for scientific discovery, agentic systems, AI for health, simulation, and local-first personal intelligence."
   lang={lang}
   path={path}
   enPath={enPath}
@@ -51,22 +56,22 @@ const zhPath = '/zh/research/';
   backgroundMode="research"
   preloadArtwork="research"
 >
-  <section class="shell section">
-    <SectionHeading
-      as="h1"
-      eyebrow={t('research.eyebrow')}
-      title="Research"
-      lead={t('research.lead')}
-    />
+  <!-- §14: the hero is a composition, not a stack. Copy left, scientific field
+       right; on a phone it is the same two things in one column, with the
+       drawing under the lead. -->
+  <section class="shell research-hero">
+    <div class="rh-copy">
+      <SectionHeading as="h1" eyebrow={t('research.eyebrow')} title="Research" lead={t('research.lead')} />
+    </div>
 
-    <!-- Page artwork: the same paper and ink as the homepage, without the
-         hero's profile and without any project's composition. -->
-    <div class="research-band">
-      <Artwork
-        name="research"
-        label={ARTWORK_LABELS.research[lang]}
-        alt={ART_ALT.research[lang]}
-      />
+    <div class="rh-visual">
+      <div class="research-accent">
+        <Artwork
+          name="research"
+          label={ARTWORK_LABELS.research[lang]}
+          alt={ART_ALT.research[lang]}
+        />
+      </div>
     </div>
   </section>
 
@@ -92,20 +97,56 @@ const zhPath = '/zh/research/';
 </BaseLayout>
 
 <style>
-  /* §28: the page artwork stops being a banner the page has to be read around.
-     It is capped at 56rem and pushed to the right edge of the column, so the
-     left margin it gives up is paper the background system can use — which is
-     the whole point of §13's sparse composition.
+  /* §22: tightened. v2.1's band pushed the first direction below the fold and
+     left a screen of empty paper between the title and the list. */
+  .research-hero {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    padding-top: clamp(2rem, 4vw, 3rem);
+    padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  }
 
-     Only the width changes. The frame keeps its 8:5 ratio and its 100% object
-     position, so the visible *fraction* of the source is untouched: `cover` on
-     a fixed-ratio frame always shows 1.6/2 = 80% of a 2:1 source, at any
-     rendered size. Nothing about the crop needed re-verifying because nothing
-     about the crop changed — the drawing is simply smaller. */
-  .research-band {
-    margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
-    max-width: 56rem;
-    margin-left: auto;
+  /* §14: left 46% / right 54%. `align-items: center` is what keeps the copy
+     optically centred against the field rather than pinned to its top edge. */
+  @media (min-width: 1024px) {
+    .research-hero {
+      grid-template-columns: minmax(0, 46fr) minmax(0, 54fr);
+      gap: clamp(2rem, 4vw, 3.5rem);
+      align-items: center;
+      min-height: clamp(520px, 58vh, 680px);
+      padding-top: clamp(2.5rem, 5vw, 4rem);
+    }
+  }
+
+  .rh-copy {
+    max-width: 30rem;
+  }
+
+  /* §59: the inner-page h1 steps down ~15% from `.h1` so the homepage keeps the
+     largest type on the site (§60). 3.4rem against the homepage's 5.5rem. */
+  .rh-copy :global(.head-title) {
+    font-size: clamp(2rem, 4.6vw, 3.4rem);
+    max-width: 14ch;
+  }
+
+  .rh-visual {
+    position: relative;
+    min-width: 0;
+  }
+
+  /* §19: the drawing is an accent, so the frame is allowed to sit slightly
+     larger than its column and run off the right edge of the page — the same
+     "fragment rather than plate" argument the background marks use. The
+     document must not gain a horizontal scrollbar (§68), so the parent grid
+     column clips it instead. */
+  .research-accent {
+    min-width: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .research-accent {
+      margin-right: calc(-1 * clamp(1rem, 3vw, 3.5rem));
+    }
   }
 
   .research-body {

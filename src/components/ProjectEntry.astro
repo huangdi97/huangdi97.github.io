@@ -1,28 +1,25 @@
 ---
 /**
- * Project entry — one project on /projects (v2.1, §10–§14).
+ * Project entry — one project on /projects (v2.2.1, §34–§35).
  *
- * What this replaces. v1.6–v2.0 rendered /projects as a filterable grid of
- * cards. Each card carried a words-first cover, a category eyebrow, a type
- * line, a description, a reality pill, a second code label, a keyword list, a
- * case link, a repository link and a status word — eight labelled slots, seven
- * cards, and no image anywhere on the page. The owner's read was that the page
- * had become a project manual rather than a portfolio.
+ * What this is now, and what it stopped being. v2.1 cut the entry from a
+ * bordered card with eight labelled slots down to a name, a positioning line,
+ * two or three lines of intro, a status and two links. That was the right
+ * direction and not far enough: the owner's v2.2.1 review found the intro
+ * paragraph had grown back into a project description — "把分散的健康信息整理
+ * 成…", "研究如何用模型表示细胞状态…" — and a public directory page is not the
+ * place for it. §34 gives the ceiling, and it is five fields:
  *
- * v2.1 gives the entry a real image — the project's own artwork, the same file
- * the homepage shows (§11, §43) — and cuts the copy to what §13 allows:
+ *   Project Name · one-line positioning · status · View project → ·
+ *   GitHub ↗ (optional)
  *
- *   name · one line of positioning · two or three lines of public intro ·
- *   one status · one project link (plus the repository)
- *
- * Removed: the category eyebrow, the capability list, the keyword pills, the
- * second code label, the card border, the card fill and the hover lift. Entries
- * are separated by whitespace, and the image is not a thumbnail placed on a
- * panel — it is the drawing itself, in the same frame the homepage uses.
- *
- * The positioning line and the intro both come from the project's own
- * frontmatter, so this page cannot drift from the homepage row or from the
- * project file.
+ * So the intro paragraph is gone from this page. Nothing was deleted from the
+ * data: `description` is still in every project file, and it still supplies the
+ * case page's meta and OG description. The case page's own body was always the
+ * fuller account, which is where §35 says the longer text belongs.
+ * The page keeps the project's own artwork — the same file the homepage shows —
+ * because §37 is explicit that the image carries the visual and the words carry
+ * the identification.
  */
 import { useT, type Lang } from '../i18n/ui';
 import { projectHref, type ProjectEntry as Entry } from '../lib/projects';
@@ -42,9 +39,11 @@ const d = project.data;
 const href = projectHref(lang, d.slug);
 const status = projectStatus(d.slug, lang, t);
 
-/* Only the four projects with a real artwork get an entry; the rest are listed
-   in the light "other work" index below, because §36 and §51 both rule out
-   standing in a drawing for a project that has none. */
+/* Only the four projects with a real artwork get an entry. §36 and §51 both
+   rule out standing a drawing in for a project that has none, and §39 hides the
+   three unfinished ones from this page entirely rather than listing them in a
+   text index — the data is untouched, the public page simply stops publishing
+   work the owner does not want shown yet. */
 const artwork = ARTWORK_LABELS[d.slug] ? (d.slug as ArtworkName) : null;
 ---
 
@@ -68,7 +67,6 @@ const artwork = ARTWORK_LABELS[d.slug] ? (d.slug as ArtworkName) : null;
     </h2>
 
     <p class="entry-line">{d.publicLine}</p>
-    <p class="entry-intro">{d.description}</p>
 
     {status && <p class="entry-status">{status}</p>}
 
@@ -121,20 +119,14 @@ const artwork = ARTWORK_LABELS[d.slug] ? (d.slug as ArtworkName) : null;
     text-underline-offset: 6px;
   }
 
-  /* The positioning line carries the ink; the intro steps back to muted. Two
-     levels, so the entry has a reading order rather than two grey paragraphs. */
+  /* The positioning line carries the ink. v2.2.1 removed the paragraph that
+     used to sit under it (§35); what is left is one line, so it is set as the
+     entry's second voice rather than as a lead-in to a block. */
   .entry-line {
     margin: 0.75rem 0 0;
     font-size: 1rem;
     line-height: 1.45;
     letter-spacing: -0.012em;
-    color: var(--ink);
-  }
-
-  .entry-intro {
-    margin: 0.625rem 0 0;
-    font-size: 0.9375rem;
-    line-height: 1.62;
     color: var(--muted);
   }
 

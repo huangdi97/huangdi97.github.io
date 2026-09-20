@@ -1,55 +1,41 @@
 ---
 /**
- * Projects index (Chinese) — v2.1.
+ * Projects index (Chinese) — v2.2.1.
  *
- * What changed and why. v1.6 moved the evidence half of the homepage here and
- * the page then grew into a project manual: a NOW strip, a five-way filter bar,
- * seven bordered cards with capability lists and keyword pills, a dark artifact
- * room, and the full open-source metadata table. Every individual piece was
- * defensible; together they answered "how much is there?" instead of "what is
- * worth looking at?".
+ * 本轮改了什么，为什么。v2.2 的 /projects 又长回了 Owner 明确要求去掉的两样东西：
  *
- * v2.1 (§10–§14) makes it a curated directory of public entries:
+ *   1. **「其他工作」索引。** 它把三个尚未完成的项目（Pet AI Health、PDIG、
+ *      太一·灵境）摊在公开目录页上。Owner 的原话是「很多项目还没做完，不想全部
+ *      表露」。§39–§41 的处理方式是**只从公开渲染里隐藏，不删数据**：三个项目的
+ *      frontmatter、案例页、证据层全部原样保留，只是首页与 /projects 不再列出它们。
+ *   2. **黑色「公开成果精选」区块。** 它原本是本站唯一的反色面，而反色面在纸面
+ *      editorial 版式里读起来像「另一个网站被贴了上来」，同时把工程细节重新放大。
+ *      §42 要求整块从 /projects 移除；§43 明确数据不删——`src/data/artifacts.ts`
+ *      一字未动，`SelectedArtifacts.astro` 也仍在仓库里，只是**当前没有任何页面
+ *      mount 它**（这一点由 artifacts 门禁断言，而不是靠推断）。§44 只允许保留
+ *      **一行文字链接**作为出口，所以底部现在就是一行。
  *
- *   1. a short lead that says how to read the list;
- *   2. four entries, each with the project's own artwork — the same file the
- *      homepage shows, not a second design (§11, §43) — its name, one line of
- *      positioning, two or three lines of public intro, one status and two
- *      links;
- *   3. a light "other work" index for the three projects that have no public
- *      repository and therefore no artwork: a name, a line and a status. No
- *      drawing is invented for them (§36, §51);
- *   4. the evidence stays, because everything in it is real and externally
- *      checkable — but as a footnote, not a chapter. v2.1's final closure cut
- *      the artifact room from a five-tile mosaic of repository trees, terminal
- *      transcripts and metric dumps to a three-row "Selected Public Work" list.
- *      The room had reached 2,875px, 44% of the page, so a visitor asking "what
- *      have you built" met a directory listing before they met the four
- *      projects. It is now 751px, 17%. The table in `src/data/artifacts.ts` is
- *      untouched; only the amount of it the page prints changed. The
- *      open-source table below it is checked-in GitHub metadata and stays.
+ * 项目条目本身再收一次（§34–§35）：每个项目最多五个字段——名称、一行定位、状态、
+ * 「查看项目 →」、（可选）GitHub ↗。v2.1 留下的两三段介绍移出目录页；frontmatter 的
+ * `description` 一字未动，仍是案例页的 meta / OG 描述，而案例页正文本来就是更完整的
+ * 那一份——这正是 §35 说的「移到 case page」。
  *
- * Removed: the NOW strip (its information is each entry's status line, and a
- * "what I am working on" rail is roadmap-adjacent), the filter bar and the
- * `groups` frontmatter it read, the card grid, and the ProjectCover component
- * with its six `cover*` fields.
+ * 开源列表同样减重（§45–§48）：只留仓库名、一行描述、语言和 GitHub 入口；许可证、
+ * 更新日期、元数据快照日期与「定位」列全部去掉——GitHub 自己会显示这些。
  */
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import SectionHeading from '../../../components/SectionHeading.astro';
 import ProjectEntry from '../../../components/ProjectEntry.astro';
-import SelectedArtifacts from '../../../components/SelectedArtifacts.astro';
 import OpenSourceList from '../../../components/OpenSourceList.astro';
 import { SITE } from '../../../config/site';
 import { useT } from '../../../i18n/ui';
-import { getProjects, projectHref } from '../../../lib/projects';
-import { projectStatus } from '../../../lib/projectStatus';
+import { getProjects } from '../../../lib/projects';
 
 const lang = 'zh' as const;
 const t = useT(lang);
 
 const all = await getProjects(lang);
 const featured = all.filter((project) => project.data.featured);
-const others = all.filter((project) => !project.data.featured);
 
 const path = '/zh/projects/';
 const enPath = '/projects/';
@@ -63,8 +49,8 @@ const collectionLd = {
   inLanguage: 'zh-Hans',
   mainEntity: {
     '@type': 'ItemList',
-    numberOfItems: all.length,
-    itemListElement: all.map((p, i) => ({
+    numberOfItems: featured.length,
+    itemListElement: featured.map((p, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       name: p.data.title,
@@ -76,12 +62,13 @@ const collectionLd = {
 
 <BaseLayout
   title="项目"
-  description="AI 健康、计算生物学、智能体与本地优先基础设施方向的精选项目。每条只说明它是什么、用来做什么，以及当前公开到什么程度。"
+  description="AI 健康、计算生物学、智能体与本地优先基础设施方向的精选项目。每条只说明它是什么，以及当前公开到什么程度。"
   lang={lang}
   path={path}
   enPath={enPath}
   zhPath={zhPath}
   ogImage="/og/projects.png"
+  backgroundMode="projects"
   jsonLd={collectionLd}
 >
   <section class="shell section">
@@ -91,32 +78,6 @@ const collectionLd = {
       {featured.map((project) => <ProjectEntry project={project} lang={lang} />)}
     </div>
   </section>
-
-  <!-- 其他工作：没有公开仓库、也没有正式主视觉的项目，只做一份很轻的索引。 -->
-  <section class="shell section-tight">
-    <h2 class="other-title">{t('work.other')}</h2>
-    <p class="other-lead">{t('work.other.lead')}</p>
-
-    <ul class="other-list">
-      {
-        others.map((project) => {
-          const status = projectStatus(project.data.slug, lang, t);
-          return (
-            <li class="other-item">
-              <a class="other-name" href={projectHref(lang, project.data.slug)}>
-                {project.data.title}
-              </a>
-              <span class="other-line">{project.data.publicLine}</span>
-              {status && <span class="other-status">{status}</span>}
-            </li>
-          );
-        })
-      }
-    </ul>
-  </section>
-
-  <!-- 已公开内容：每件实物都引用自公开仓库。 -->
-  <SelectedArtifacts lang={lang} />
 
   <section class="shell section">
     <SectionHeading
@@ -129,6 +90,16 @@ const collectionLd = {
 
     <OpenSourceList lang={lang} />
   </section>
+
+  <!-- §44：页面唯一的出口，而且是一行，不是一块。证据本身仍在
+       `src/data/artifacts.ts`，仍在各项目自己的案例页上渲染。 -->
+  <p class="shell work-exit">
+    <a class="link-arrow" href={SITE.github} target="_blank" rel="noopener noreferrer">
+      {t('artifacts.title')}
+      <span class="arrow" aria-hidden="true">→</span>
+      <span class="sr-only"> ({t('a11y.external')})</span>
+    </a>
+  </p>
 </BaseLayout>
 
 <style>
@@ -146,68 +117,7 @@ const collectionLd = {
     }
   }
 
-  .other-title {
-    font-size: clamp(1.25rem, 2vw, 1.5rem);
-    letter-spacing: -0.022em;
-    font-weight: 500;
-    margin: 0;
-  }
-
-  .other-lead {
-    margin: 0.625rem 0 0;
-    font-size: 0.9375rem;
-    color: var(--muted);
-    max-width: 62ch;
-  }
-
-  .other-list {
-    list-style: none;
-    margin: clamp(1.5rem, 3vw, 2rem) 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* A light index, not a second grid of cards: one hairline per row, the name
-     in ink, the line muted, the status quiet in the mono face. */
-  .other-item {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.25rem;
-    padding-block: 1rem;
-    border-top: 1px solid var(--line);
-  }
-
-  @media (min-width: 760px) {
-    .other-item {
-      grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) auto;
-      gap: 0.25rem 1.5rem;
-      align-items: baseline;
-    }
-  }
-
-  .other-name {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--ink);
-  }
-
-  .other-name:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 5px;
-  }
-
-  .other-line {
-    font-size: 0.9375rem;
-    color: var(--muted);
-  }
-
-  .other-status {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.08em;
-    color: var(--faint);
-    white-space: nowrap;
+  .work-exit {
+    margin: 0 auto clamp(3rem, 6vw, 5rem);
   }
 </style>

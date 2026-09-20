@@ -1,5 +1,6 @@
 /**
- * Editorial background system + raster loading policy (v2.2).
+ * Editorial background system + raster loading policy (v2.2, re-layered in
+ * v2.2.1).
  *
  * This suite is the browser half of the argument the visual gate makes in
  * source. The gate can prove the tokens are declared and the markup is inert;
@@ -7,6 +8,13 @@
  * fewer fragments rather than a squashed desktop, and — the acceptance item
  * this whole round turns on — that the page still stands up when no image
  * arrives at all.
+ *
+ * v2.2.1 moves the axis of the suite. v2.2 had one composition and varied the
+ * number of fragments per mode, so the tests here could check "the same field,
+ * smaller". The round replaced that with seven variants that differ in mark
+ * set, placement *and* density (§50–§52), so the tests now check the hierarchy
+ * itself: that the routes do not draw the same field, and that the density
+ * order the owner named is the order the CSS actually produces.
  *
  * The suite is deliberately small. §97 asks for a few assertions that would
  * genuinely catch a regression, and warns against dozens of fragile pixel
@@ -17,36 +25,53 @@
 import { test, expect, type Page } from '@playwright/test';
 import { visit } from './helpers';
 
-/** Routes that mount the background, with the marks each mode is meant to show. */
+/** Routes that mount the background, with the marks each variant is meant to show. */
 const MARKED_ROUTES = ['/', '/projects/', '/research/', '/about/', '/resume/'] as const;
 
-/** §34: what each mode is for. `minimal` is checked separately — it has none. */
+/**
+ * §50–§52: the variant table, mirrored from `ScientificEditorialBackground`.
+ *
+ * Read per *kind*, not per group: `formula` and `curve` are both mathematics,
+ * so a variant's kind set is what a reader actually perceives. `/projects`
+ * deliberately shares the homepage's mark set — what separates them is density
+ * and placement, which the hierarchy test below measures.
+ */
 const EXPECTED_KINDS: Record<string, string[]> = {
-  '/': ['math', 'biology', 'ai'],
+  '/': ['math', 'ai'],
+  '/projects/': ['math', 'ai'],
   '/research/': ['math', 'biology', 'ai'],
-  '/about/': ['math', 'biology'],
+  '/about/': ['math', 'ai'],
   '/resume/': ['math'],
 };
 
-/** §12: floor and ceiling per token, per theme, exactly as the gate enforces. */
+/** §51: the owner's density table, as a strict order rather than seven numbers. */
+const DENSITY_ORDER = ['/research/', '/', '/projects/', '/about/', '/resume/'] as const;
+
+/** §12/§18: floor and ceiling per token, per theme, exactly as the gate enforces. */
 const TOKEN_BANDS: Record<string, Record<string, [number, number]>> = {
   paper: {
+    'bg-texture': [0.01, 0.028],
+    'bg-grid': [0.02, 0.04],
     'bg-mark': [0.025, 0.05],
+    'bg-curve': [0.03, 0.06],
     'bg-graph': [0.03, 0.06],
     'bg-bio': [0.03, 0.06],
-    'bg-grid': [0.02, 0.04],
   },
   white: {
-    'bg-mark': [0.02, 0.045],
-    'bg-graph': [0.02, 0.05],
-    'bg-bio': [0.02, 0.05],
+    'bg-texture': [0.01, 0.024],
     'bg-grid': [0.015, 0.035],
+    'bg-mark': [0.02, 0.045],
+    'bg-curve': [0.02, 0.055],
+    'bg-graph': [0.02, 0.06],
+    'bg-bio': [0.02, 0.06],
   },
   night: {
-    'bg-mark': [0.04, 0.08],
-    'bg-graph': [0.04, 0.08],
-    'bg-bio': [0.04, 0.08],
+    'bg-texture': [0.015, 0.032],
     'bg-grid': [0.03, 0.06],
+    'bg-mark': [0.04, 0.08],
+    'bg-curve': [0.045, 0.09],
+    'bg-graph': [0.045, 0.09],
+    'bg-bio': [0.045, 0.09],
   },
 };
 
@@ -109,6 +134,7 @@ test.describe('editorial background', () => {
           const style = getComputedStyle(el);
           return {
             image: style.backgroundImage,
+            size: style.backgroundSize,
             opacity: Number(style.opacity),
             width: el.getBoundingClientRect().width,
           };
@@ -123,6 +149,14 @@ test.describe('editorial background', () => {
       expect(layers.texture, 'texture layer').not.toBeNull();
       expect(layers.texture?.image ?? '', 'texture tile').toContain('paper.webp');
       expect(layers.texture?.opacity ?? 0).toBeGreaterThan(0.01);
+
+      /* §3: a 128px tile, not a 256px one. The v2.2 tile was 256×256 and carried
+         a directional fibre layer, so it repeated every 256px behind every page
+         — the horizontal banding this round exists to remove. The size is
+         asserted here because a later "make the grain finer" edit that quietly
+         grew the tile would restore the periodicity without ever touching the
+         generator, and nothing else in the suite would notice. */
+      expect(layers.texture?.size ?? '', 'tile size').toBe('128px 128px');
     });
   }
 
@@ -142,6 +176,72 @@ test.describe('editorial background', () => {
       }
     });
   }
+
+  /**
+   * §50–§52: the per-page variant table, checked as a hierarchy rather than as
+   * seven numbers.
+   *
+   * v2.2's failure was that every page had roughly the same field — density
+   * moved by a factor of two across the whole site, which is not a hierarchy.
+   * The correction is only real if the order the owner named survives all the
+   * way to the rendered page, so this test reads `--ebg-scale` off the mounted
+   * element and asserts the order, and separately checks that the routes do not
+   * all draw the same marks. A variant that differs only in its multiplier
+   * would pass a "the mode names are unique" check and fail this one.
+   */
+  test('the routes draw different fields, in the order the brief names', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    const seen: Record<string, { mode: string; scale: number; groups: string[] }> = {};
+
+    for (const route of MARKED_ROUTES) {
+      await visit(page, route);
+      seen[route] = await page.evaluate(() => {
+        const bg = document.querySelector('[data-editorial-background]') as HTMLElement | null;
+        if (!bg) return { mode: '', scale: 0, groups: [] };
+        return {
+          mode: bg.dataset.bgMode ?? '',
+          scale: Number(getComputedStyle(bg).getPropertyValue('--ebg-scale').trim()),
+          groups: Array.from(bg.querySelectorAll('[data-bg-group]')).map(
+            (group) => (group as HTMLElement).dataset.bgGroup ?? '',
+          ),
+        };
+      });
+    }
+
+    // One variant per route, and no route quietly falling back to the empty one.
+    const modes = MARKED_ROUTES.map((route) => seen[route].mode);
+    expect(modes.every(Boolean), 'every route declares its mode').toBe(true);
+    expect(new Set(modes).size, 'each route has its own mode').toBe(modes.length);
+    expect(modes, 'no route falls back to the empty variant').not.toContain('minimal');
+
+    // §51: research is the richest field and resume the quietest, in that order.
+    const scales = DENSITY_ORDER.map((route) => seen[route].scale);
+    expect(scales.every((value) => Number.isFinite(value) && value > 0), 'every scale parses').toBe(
+      true,
+    );
+    for (let i = 1; i < scales.length; i += 1) {
+      expect(scales[i], `${DENSITY_ORDER[i]} is quieter than ${DENSITY_ORDER[i - 1]}`).toBeLessThan(
+        scales[i - 1],
+      );
+    }
+
+    for (const route of MARKED_ROUTES) {
+      const { groups } = seen[route];
+      expect(groups.length, `${route} group count`).toBeGreaterThanOrEqual(1);
+      expect(groups.length, `${route} group count`).toBeLessThanOrEqual(4);
+      if (route !== '/resume/') {
+        /* §7–§8: a composition, not a watermark. /resume is the one page §50
+           deliberately leaves with a single fragment. */
+        expect(groups.length, `${route} draws a composition`).toBeGreaterThanOrEqual(2);
+      }
+    }
+
+    // The mark set travels with the variant — these are not one field with five
+    // multipliers.
+    const sets = MARKED_ROUTES.map((route) => [...seen[route].groups].sort().join(','));
+    expect(new Set(sets).size, 'the routes do not all draw the same marks').toBeGreaterThan(2);
+  });
 
   test('every theme inks the field inside the §12 band, and the hierarchy holds', async ({
     page,
@@ -174,11 +274,17 @@ test.describe('editorial background', () => {
         expect(value, `${theme} ${token} ceiling`).toBeLessThanOrEqual(max);
       }
 
-      expect(tokens['bg-grid'], `${theme} ticks under notation`).toBeLessThan(tokens['bg-mark']);
-      expect(tokens['bg-mark'], `${theme} notation under the graph marks`).toBeLessThan(
-        tokens['bg-graph'],
+      /* §18: four mark kinds, four separable bands. The curve sits between the
+         notation and the network, which is what makes the weights four distinct
+         values rather than three — v2.2 gave the curve and the network one
+         token, so two of the owner's four bands collapsed into one. */
+      expect(tokens['bg-texture'], `${theme} grain under every mark`).toBeLessThan(tokens['bg-grid']);
+      expect(tokens['bg-grid'], `${theme} ruled grid under the notation`).toBeLessThan(
+        tokens['bg-mark'],
       );
-      expect(tokens['bg-bio'], `${theme} biology no louder than the graph`).toBeLessThanOrEqual(
+      expect(tokens['bg-mark'], `${theme} notation under the curve`).toBeLessThan(tokens['bg-curve']);
+      expect(tokens['bg-curve'], `${theme} curve under the network`).toBeLessThan(tokens['bg-graph']);
+      expect(tokens['bg-bio'], `${theme} biology no louder than the network`).toBeLessThanOrEqual(
         tokens['bg-graph'],
       );
 
@@ -225,12 +331,32 @@ test.describe('editorial background', () => {
     expect(mobile).toBeGreaterThan(0);
     expect(mobile).toBeLessThan(desktop);
 
-    // And all three sciences survive the reduction.
-    for (const kind of ['math', 'biology', 'ai']) {
-      const count = await page
-        .locator(`[data-editorial-background] [data-bg-kind="${kind}"]:visible`)
-        .count();
-      expect(count, `${kind} fragments at 390px`).toBeGreaterThan(0);
+    /* §54 caps a phone at one or two groups, and /research keeps exactly one:
+       the network, which is the fragment that says "computational" on its own.
+       The notation, the cell and the curve are *hidden* rather than shrunk,
+       because a mark that has been shrunk to fit is still a mark competing with
+       the text. */
+    expect(mobile, '§54 caps a phone at two groups').toBeLessThanOrEqual(2);
+    expect(mobile, 'the network is the one that survives').toBe(1);
+
+    const visibleKinds = await page
+      .locator('[data-editorial-background] [data-bg-kind]:visible')
+      .evaluateAll((nodes) => [
+        ...new Set(nodes.map((node) => (node as HTMLElement).dataset.bgKind ?? '')),
+      ]);
+    expect(visibleKinds.sort()).toEqual(['ai']);
+  });
+
+  test('the phone clears the field entirely on the two document pages', async ({ page }) => {
+    /* §54, per page: /projects already leads with four drawings and /resume is a
+       professional document, so both keep zero mark groups at 390px. Asserted
+       rather than assumed, because "fewer" and "none" are one CSS rule apart. */
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    for (const route of ['/projects/', '/resume/']) {
+      await visit(page, route);
+      const visible = await page.locator('[data-editorial-background] [data-bg-group]:visible').count();
+      expect(visible, `${route} at 390px`).toBe(0);
     }
   });
 
