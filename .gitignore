@@ -34,6 +34,11 @@ _*.log
 _*.txt
 _*.py
 _*.mjs
+# `chkver-*` is the established name for before/after comparison captures
+# (`git show HEAD:<file> > chkver-<name>`, or a snapshot of `dist/`). They are
+# evidence for one round, not source, so they stay out of the repository.
+chkver-*.mjs
+chkver-*/
 
 # Workspace agent data
 .workbuddy/

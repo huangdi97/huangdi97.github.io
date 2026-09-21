@@ -42,14 +42,19 @@
     --accent: #2e56f2;
     --accent-soft: rgba(46, 86, 242, 0.09);
 
-    /* Artifact room — the single inverted block on a page */
+    /* Artifact room — the palette of the inverted block that §42 retired from
+       /projects. `--artifact-ink` still paints the hover hint on a case-study
+       figure; the rest are the record's contract, consumed by
+       `src/components/SelectedArtifacts.astro`, which is kept as the record of
+       a surface the owner asked the site not to render again. `--artifact-bg` is
+       also the reference surface the theme gate measures that palette against.
+       `--artifact-line-strong` and `--artifact-code-bg` had no consumer in the
+       record or anywhere else and were removed in v2.2.4. */
     --artifact-bg: #111110;
     --artifact-ink: #ecece7;
     --artifact-muted: #a09f98;
     --artifact-faint: #8a8a83;
     --artifact-line: rgba(255, 255, 255, 0.13);
-    --artifact-line-strong: rgba(255, 255, 255, 0.24);
-    --artifact-code-bg: rgba(255, 255, 255, 0.05);
 
     /* Diagrams */
     --dg-fill: #fbfaf6;
@@ -140,8 +145,6 @@
     --artifact-muted: #a3a39c;
     --artifact-faint: #8c8c85;
     --artifact-line: rgba(255, 255, 255, 0.13);
-    --artifact-line-strong: rgba(255, 255, 255, 0.24);
-    --artifact-code-bg: rgba(255, 255, 255, 0.05);
 
     --dg-fill: #ffffff;
     --dg-line: rgba(0, 0, 0, 0.34);
@@ -211,8 +214,6 @@
     --artifact-muted: #a09f98;
     --artifact-faint: #8a8a83;
     --artifact-line: rgba(255, 255, 255, 0.14);
-    --artifact-line-strong: rgba(255, 255, 255, 0.26);
-    --artifact-code-bg: rgba(255, 255, 255, 0.06);
 
     --dg-fill: #1e1f1b;
     --dg-line: rgba(236, 236, 231, 0.42);
@@ -424,17 +425,6 @@
     padding-block: clamp(2.5rem, 5vw, 4.5rem);
   }
 
-  .night,
-  .artifact-room {
-    background-color: var(--artifact-bg);
-    color: var(--artifact-ink);
-  }
-
-  .night .muted,
-  .artifact-room .muted {
-    color: var(--artifact-muted);
-  }
-
   /* Eyebrow / section label */
   .eyebrow {
     font-family: var(--font-mono);
@@ -454,15 +444,6 @@
     height: 1px;
     background: var(--line);
     max-width: 6rem;
-  }
-
-  .night .eyebrow,
-  .artifact-room .eyebrow {
-    color: var(--artifact-faint);
-  }
-  .night .eyebrow::after,
-  .artifact-room .eyebrow::after {
-    background: var(--artifact-line);
   }
 
   /* Display typography — editorial, left-aligned, never centered */
@@ -515,10 +496,6 @@
     color: var(--faint);
   }
 
-  .artifact-room .mono {
-    color: var(--artifact-faint);
-  }
-
   /* Buttons — 44px minimum touch target */
   .btn {
     display: inline-flex;
@@ -568,17 +545,6 @@
     border-color: var(--ink);
     background: var(--accent-soft);
     transform: translateY(-2px);
-  }
-
-  .night .btn-outline,
-  .artifact-room .btn-outline {
-    color: var(--artifact-ink);
-    border-color: var(--artifact-line-strong);
-  }
-  .night .btn-outline:hover,
-  .artifact-room .btn-outline:hover {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.5);
   }
 
   /* Animated inline link with underline motion */
@@ -643,22 +609,11 @@
     background: var(--surface);
   }
 
-  .night .tag,
-  .artifact-room .tag {
-    color: var(--artifact-muted);
-    border-color: var(--artifact-line);
-    background: rgba(255, 255, 255, 0.045);
-  }
-
   /* Thin horizontal rule */
   .rule {
     height: 1px;
     background: var(--line);
     border: 0;
-  }
-  .night .rule,
-  .artifact-room .rule {
-    background: var(--artifact-line);
   }
 
   /* Index number used in editorial lists */
@@ -770,41 +725,6 @@
     fill: var(--muted);
   }
 
-  .night .dg-label,
-  .artifact-room .dg-label {
-    fill: var(--artifact-faint);
-  }
-  .night .dg-node,
-  .artifact-room .dg-node,
-  .night .dg-var,
-  .artifact-room .dg-var {
-    fill: var(--artifact-ink);
-  }
-  .night .dg-var-sm,
-  .artifact-room .dg-var-sm {
-    fill: var(--artifact-muted);
-  }
-
-  /* Appearance control inside the inverted footer block. */
-  .night .ts-blocktitle,
-  .artifact-room .ts-blocktitle {
-    color: var(--artifact-faint);
-  }
-  .night .ts-blockoption,
-  .artifact-room .ts-blockoption {
-    color: var(--artifact-muted);
-    border-color: var(--artifact-line);
-  }
-  .night .ts-blockoption:hover,
-  .artifact-room .ts-blockoption:hover {
-    background: rgba(255, 255, 255, 0.07);
-    color: var(--artifact-ink);
-  }
-  .night .ts-blockoption .ts-note,
-  .artifact-room .ts-blockoption .ts-note {
-    color: var(--artifact-faint);
-  }
-
   /* Scroll-reveal: visible by default, upgraded by JS when supported */
   .reveal {
     opacity: 1;
@@ -855,10 +775,6 @@
   }
   .stroke-line {
     border-top: 1px solid var(--line);
-  }
-  .night .stroke-line,
-  .artifact-room .stroke-line {
-    border-top-color: var(--artifact-line);
   }
   .grid-lines {
     background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);

@@ -182,6 +182,17 @@ for (const page of caseStudyPages) {
  * therefore also means restoring its styling. `--science-bio-ink` is kept — the
  * compositions still reference it, and `check-theme-system.mjs` still requires
  * it, so the record stays resolvable.
+ *
+ * v2.2.4 finished the same job for the second retired surface. `SelectedArtifacts`
+ * is what carried `class="artifact-room"`, and its `@layer components` rules were
+ * being kept alive by the same content scan — 17 rule blocks, every one of them
+ * written `.night X, .artifact-room X`. Both halves were dead for different
+ * reasons: `.artifact-room` because §42 took the block off /projects, and `.night`
+ * because v1.6 removed the forced night class from the foot of every page and the
+ * theme system has never had a second mechanism — `ThemeInit` and the switcher
+ * only ever write `data-theme` on `<html>`, so no element can acquire that class.
+ * The rules are gone; the palette they used is not (see `check-theme-system.mjs`).
+ * Re-importing `SelectedArtifacts` therefore also means restoring its styling.
  */
 const RETIRED = [
   ['GlobalScientificCanvas', CANVAS],
@@ -921,6 +932,19 @@ for (const rel of ['dist/projects/index.html', 'dist/zh/projects/index.html']) {
     checks += 1;
     if (pattern.test(html)) fail(`${rel} still renders ${what} — §47 removes it`);
   }
+}
+
+/* §42–§44, continued (v2.2.4): the retired surfaces are gone from the stylesheet
+   as well as from the page. `.night X, .artifact-room X` was 17 rule blocks of
+   published CSS whose two halves were dead for two different reasons — the room
+   because §42 took it off /projects, and `.night` because v1.6 dropped the forced
+   night class and nothing has replaced it: the bootstrap and the switcher only
+   write `data-theme` on `<html>`. A `.night` class would in fact be a second
+   theme mechanism, which is the one thing the theme system exists to forbid.
+   This asserts it does not come back through `global.css`. */
+checks += 1;
+if (/(^|[\s,>+~])\.(night|artifact-room)(?![\w-])/.test(css)) {
+  fail('global.css declares a `.night` / `.artifact-room` rule — both surfaces are retired');
 }
 
 /* ---- /research and /about: a side accent each (§19–§21, §26) -------------- */

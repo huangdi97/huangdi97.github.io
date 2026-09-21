@@ -42,13 +42,20 @@ const REQUIRED_TOKENS = [
   'grid-line',
   'accent',
   'accent-soft',
+  /* The artifact-room palette. The room itself was retired from /projects
+     (§42) and its CSS went with it in v2.2.4, but the palette is not dead:
+     `--artifact-ink` still paints the hover hint on a case-study figure
+     (`EvidencePanel.astro`), and the rest are consumed by
+     `src/components/SelectedArtifacts.astro`, kept as the record of a surface
+     the owner asked the site not to render again. `--artifact-bg` additionally
+     serves as the reference surface for the palette contrast checks below.
+     `--artifact-line-strong` and `--artifact-code-bg` had no consumer at all
+     and were removed in v2.2.4. */
   'artifact-bg',
   'artifact-ink',
   'artifact-muted',
   'artifact-faint',
   'artifact-line',
-  'artifact-line-strong',
-  'artifact-code-bg',
   'dg-fill',
   'dg-line',
   'dg-line-strong',
