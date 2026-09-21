@@ -228,7 +228,11 @@ the three detail frames §95 names (horizontal 1440, vertical 1440, vertical 390
 
 The measurements behind them are kept as `measurements-1.json`,
 `measurements-3.json` and `measurements-8.json`, so the per-count evidence
-survives later runs. Headline numbers at eight entries:
+survives later runs. Each capture asserts that the number of rendered entries
+equals the number of fixtures it was run against, which is what proves the frames
+came from the build under test rather than from a server still holding an older
+one — worth stating, because the captures run against a preview server that is
+long-lived across rebuilds. Headline numbers at eight entries:
 
 | Frame                     | requests | image bytes | video bytes | CLS | images | overflowX |
 | ------------------------- | -------- | ----------- | ----------- | --- | ------ | --------- |
@@ -333,7 +337,7 @@ quietly fixed, because each was invisible to source review.
 | `npm run visual`                          | 750 checks                                               |
 | `npm run identity`                        | 442 assertions, 91 source files + 28 pages               |
 | `npm run works`                           | 119 checks, 0 entries                                    |
-| `npx playwright test` (default)           | 357 passed, 23 skipped, 0 failed                         |
+| `npx playwright test` (default)           | 382 tests: 357 passed, 25 skipped, 0 failed              |
 | `tests/works.spec.ts` (`WORKS_PREVIEW=1`) | 40 passed, 6 skipped, 0 failed                           |
 | Preview build with 8 fixtures             | 44 pages, exit 0                                         |
 
