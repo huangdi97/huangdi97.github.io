@@ -106,9 +106,21 @@ Phase one is external hosting (§22–§23, §88–§90):
 
 ## 7. Index design
 
-A vertical editorial gallery (§7–§12). Measured at 1440 with eight entries the
-visual column occupies the large majority of the row and the copy the remainder;
-the two-column composition only exists at ≥900px, and below that every entry is a
+A vertical editorial gallery (§7–§12). Measured at 1440 with eight entries, each
+row is a two-column composition whose split is stated in §10 of the brief as
+"visual 65–75% / text 25–35%". The measured split is **702 / 330 px inside a
+1,088 px entry** — that is **68.0% visual** of the two columns and **64.5%** of
+the entry box once the 56 px gutter is counted, with the copy at 32.0% / 30.3%.
+The grid therefore sits inside the range under the column reading — which is the
+only reading under which both of §10's ranges can hold at once, since 68 + 32
+sums to 100 while 65 + 25 does not — and half a point below the floor under the
+gutter-inclusive reading. Recorded rather than tuned, because moving the grid to
+clear the stricter denominator would change verified frames to satisfy an
+ambiguity in the brief. Portrait entries measure 392 / 293 px (36.0% / 26.9%):
+§63–§64 give a portrait work a narrow column and the rest as air, so the 65–75%
+range describes the landscape case only.
+
+The two-column composition only exists at ≥900px; below that every entry is a
 single column.
 
 Each entry prints at most: the poster, the name, `type · year · duration?`, one
@@ -175,8 +187,23 @@ The background layer stays `aria-hidden` with `pointer-events: none` and
 
 The gallery is a single column with no sideways overflow at 390 (measured
 `overflowX: 0`). Portrait works are visibly narrower than the column, which is the
-intended rhythm rather than a gap. The Header was checked against the projected
-six-link state and does not crowd or overflow at 1440 / 1024 / 768 / 390 (§72–§73).
+intended rhythm rather than a gap.
+
+The Header was measured **with the Works link present**, which is the state §72 is
+actually about and the state the site is not yet in. With five links —
+`项目 / 作品 / 研究 / 关于 / 简历` — at 1440 / 1024 / 768 / 390: the header holds a
+constant 69 px height, the link row stays a single row at every width (one distinct
+link top, never two), the nav never overflows its own box, the widest link ends at
+800 / 592 / 464 px with the viewport at 1440 / 1024 / 768, `document.scrollWidth`
+equals the viewport in all four cases, and the hamburger is correctly `display:none`
+at ≥768 and correctly visible at 390 (right edge 366 px of 390). Opening the panel
+at 390 gives a 11-item menu — five sections plus two language options, two
+addresses, GitHub and the résumé URL — whose widest item ends at 366 px with no
+item overflowing and no horizontal overflow. §72–§73 hold.
+
+Note the count: adding Works makes the desktop nav **five** links, not six. Home is
+the wordmark and Contact lives in the footer, so §4's seven destinations are spread
+across three surfaces rather than seven nav entries.
 
 ## 14. Tests
 
@@ -281,6 +308,9 @@ quietly fixed, because each was invisible to source review.
   keep it (it is honest, and the detail routes do not exist yet), or to omit the
   index from the sitemap until the first work is published. This is a product
   decision, not a bug, so it has not been changed unilaterally.
+- **§10's 65–75% is met under one denominator and missed by half a point under the
+  other** (68.0% of the columns, 64.5% of the entry box once the gutter is counted).
+  The grid has been left alone; see §7 above for the full numbers and the reasoning.
 - **The local working copy is CRLF** while `.gitattributes` declares LF, so
   locally verified bytes are not the bytes CI would build. Normalisation is a
   pre-release step and has not been applied, because nothing is being released.
