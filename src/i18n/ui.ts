@@ -12,7 +12,13 @@ export const DEFAULT_LANG: Lang = 'en';
 type Dict = Record<string, string>;
 
 const en = {
-  'nav.work': 'Work',
+  /* v2.3 (§4): `/projects` was labelled "Work" and the site gained a second
+     output line also called Works, which made the two indistinguishable in the
+     header. The route keeps its slug and its content; only the label moves, to
+     the word the page's own <h1> has always used. The Chinese label was
+     already 「项目」 and does not change. */
+  'nav.work': 'Projects',
+  'nav.works': 'Works',
   'nav.research': 'Research',
   'nav.about': 'About',
   'nav.resume': 'Resume',
@@ -51,6 +57,23 @@ const en = {
     'A short, curated list. Each entry says what the project is and how much of it is public today.',
   'work.other': 'Other work',
   'work.other.lead': 'Specification, architecture and concept work — nothing public to open yet.',
+
+  /* v2.3 (§33): the Works index. A short kicker, a heading and one line — §33
+     asks for no hero, and §11 caps what an entry may say, so there is very
+     little copy on this route by design. The line names the media rather than
+     the discipline: the page is where the works speak, not where they are
+     explained. */
+  'works.eyebrow': 'Works',
+  'works.title': 'Works',
+  'works.lead': 'Films, generative visuals and AI-driven creative experiments.',
+  'works.view': 'View work',
+  /* §42–§44: the detail page's one action. §26 keeps it a link rather than a
+     player — the first phase opens the work where it is hosted. */
+  'works.watch': 'Watch',
+  'works.role': 'Role',
+  'works.tools': 'Tools',
+  'works.credits': 'Credits',
+  'works.back': 'All works',
 
   /* v2.1 (§15–§16): a project page is a public case study, not a build log. */
   'case.eyebrow': 'Public case study',
@@ -197,6 +220,7 @@ const en = {
 
 const zh: Dict = {
   'nav.work': '项目',
+  'nav.works': '作品',
   'nav.research': '研究',
   'nav.about': '关于',
   'nav.resume': '简历',
@@ -230,6 +254,18 @@ const zh: Dict = {
     '一份简短的精选清单。每条只说明：它是什么、用来做什么、今天能打开多少。',
   'work.other': '其他工作',
   'work.other.lead': '规范、架构与概念设计——目前没有可打开的公开内容。',
+
+  /* v2.3（§33）：作品索引页。一句短引子、一个标题、一行说明——§33 明确不要 Hero，
+     §11 又限定了每条能说什么，所以这个路由上的文案本来就很少。 */
+  'works.eyebrow': '作品',
+  'works.title': '作品',
+  'works.lead': '影像、生成视觉与 AI 驱动的创作实验。',
+  'works.view': '查看作品',
+  'works.watch': '观看作品',
+  'works.role': '角色',
+  'works.tools': '工具',
+  'works.credits': '参与制作',
+  'works.back': '全部作品',
 
   /* v2.1（§15–§16）：项目页是公开案例，不是构建日志。 */
   'case.eyebrow': '公开案例',

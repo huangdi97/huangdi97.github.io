@@ -1,0 +1,210 @@
+---
+/**
+ * Work entry — one work on the index (v2.3).
+ *
+ * §7–§10 and §63–§66 in one component. The entry is an **editorial composition,
+ * not a card**: no border, no fill, no radius, no uniform tile. §8 rules out a
+ * 3×3 wall of identical bordered cards by name, and §66 asks for a stable
+ * rhythm rather than mechanically identical proportions.
+ *
+ * The two compositions:
+ *
+ *   landscape (16/9, 3/2, 4/3)   poster in a 68fr track, copy beside it,
+ *                                bottom-aligned. §10's "visual 65–75%".
+ *   portrait  (9/16)             poster in a 38fr track with the copy beside it
+ *                                and the rest of the row left as air — §63's
+ *                                editorial composition. The poster is capped by
+ *                                *width* on a phone rather than by height,
+ *                                because capping the height would crop the
+ *                                piece (§58, §64).
+ *
+ * Which one an entry gets is read from its own `aspectRatio`, so adding a
+ * portrait work needs no layout change and cannot be forgotten.
+ *
+ * One link, not two. The title carries a stretched overlay that makes the whole
+ * entry clickable, and "View work →" is decorative text inside it. Two anchors
+ * to the same URL would make a screen reader announce the entry twice (§52).
+ */
+import { useT, type Lang } from '../i18n/ui';
+import { workHref, workMetaLine, WORK_TYPE_LABELS, type WorkEntry as Entry } from '../lib/works';
+import { INDEX_LANDSCAPE_SIZES, INDEX_PORTRAIT_SIZES } from '../data/worksLayout';
+import WorkPoster from './WorkPoster.astro';
+import WorkMeta from './WorkMeta.astro';
+
+export interface Props {
+  work: Entry;
+  lang: Lang;
+  /** §54: true only for a poster that genuinely paints above the fold. */
+  eager?: boolean;
+}
+
+const { work, lang, eager = false } = Astro.props;
+const t = useT(lang);
+const d = work.data;
+
+const href = workHref(lang, d.slug);
+
+/* §60–§62: read the orientation from the data. `9/16` is portrait, `16/9` and
+   `3/2` are not, and a future ratio is handled without touching this file. */
+const [ratioW, ratioH] = d.aspectRatio.split('/').map(Number);
+const portrait = ratioH > ratioW;
+
+const sizes = portrait ? INDEX_PORTRAIT_SIZES : INDEX_LANDSCAPE_SIZES;
+
+/* §51: a description of the work, never the word "cover" or "poster image".
+   Falls back to title + type rather than to a generic string. */
+const alt = d.posterAlt ?? `${d.title} — ${WORK_TYPE_LABELS[d.type][lang]}`;
+---
+
+<article
+  class:list={['work', portrait && 'work--portrait']}
+  data-work
+  data-slug={d.slug}
+  data-orientation={portrait ? 'portrait' : 'landscape'}
+>
+  <WorkPoster
+    poster={d.poster}
+    aspectRatio={d.aspectRatio}
+    alt={alt}
+    sizes={sizes}
+    loading={eager ? 'eager' : 'lazy'}
+    priority={eager}
+  />
+
+  <div class="work-copy">
+    <h2 class="work-title">
+      <a class="work-link" href={href}>{d.title}</a>
+    </h2>
+
+    <WorkMeta line={workMetaLine(d, lang)} status={d.status} lang={lang} />
+
+    <p class="work-desc">{d.description}</p>
+
+    <p class="work-cta" aria-hidden="true">
+      {t('works.view')}
+      <span class="work-arrow">→</span>
+    </p>
+  </div>
+</article>
+
+<style>
+  .work {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(1.25rem, 3vw, 2rem);
+    align-items: start;
+  }
+
+  /* §64: a phone poster is bounded by width, not height. A 9:16 frame at 78% of
+     the shell is about 0.6 of a viewport tall, which keeps one work from eating
+     the screen — and, unlike a `max-height`, it leaves the composition intact.
+     It is a *phone* rule: from 900px up the portrait track is already 38fr, and
+     capping that as well would shrink the poster to 78% of an already-narrow
+     column. `INDEX_PORTRAIT_SIZES` declares the same split, so the file the
+     browser fetches and the box it fills agree.
+
+     `:global()` is required, not cosmetic. Astro scopes a rule to the component
+     that declares it, so a plain `.work-poster` here compiles to
+     `.work-poster[data-astro-cid-<this component>]` — and the `<figure>` is
+     rendered by `WorkPoster`, which carries its own cid. The rule then matches
+     nothing and the cap silently disappears: the built stylesheet is where this
+     was caught, because the selector looks perfectly correct in the source. */
+  @media (max-width: 899px) {
+    .work--portrait :global(.work-poster) {
+      max-width: 78%;
+    }
+  }
+
+  .work-copy {
+    min-width: 0;
+  }
+
+  .work-title {
+    margin: 0;
+    font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+    line-height: 1.08;
+    letter-spacing: -0.026em;
+    font-weight: 500;
+  }
+
+  /* The stretched link: one anchor, the whole entry clickable. */
+  .work-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .work-link {
+    text-decoration: none;
+  }
+
+  .work:hover .work-title,
+  .work:focus-within .work-title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 6px;
+  }
+
+  .work-desc {
+    margin: 0.875rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    letter-spacing: -0.008em;
+    color: var(--muted);
+    max-width: 46ch;
+  }
+
+  .work-cta {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin: 1.25rem 0 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .work-arrow {
+    transition: transform var(--dur-fast) var(--ease);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .work:hover .work-arrow,
+    .work:focus-within .work-arrow {
+      transform: translateX(4px);
+    }
+  }
+
+  /* §10/§63: two compositions, one breakpoint. Below it every entry is a single
+     column, which is also what keeps a phone from being asked to lay out a
+     poster and a paragraph side by side. */
+  @media (min-width: 900px) {
+    .work {
+      /* §10: the poster is the subject — two thirds of the row. */
+      grid-template-columns: 68fr 32fr;
+      gap: clamp(2rem, 4vw, 3.5rem);
+      align-items: end;
+    }
+
+    /* §63: a portrait piece keeps a narrow column and the copy sits beside it,
+       with the remainder of the row left as air. The copy is capped at a
+       readable measure so the whitespace is what grows, not the text. */
+    .work--portrait {
+      grid-template-columns: 38fr 62fr;
+      align-items: center;
+    }
+
+    .work--portrait .work-copy {
+      max-width: 34ch;
+    }
+  }
+
+  /* Printing drops the gallery chrome; the poster and the identification stay. */
+  @media print {
+    .work-cta {
+      display: none;
+    }
+  }
+</style>

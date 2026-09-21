@@ -1,0 +1,3 @@
+# Keeps this directory in git so the content-collection glob base exists in a
+# fresh clone. Astro warns when a collection's base directory is missing.
+# 作品条目以 `<slug>.md` 放在这里；格式见 README.md 的 "Adding a work"。

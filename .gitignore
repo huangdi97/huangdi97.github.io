@@ -23,6 +23,15 @@ blob-report/
 .playwright/
 .qa-screens/
 
+# Works QA fixtures (v2.3)
+# `npm run qa:works` generates these, builds under the `works-preview` mode, and
+# deletes them again. They are scaffolding for the screenshot set, not content:
+# §83 allows them for QA and forbids them from a production page. Ignoring them
+# is the backstop for the case where the script is interrupted before cleanup —
+# `scripts/check-works.mjs` is the other one.
+src/content/works/*/_qa-*.md
+public/images/works/qa-*.webp
+
 # Logs
 *.log
 npm-debug.log*

@@ -11,6 +11,10 @@ const ROUTES = [
   '/projects/taiyi-lingjing/',
   '/projects/pet-ai-health/',
   '/projects/pdig/',
+  /* v2.3 (§5): the Works index exists in both locales from this round on, even
+     while it has no entries. The detail routes are deliberately not listed —
+     they only exist once a work does, and `tests/works.spec.ts` covers them. */
+  '/works/',
   '/research/',
   '/about/',
   '/resume/',
@@ -21,6 +25,7 @@ const ROUTES = [
   '/zh/projects/morn/',
   '/zh/projects/biopulse/',
   '/zh/projects/taiyi-lingjing/',
+  '/zh/works/',
   '/zh/research/',
   '/zh/about/',
   '/zh/resume/',

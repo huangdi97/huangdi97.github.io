@@ -19,6 +19,9 @@ export interface Props {
   enPath: string;
   zhPath: string;
   ogImage?: string;
+  /** Declared size of `ogImage`. Forwarded to `Seo`; see the note there. */
+  ogImageWidth?: number;
+  ogImageHeight?: number;
   type?: 'website' | 'article' | 'profile';
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   /** Verbatim <title> override, forwarded to Seo. */
@@ -76,6 +79,8 @@ const {
   enPath,
   zhPath,
   ogImage,
+  ogImageWidth,
+  ogImageHeight,
   type,
   jsonLd,
   seoTitle,
@@ -138,6 +143,8 @@ const preloadSizes = preloadArtwork ? ART_SIZES[preloadArtwork] : undefined;
       enPath={enPath}
       zhPath={zhPath}
       ogImage={ogImage}
+      ogImageWidth={ogImageWidth}
+      ogImageHeight={ogImageHeight}
       type={type}
       jsonLd={jsonLd}
       seoTitle={seoTitle}

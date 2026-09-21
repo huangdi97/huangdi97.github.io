@@ -2,6 +2,7 @@
 import { useT, localizedPath, switchLocalePath, type Lang } from '../i18n/ui';
 import ContactLinks from './ContactLinks.astro';
 import ThemeSwitcher from './ThemeSwitcher.astro';
+import { publishedWorkCount, worksHref, WORKS_NAV_MIN } from '../lib/works';
 
 export interface Props {
   lang: Lang;
@@ -13,8 +14,14 @@ const t = useT(lang);
 const zhHref = switchLocalePath(Astro.url.pathname, 'zh');
 const enHref = switchLocalePath(Astro.url.pathname, 'en');
 
+/* The panel lists the same routes as the header, in the same order and under the
+   same condition (§81–§82) — a phone must not be the only place a visitor can
+   reach a section, and it must not be the only place that announces one. */
+const showWorks = (await publishedWorkCount(lang)) >= WORKS_NAV_MIN;
+
 const links = [
   { href: localizedPath(lang, '/projects'), label: t('nav.work') },
+  ...(showWorks ? [{ href: worksHref(lang), label: t('nav.works') }] : []),
   { href: localizedPath(lang, '/research'), label: t('nav.research') },
   { href: localizedPath(lang, '/about'), label: t('nav.about') },
   { href: localizedPath(lang, '/resume'), label: t('nav.resume') },

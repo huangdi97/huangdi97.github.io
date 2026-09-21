@@ -4,6 +4,7 @@ import { SITE } from '../config/site';
 import LanguageSwitcher from './LanguageSwitcher.astro';
 import ThemeSwitcher from './ThemeSwitcher.astro';
 import MobileNav from './MobileNav.astro';
+import { publishedWorkCount, worksHref, WORKS_NAV_MIN } from '../lib/works';
 
 export interface Props {
   lang: Lang;
@@ -12,8 +13,26 @@ export interface Props {
 const { lang } = Astro.props;
 const t = useT(lang);
 
+/**
+ * v2.3 (§81–§82): Works joins the primary navigation only once the site has
+ * `WORKS_NAV_MIN` published works.
+ *
+ * The condition is the brief's own, and it is read from the content rather than
+ * hard-coded, because a hard-coded omission is a thing someone has to remember
+ * to undo. Today there are no published works, so the entry is absent and the
+ * header is byte-for-byte what it was in v2.2.4; the day the third work lands,
+ * the entry appears without anyone editing this file.
+ *
+ * The label change is separate and unconditional (§4): `/projects` was "Work",
+ * which stopped being distinguishable the moment a second output line called
+ * Works existed.
+ */
+const workCount = await publishedWorkCount(lang);
+const showWorks = workCount >= WORKS_NAV_MIN;
+
 const links = [
   { href: localizedPath(lang, '/projects'), label: t('nav.work') },
+  ...(showWorks ? [{ href: worksHref(lang), label: t('nav.works') }] : []),
   { href: localizedPath(lang, '/research'), label: t('nav.research') },
   { href: localizedPath(lang, '/about'), label: t('nav.about') },
   { href: localizedPath(lang, '/resume'), label: t('nav.resume') },

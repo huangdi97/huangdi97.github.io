@@ -309,14 +309,27 @@ if (!existsSync(BACKGROUND)) {
     if (!bgKinds.has(kind)) fail(`the editorial background has no "${kind}" fragment`);
   }
 
-  /* §50–§52: seven variants, each a documented density *and* a documented set of
+  /* §50–§52: eight variants, each a documented density *and* a documented set of
      marks. A variant that only moved a multiplier is the v2.2 failure this round
-     exists to fix, so the table is parsed rather than merely counted. */
+     exists to fix, so the table is parsed rather than merely counted.
+     v2.3 adds `works`, which is why this list is the thing that has to change
+     when a route gets its own field — the assertion is "every variant the
+     component declares is real", and a new one that skipped this list would be
+     exactly the silently-inherited variant the next check looks for. */
   const groupsBlock = /const VARIANTS[\s\S]*?\n\};/.exec(code)?.[0] ?? '';
   checks += 1;
   if (!groupsBlock) fail('the editorial background has no VARIANTS map');
 
-  const VARIANTS = ['home', 'projects', 'research', 'about', 'resume', 'opensource', 'minimal'];
+  const VARIANTS = [
+    'home',
+    'projects',
+    'works',
+    'research',
+    'about',
+    'resume',
+    'opensource',
+    'minimal',
+  ];
   for (const mode of VARIANTS) {
     checks += 1;
     if (!new RegExp(`\\b${mode}:`).test(groupsBlock)) {
@@ -351,8 +364,8 @@ if (!existsSync(BACKGROUND)) {
 
   /* §51: "no site-wide identical background". Two variants may legitimately
      mount the same *set* of marks — /home and /projects both want a curve and a
-     node group — so the axis that has to be unique is density. Seven variants,
-     seven distinct `--ebg-scale` values, or the "variant" is a name. */
+     node group — so the axis that has to be unique is density. Every variant,
+     a distinct `--ebg-scale`, or the "variant" is a name. */
   const scales = [...source.matchAll(/data-bg-mode='([a-z]+)'\]\s*\{[^}]*--ebg-scale:\s*([0-9.]+)/g)].map(
     (m) => [m[1], Number(m[2])],
   );

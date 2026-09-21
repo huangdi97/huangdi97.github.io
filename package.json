@@ -29,6 +29,7 @@
     "science": "node scripts/check-science-copy.mjs",
     "visual": "node scripts/check-visual-system.mjs",
     "identity": "node scripts/check-public-identity.mjs",
+    "works": "node scripts/check-works.mjs",
     "resume:pdf": "npm run build && node scripts/generate-resume-pdfs.mjs",
     "qa:height": "node scripts/qa-height.mjs",
     "qa:crops": "node scripts/qa-crops.mjs",
@@ -37,7 +38,8 @@
     "qa:v21": "node scripts/qa-v21-shots.mjs",
     "qa:v22": "node scripts/qa-v22-shots.mjs",
     "qa:v221": "node scripts/qa-v221-shots.mjs",
-    "gate": "npm run lint && npm run typecheck && npm run build && npm run verify && npm run theme && npm run artifacts && npm run science && npm run visual && npm run identity && npm run test",
+    "qa:works": "node scripts/qa-works-shots.mjs",
+    "gate": "npm run lint && npm run typecheck && npm run build && npm run verify && npm run theme && npm run artifacts && npm run science && npm run visual && npm run identity && npm run works && npm run test",
     "artwork:preview": "node scripts/preview-artwork-crops.mjs"
   },
   "dependencies": {

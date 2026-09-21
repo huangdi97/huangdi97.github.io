@@ -52,7 +52,7 @@
  *     so no component ever hard-codes a weight;
  *   · inline SVG only — no second image request beyond the texture.
  */
-export type BackgroundMode = 'home' | 'projects' | 'research' | 'about' | 'resume' | 'opensource' | 'minimal';
+export type BackgroundMode = 'home' | 'projects' | 'works' | 'research' | 'about' | 'resume' | 'opensource' | 'minimal';
 
 export interface Props {
   /**
@@ -61,6 +61,7 @@ export interface Props {
    *
    *   home        medium       hero right edge · lower left · the projects band
    *   projects    medium-low   one curve, one node group, faintest notation
+   *   works       low          one curve and one notation fragment, nothing else
    *   research    medium-high  the richest field: neural · notation · curve · cell
    *   about       medium-low   a margin note, a ruled grid, a tiny node group
    *   resume      very low     one notation fragment, nothing else
@@ -77,10 +78,17 @@ const { mode = 'home' } = Astro.props;
  * names, but a variant is more than a multiplier, so the set of groups travels
  * with it. No variant mounts more than four (§8's desktop ceiling); `minimal`
  * mounts none, which is the whole of what it means.
+ *
+ * v2.3 (§34–§37) adds `works`. It is not a copy of `projects` under a new name:
+ * §36 rules out the cell, the large network and the DNA on /works — the posters
+ * are the page's visual — so the set is exactly one curve and one notation
+ * fragment. That is a different mark set, which is the condition §37 sets for
+ * adding a variant instead of reusing one.
  */
 const VARIANTS: Record<BackgroundMode, readonly string[]> = {
   home: ['formula', 'curve', 'neural'],
   projects: ['formula', 'curve', 'neural'],
+  works: ['formula', 'curve'],
   research: ['neural', 'formula', 'cell', 'curve'],
   about: ['formula', 'grid', 'neural'],
   resume: ['formula'],
@@ -313,6 +321,15 @@ const NOTATION = [
     --ebg-wash-scale: 0.9;
   }
 
+  /* v2.3 (§35): /works is quieter than /projects. The posters on that page are
+     the visual, so the field has to lose the argument — which is a density the
+     table did not have. The gate asserts every variant's density is distinct,
+     so this is a new rung rather than a nudge of `projects`. */
+  .editorial-bg[data-bg-mode='works'] {
+    --ebg-scale: 0.72;
+    --ebg-wash-scale: 0.82;
+  }
+
   .editorial-bg[data-bg-mode='research'] {
     --ebg-scale: 1.4;
     --ebg-wash-scale: 1.05;
@@ -453,6 +470,27 @@ const NOTATION = [
     left: auto;
     right: 1%;
     width: min(14rem, 19vw);
+  }
+
+  /* ── works (§36) ─────────────────────────────────────────────────────────
+     Two marks, and neither is a figure. §36 allows one curve and one subtle
+     formula fragment on this page and rules out the cell, the network and the
+     DNA outright — the works' own posters are the visual, and a background that
+     competed with them would be the thing §35 is guarding against.
+
+     Both sit at the outer edges of the page for the same reason: the gallery is
+     a tall single column of large images, so the only space the field can
+     occupy without sitting behind a poster is the margin. */
+  .editorial-bg[data-bg-mode='works'] .ebg-formula {
+    top: 3rem;
+    right: 3%;
+    width: min(12rem, 16vw);
+  }
+
+  .editorial-bg[data-bg-mode='works'] .ebg-curve {
+    top: 46%;
+    left: -5%;
+    width: min(20rem, 27vw);
   }
 
   /* ── research (§13–§18) ──────────────────────────────────────────────────
@@ -656,6 +694,13 @@ const NOTATION = [
     /* /projects: the four drawings are the page; the field gets out of the way
        entirely. */
     .editorial-bg[data-bg-mode='projects'] .ebg-group {
+      display: none;
+    }
+
+    /* /works (v2.3, §36): same argument as /projects, and stronger — a phone
+       shows one poster at a time at nearly full width, so there is no margin
+       for a mark to live in at all. */
+    .editorial-bg[data-bg-mode='works'] .ebg-group {
       display: none;
     }
 

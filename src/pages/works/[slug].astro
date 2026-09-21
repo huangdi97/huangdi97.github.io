@@ -1,0 +1,270 @@
+---
+/**
+ * Work detail (English) — v2.3.
+ *
+ * §43 is the constraint that shapes this page: a work is **not** a project case
+ * study. There is no "What it is / Why it matters / Current public status"
+ * skeleton, no evidence matrix, no implementation-status vocabulary — those
+ * belong to the systems line and applying them here would turn a piece of work
+ * into a build report.
+ *
+ * §44's structure, in order:
+ *
+ *   Title · type · year · duration      the identification
+ *   Poster                              the work itself, at full size
+ *   One sentence                        what it is
+ *   Role / Tools                        optional, and only when real (§45–§46)
+ *   Watch ↗                             §26 — a link, not a mounted player
+ *
+ * §24–§26: nothing loads a video. The page shows the poster and, if the work has
+ * somewhere to be watched, one external link. `videoProvider: 'self-hosted'` is
+ * reserved in the schema (§27) and renders nothing today.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WorkPoster from '../../components/WorkPoster.astro';
+import WorkMeta from '../../components/WorkMeta.astro';
+import { SITE } from '../../config/site';
+import { useT } from '../../i18n/ui';
+import { getWorks, watchUrl, workMetaLine, WORK_TYPE_LABELS } from '../../lib/works';
+import { DETAIL_LANDSCAPE_SIZES, DETAIL_PORTRAIT_SIZES } from '../../data/worksLayout';
+
+export async function getStaticPaths() {
+  /* `getWorks` is the single place the draft rule lives (§69), so a draft can
+     never acquire a route — there is no second filter here to forget. */
+  const entries = await getWorks('en');
+  return entries.map((entry) => ({
+    params: { slug: entry.data.slug },
+    props: { slug: entry.data.slug },
+  }));
+}
+
+const { slug } = Astro.props;
+
+const lang = 'en' as const;
+const t = useT(lang);
+
+const all = await getWorks(lang);
+const entry = all.find((e) => e.data.slug === slug);
+if (!entry) throw new Error(`Unknown work: ${slug}`);
+
+const d = entry.data;
+
+const path = `/works/${d.slug}/`;
+const enPath = `/works/${d.slug}/`;
+const zhPath = `/zh/works/${d.slug}/`;
+
+const watch = watchUrl(d);
+
+/* §60–§63: the detail page's frame follows the work too. A cinematic piece is
+   allowed the full column (§65); a portrait piece is capped by width so it
+   never becomes a column of image three screens tall (§63–§64). */
+const [ratioW, ratioH] = d.aspectRatio.split('/').map(Number);
+const portrait = ratioH > ratioW;
+const sizes = portrait ? DETAIL_PORTRAIT_SIZES : DETAIL_LANDSCAPE_SIZES;
+
+/* §49: the poster is the Open Graph image, and the declared size is the work's
+   own rather than the site's 1200×630 — a portrait poster announced as 1200×630
+   is a false statement to the crawler. */
+const ogWidth = 1440;
+const ogHeight = Math.round((ogWidth * ratioH) / ratioW);
+
+const alt = d.posterAlt ?? `${d.title} — ${WORK_TYPE_LABELS[d.type][lang]}`;
+
+const ld = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: d.title,
+    description: d.description,
+    url: new URL(path, SITE.url).href,
+    inLanguage: 'en',
+    datePublished: String(d.year),
+    creator: { '@type': 'Person', name: SITE.nameEn, url: SITE.url },
+    ...(d.tools.length ? { keywords: d.tools.join(', ') } : {}),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+      { '@type': 'ListItem', position: 2, name: 'Works', item: new URL('/works/', SITE.url).href },
+      { '@type': 'ListItem', position: 3, name: d.title, item: new URL(path, SITE.url).href },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title={d.title}
+  description={d.description}
+  lang={lang}
+  path={path}
+  enPath={enPath}
+  zhPath={zhPath}
+  ogImage={`${d.poster}-1440.webp`}
+  ogImageWidth={ogWidth}
+  ogImageHeight={ogHeight}
+  backgroundMode="works"
+  jsonLd={ld}
+>
+  <article class="shell work-detail">
+    <nav class="work-detail-back" aria-label="Breadcrumb">
+      <a href="/works/" class="link-arrow">
+        <span class="arrow" aria-hidden="true">←</span>
+        {t('works.back')}
+      </a>
+    </nav>
+
+    <header class="work-detail-head">
+      <h1 class="h1 work-detail-title">{d.title}</h1>
+      <WorkMeta line={workMetaLine(d, lang)} status={d.status} lang={lang} size="md" />
+    </header>
+
+    <div class:list={['work-detail-poster', portrait && 'work-detail-poster--portrait']}>
+      <WorkPoster
+        poster={d.poster}
+        aspectRatio={d.aspectRatio}
+        alt={alt}
+        sizes={sizes}
+        loading="eager"
+        priority
+      />
+    </div>
+
+    <p class="work-detail-desc">{d.description}</p>
+
+    {
+      (d.role || d.tools.length > 0 || d.credits.length > 0) && (
+        <dl class="work-facts">
+          {d.role && (
+            <div class="work-fact">
+              <dt>{t('works.role')}</dt>
+              <dd>{d.role}</dd>
+            </div>
+          )}
+          {d.tools.length > 0 && (
+            <div class="work-fact">
+              <dt>{t('works.tools')}</dt>
+              <dd>{d.tools.join(' · ')}</dd>
+            </div>
+          )}
+          {/* §44: only rendered when the piece actually had collaborators. */}
+          {d.credits.length > 0 && (
+            <div class="work-fact">
+              <dt>{t('works.credits')}</dt>
+              <dd>{d.credits.join(' · ')}</dd>
+            </div>
+          )}
+        </dl>
+      )
+    }
+
+    {
+      watch && (
+        <p class="work-watch">
+          {/* §84: https only, and `noopener noreferrer` on every outbound link.
+              §52: the link is a link — reachable by keyboard, and it says it
+              leaves the site. §26: no iframe is mounted here, now or on click. */}
+          <a class="btn btn-outline" href={watch} target="_blank" rel="noopener noreferrer">
+            {t('works.watch')}
+            <span aria-hidden="true">↗</span>
+            <span class="sr-only"> ({t('a11y.external')})</span>
+          </a>
+        </p>
+      )
+    }
+  </article>
+</BaseLayout>
+
+<style>
+  .work-detail {
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+  }
+
+  .work-detail-back {
+    padding-block: 1rem 2rem;
+  }
+
+  .work-detail-head {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 60ch;
+  }
+
+  .work-detail-title {
+    margin: 0;
+  }
+
+  /* §65: the widest visual on the site, and the one place a wide band is the
+     point. */
+  .work-detail-poster {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  /* §63–§64: a portrait piece is capped by *width*, so the page keeps the rest
+     as air instead of turning the work into a column of image three screens
+     tall. Without this a 9:16 poster at 1440 is 1,088 wide and therefore 1,934
+     tall on its own. The `sizes` attribute does not do this — it selects which
+     file the browser fetches and has no effect on layout — so the frame and the
+     declared sizes are set from the same two numbers in `worksLayout.ts`. */
+  .work-detail-poster--portrait {
+    max-width: 520px;
+  }
+
+  @media (max-width: 1279px) {
+    .work-detail-poster--portrait {
+      max-width: 72%;
+    }
+  }
+
+  .work-detail-desc {
+    margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
+    font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+    line-height: 1.55;
+    letter-spacing: -0.014em;
+    max-width: 46ch;
+  }
+
+  .work-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 3rem;
+    margin: clamp(2rem, 4vw, 2.75rem) 0 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .work-fact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin: 0;
+  }
+
+  .work-fact dt {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .work-fact dd {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--ink);
+  }
+
+  .work-watch {
+    margin: clamp(2rem, 4vw, 2.75rem) 0 0;
+  }
+
+  @media print {
+    .work-detail-back,
+    .work-watch {
+      display: none;
+    }
+  }
+</style>

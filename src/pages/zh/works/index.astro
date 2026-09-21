@@ -1,0 +1,98 @@
+---
+/**
+ * 作品索引页（中文）— v2.3。
+ *
+ * 与 `/works` 是同一套信息架构的镜像，不是另一套。本文件只决定中文文案与
+ * SEO 描述；版式、条目组件与排序全部来自共享实现，因此两种语言不可能各自漂移。
+ *
+ * 页面定位（§7–§10）：**视觉 editorial 画廊**，不是目录页，也不是卡片墙。
+ * §8 点名禁止「每个作品一张一模一样的带边框卡片」，§10 要求海报占整行的三分之二，
+ * 这两条都实现在 `WorkEntry` 里。本页只负责条目之间的节奏。
+ *
+ * 刻意没有的东西：没有筛选栏、没有 tab（§28–§29，作品数量少时它们只是摆设，
+ * 门槛是十二到十六个）；没有把 /projects 的模板换个标题复用（§6）。
+ *
+ * §81/§82：正式作品少于 `WORKS_NAV_MIN` 时路由照常构建——能力是真实且可复核的
+ * ——但不进入主导航。页面上不出现任何关于「尚不存在的作品」的话，所以条目为空时
+ * 就只渲染标题部分：没有 placeholder，也没有「敬请期待」（§32）。
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/SectionHeading.astro';
+import WorkEntry from '../../../components/WorkEntry.astro';
+import { SITE } from '../../../config/site';
+import { useT } from '../../../i18n/ui';
+import { getWorks } from '../../../lib/works';
+
+const lang = 'zh' as const;
+const t = useT(lang);
+
+const works = await getWorks(lang);
+
+const path = '/zh/works/';
+const enPath = '/works/';
+const zhPath = '/zh/works/';
+
+/* 只有确实有条目时才输出结构化数据：一份声明「零条」的 ItemList 是在向爬虫断言
+   这个页面是空的，那比什么都不说更糟。 */
+const collectionLd =
+  works.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: `作品 — ${SITE.nameZh}`,
+        url: new URL(path, SITE.url).href,
+        inLanguage: 'zh-Hans',
+        mainEntity: {
+          '@type': 'ItemList',
+          numberOfItems: works.length,
+          itemListElement: works.map((w, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: w.data.title,
+            url: new URL(`/zh/works/${w.data.slug}/`, SITE.url).href,
+          })),
+        },
+      }
+    : undefined;
+---
+
+<BaseLayout
+  title={t('works.title')}
+  description="影像、生成视觉与 AI 驱动的创作实验——个人 AI 实验室的作品选集。"
+  lang={lang}
+  path={path}
+  enPath={enPath}
+  zhPath={zhPath}
+  backgroundMode="works"
+  jsonLd={collectionLd}
+>
+  <section class="shell section">
+    <SectionHeading
+      as="h1"
+      eyebrow={t('works.eyebrow')}
+      title={t('works.title')}
+      lead={t('works.lead')}
+    />
+
+    {
+      works.length > 0 && (
+        <div class="works-gallery" data-works-gallery>
+          {works.map((work) => (
+            <WorkEntry work={work} lang={lang} />
+          ))}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>
+
+<style>
+  /* §66：作品之间的节奏才让画廊读起来是一连串作品，而不是一个列表。间距给得
+     充足，且不随作品横竖变化——条目的比例各不相同，间距保持一致。 */
+  .works-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3.5rem, 8vw, 7rem);
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+</style>

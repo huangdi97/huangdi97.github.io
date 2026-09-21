@@ -52,26 +52,27 @@ npm run dev          # http://localhost:4321
 
 ### Scripts
 
-| Script                    | What it does                                                   |
-| ------------------------- | -------------------------------------------------------------- |
-| `npm run dev`             | Dev server with HMR                                            |
-| `npm run build`           | `assets` → `texture` → `astro build`, into `dist/`             |
-| `npm run preview`         | Serve the production build locally                             |
-| `npm run lint`            | ESLint over `.ts` / `.astro`                                   |
-| `npm run typecheck`       | `astro check` (strict TypeScript diagnostics)                  |
-| `npm run format`          | Prettier write                                                 |
-| `npm run check`           | `lint` → `typecheck` → `build`                                 |
-| `npm run assets`          | Regenerate OG images and icons from SVG                        |
-| `npm run texture`         | Regenerate the paper texture → `public/texture/paper.webp`     |
-| `npm run artwork:v2`      | Homepage artwork → three WebP rungs per slot + size manifest   |
-| `npm run artwork:pages`   | Inner-page accents → three WebP rungs per slot + size manifest |
-| `npm run artwork:preview` | Render an `object-fit: cover` crop without a full build        |
-| `npm run qa:v22`          | 30 acceptance frames + `measurements.json` into `.qa-screens/` |
-| `npm run qa:v221`         | 37 acceptance frames + `measurements.json` into `.qa-screens/` |
-| `npm run verify`          | Link + asset verification over `dist/`                         |
-| `npm run test`            | Playwright browser tests against `dist/`                       |
+| Script                    | What it does                                                               |
+| ------------------------- | -------------------------------------------------------------------------- |
+| `npm run dev`             | Dev server with HMR                                                        |
+| `npm run build`           | `assets` → `texture` → `astro build`, into `dist/`                         |
+| `npm run preview`         | Serve the production build locally                                         |
+| `npm run lint`            | ESLint over `.ts` / `.astro`                                               |
+| `npm run typecheck`       | `astro check` (strict TypeScript diagnostics)                              |
+| `npm run format`          | Prettier write                                                             |
+| `npm run check`           | `lint` → `typecheck` → `build`                                             |
+| `npm run assets`          | Regenerate OG images and icons from SVG                                    |
+| `npm run texture`         | Regenerate the paper texture → `public/texture/paper.webp`                 |
+| `npm run artwork:v2`      | Homepage artwork → three WebP rungs per slot + size manifest               |
+| `npm run artwork:pages`   | Inner-page accents → three WebP rungs per slot + size manifest             |
+| `npm run artwork:preview` | Render an `object-fit: cover` crop without a full build                    |
+| `npm run qa:v22`          | 30 acceptance frames + `measurements.json` into `.qa-screens/`             |
+| `npm run qa:v221`         | 37 acceptance frames + `measurements.json` into `.qa-screens/`             |
+| `npm run qa:works`        | Works frames + `measurements.json`; generates and removes its own fixtures |
+| `npm run verify`          | Link + asset verification over `dist/`                                     |
+| `npm run test`            | Playwright browser tests against `dist/`                                   |
 
-The five remaining gates — `theme`, `artifacts`, `science`, `visual`, `identity` — are
+The six remaining gates — `theme`, `artifacts`, `science`, `visual`, `identity`, `works` — are
 listed under [Quality assurance](#quality-assurance).
 
 ---
@@ -102,6 +103,7 @@ fixed lattice — so re-running it yields a byte-identical file, and
 ├── public/                     Copied verbatim into dist/ — everything here is public
 │   ├── og/                     OG images (1200×630), one per route + default
 │   ├── images/                 Published artwork — three WebP rungs per slot
+│   │   └── works/              Work posters, same ladder — empty until a work ships
 │   ├── texture/paper.webp      Tiling paper texture (128×128, 6.5 KB, lossless)
 │   ├── favicon.svg             HL monogram
 │   ├── manifest.webmanifest    PWA manifest
@@ -116,21 +118,25 @@ fixed lattice — so re-running it yields a byte-identical file, and
 │   ├── lib/artwork-ladder.mjs  Shared ladder [640, 960, 1440] + stale-rung pruning
 │   ├── verify-build.mjs        Link + asset checker over dist/
 │   ├── qa-v221-shots.mjs       Acceptance frames + measurements, per round
-│   └── check-*.mjs             The five remaining gates
+│   ├── qa-works-shots.mjs      Works frames; writes, builds over and removes QA fixtures
+│   └── check-*.mjs             The six remaining gates
 ├── src/
-│   ├── components/             Header, MobileNav, Artwork, ProjectEntry, …
+│   ├── components/             Header, MobileNav, Artwork, ProjectEntry, WorkEntry, …
 │   │   └── visual/             ScientificEditorialBackground — the site-wide background
 │   ├── config/site.ts          Single source of truth for verifiable facts
-│   ├── content/projects/       Content collections: en/ and zh/
+│   ├── content/projects/       Project collections: en/ and zh/
+│   ├── content/works/          Work collections: en/ and zh/
 │   ├── data/                   Page models + fact layer (research, resume, oss, …)
+│   ├── data/worksLayout.ts     Work frame widths per breakpoint — the layout facts
 │   ├── i18n/ui.ts              UI string table (en / zh-Hans)
 │   ├── layouts/BaseLayout.astro  Mounts the background, emits the one image preload
-│   ├── lib/projects.ts         Collection queries and ordering
+│   ├── lib/projects.ts         Project collection queries and ordering
+│   ├── lib/works.ts            Work queries, ordering, the draft rule, poster srcset
 │   ├── lib/artworkAsset.ts     Slot names, variants, srcset — one source of truth
 │   ├── pages/                  English routes (default language)
 │   │   └── zh/                 Chinese routes, mirroring the English tree
 │   └── styles/global.css       Design tokens + typography + primitives
-├── tests/                      Playwright specs (site, entries, artifacts, theme, background)
+├── tests/                      Playwright specs (site, entries, artifacts, theme, background, works)
 └── astro.config.mjs
 ```
 
@@ -141,10 +147,18 @@ fixed lattice — so re-running it yields a byte-identical file, and
 | `/`                | `/zh/`                |
 | `/projects`        | `/zh/projects`        |
 | `/projects/<slug>` | `/zh/projects/<slug>` |
+| `/works`           | `/zh/works`           |
+| `/works/<slug>`    | `/zh/works/<slug>`    |
 | `/research`        | `/zh/research`        |
 | `/about`           | `/zh/about`           |
 | `/resume`          | `/zh/resume`          |
 | `/404`             | `/zh/404`             |
+
+`/works` and `/zh/works` build in both locales from v2.3 on. With no published works the
+index renders its heading and stops — no placeholder, no "coming soon" — and the Works
+entry stays out of the primary navigation until three works are published. The threshold
+is `WORKS_NAV_MIN` in `src/lib/works.ts` and is read from the content, so the header needs
+no edit the day the third work lands. The detail routes only exist once a work does.
 
 Seven slugs exist: `biopulse`, `hycell`, `morn`, `pdig`, `pet-ai-health`, `taiyi-lingjing` and
 `wennian`. Four of them — `biopulse`, `hycell`, `morn`, `wennian` — are `featured: true`, and
@@ -202,6 +216,55 @@ frontmatter keys. Product names stay untranslated (`WenNian / 知身·问年`,
 specification, a design or a research direction — and nothing more. A project
 whose target system does not exist yet must say so on the page, in both
 languages, and must never be described with implementation language.
+
+### Adding a work
+
+A **work** is the other output line beside a project: a film, a visual experiment, a
+cultural-AI piece, an interactive. Projects answer _what system did I build_; works answer
+_what did I make_. The two do not share a template, an entry component or a schema, and
+neither should be bent into the other — a piece with both a system and a visual output
+belongs in both, linked, not merged.
+
+Create one Markdown file **per language**, sharing the same `slug`:
+
+`src/content/works/en/<slug>.md`
+
+```markdown
+---
+title: 'Work Title'
+slug: 'work-slug'
+year: 2026
+type: 'film' # film | visual | cultural-ai | digital-heritage | interactive | generative
+status: 'published' # published | experiment | archive
+featured: true # sorts first; the hook for a future homepage selection
+poster: '/images/works/work-slug' # base path, no width suffix — the ladder adds it
+aspectRatio: '9/16' # 9/16 | 16/9 | 1/1 | 4/3 | 3/2
+description: 'One sentence. The index prints nothing longer.'
+posterAlt: 'What the poster shows — never "cover" or "poster image".'
+role: 'Direction · Visual Design' # optional, and only ever a real role
+tools: ['ComfyUI', 'MiniMax H3'] # optional, high-level names only
+credits: ['Score — Jane Doe'] # optional, only when the piece had collaborators
+duration: '15s' # optional, shown in the meta line
+videoUrl: 'https://…' # optional, https only — rendered as a link, never a player
+publishedAt: '2026-01-01' # optional, ties the ordering
+draft: true # excluded from every build until the work is approved for publication
+---
+```
+
+`title`, `slug`, `year`, `type`, `poster`, `aspectRatio` and `description` are required.
+The poster ships the same three rungs as every other image — `<slug>-640.webp`,
+`<slug>-960.webp`, `<slug>-1440.webp` under `public/images/works/` — and `npm run works`
+fails if any rung is missing. Never put an `.mp4` in `public/`: video is hosted elsewhere
+and linked, and the gate refuses to publish one.
+
+`draft: true` is the only thing that keeps an entry off the site, and it is applied in one
+place (`src/lib/works.ts`), so a draft cannot acquire a route. The Works entry joins the
+primary navigation once three works are published.
+
+To see the layouts with content before any real work exists, run `npm run qa:works`. It
+writes its own fixtures, builds under the `works-preview` mode — the one condition that
+lifts the draft rule — captures the frames into `.qa-screens/works/`, and removes them
+again. `npm run build` never sets that mode.
 
 ### Rules that keep the site honest
 
@@ -275,18 +338,19 @@ Any future domain only requires editing `public/CNAME` — no code changes.
 
 ## Quality assurance
 
-`npm run lint`, `npm run typecheck` and `npm run build` come first, then six gates, then
+`npm run lint`, `npm run typecheck` and `npm run build` come first, then seven gates, then
 the browser suite. All of them are blocking in CI, in this order.
 
-| Gate          | Command             | What it owns                                          |
-| ------------- | ------------------- | ----------------------------------------------------- |
-| Verify        | `npm run verify`    | Dead links, missing assets, both locales present      |
-| Theme         | `npm run theme`     | Three themes; every colour a token; contrast ratios   |
-| Artifacts     | `npm run artifacts` | The evidence table is kept but rendered nowhere       |
-| Science       | `npm run science`   | No overclaims; conceptual notation labelled           |
-| Visual        | `npm run visual`    | The background contract and the raster loading policy |
-| Identity      | `npm run identity`  | No private contact data; PDF text and metadata        |
-| Browser tests | `npm run test`      | Playwright — desktop 1440×900 + Pixel 5               |
+| Gate          | Command             | What it owns                                                                   |
+| ------------- | ------------------- | ------------------------------------------------------------------------------ |
+| Verify        | `npm run verify`    | Dead links, missing assets, both locales present                               |
+| Theme         | `npm run theme`     | Three themes; every colour a token; contrast ratios                            |
+| Artifacts     | `npm run artifacts` | The evidence table is kept but rendered nowhere                                |
+| Science       | `npm run science`   | No overclaims; conceptual notation labelled                                    |
+| Visual        | `npm run visual`    | The background contract and the raster loading policy                          |
+| Identity      | `npm run identity`  | No private contact data; PDF text and metadata                                 |
+| Works         | `npm run works`     | No draft reaches `dist/`; no page loads a video; the poster ladder is complete |
+| Browser tests | `npm run test`      | Playwright — desktop 1440×900 + Pixel 5                                        |
 
 `scripts/verify-build.mjs` walks every generated HTML file, resolves internal links
 against built routes, checks local asset references exist, and confirms each case
@@ -295,7 +359,7 @@ study is present in both locales.
 `scripts/check-visual-system.mjs` is the one to read before touching anything visual. It
 asserts against both source and built HTML: that the retired v1.7 canvas **and the retired
 "Selected Public Work" room** are imported nowhere; that the background component carries no
-script, no animation, no `Math.random` and no hard-coded opacity; that all seven per-page
+script, no animation, no `Math.random` and no hard-coded opacity; that all eight per-page
 variants exist, declare a density of their own, and mount no more than four groups; that every
 `--bg-*` weight sits inside its per-theme band and that the mark kinds stay ordered
 (`grid < mark < curve < graph`, with biology no louder than the network); that `/projects`
@@ -304,13 +368,26 @@ raster loading policy — the expected eager count per page, a loading hint plus
 plus `srcset` on every drawing, at most one image preload and only where an eager drawing
 exists, eager bytes at the largest rung under 250 KB, and no source file published.
 
+`scripts/check-works.mjs` is the smallest gate and owns the newest surface. It asserts that
+every work entry carries a supported type, status, aspect ratio and poster path; that every
+outbound URL is `https`; that a published work ships the whole `[640, 960, 1440]` poster
+ladder; that **no draft reaches `dist/`** as a route, a slug or a title; that no page on the
+site contains a `<video>`, an `<iframe>`, an `autoplay` or a video preload; that
+`public/images/works/` holds nothing a published work does not reference; and that the
+header links to `/works` exactly when three or more works are published. The layout, ratio
+and loading contracts are asserted in a real browser instead — `tests/works.spec.ts` under
+`WORKS_PREVIEW=1`, and `npm run qa:works`, which generates its own fixtures, builds under
+the `works-preview` mode and removes them again.
+
 The browser suite covers homepage render, navigation, project listing, case-study detail,
 language switching with path preservation, mobile hamburger menu, resume print route, 404
 page, external link attributes, absence of console errors, and no horizontal overflow at
 375 / 390 / 430 / 768 / 1024 / 1280 / 1920 px. For the background it asserts the layer's
 inertness, the per-theme bands, the density hierarchy across the five marked routes, that a
 390 px screen gets _fewer_ fragments rather than a squashed desktop, and the no-image case for
-three pages. For the contraction it asserts that `/projects` carries four entries and
+three pages. `/works/` mounts a real variant but sits outside `MARKED_ROUTES`, so its
+background contract lives in `tests/works.spec.ts` rather than widening that list.
+For the contraction it asserts that `/projects` carries four entries and
 four-field repository rows, that the inverted evidence room is gone from both locales, and
 that the three pages which carry their own contact surface keep a minimal footer.
 
@@ -373,9 +450,9 @@ carried two textures at once; that rule, the `--grain` token it read and the alr
 `--grain-opacity` token are all gone, and `check-theme-system.mjs` no longer requires the
 latter.
 
-`BaseLayout`'s `backgroundMode` prop selects one of seven variants — `home` (1) / `projects`
-(0.85) / `research` (1.4) / `about` (0.78) / `resume` (0.5) / `opensource` (0.62, declared and
-reserved) / `minimal` (0, used by the 404). A variant carries its own mark set and its own
+`BaseLayout`'s `backgroundMode` prop selects one of eight variants — `home` (1) / `projects`
+(0.85) / `research` (1.4) / `about` (0.78) / `works` (0.72) / `resume` (0.5) / `opensource` (0.62,
+declared and reserved) / `minimal` (0, used by the 404). A variant carries its own mark set and its own
 placement, not only a multiplier: **a variant changes density and composition — never the
 palette, never the layout.** Two dials multiply and stay independent — `--ebg-scale` (this
 page) × `--ebg-mobile` (this viewport, 0.7 below 900 px) — and below 900 px a page also _hides_

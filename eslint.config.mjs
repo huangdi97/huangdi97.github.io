@@ -18,6 +18,11 @@ export default [
       // out of lint is what makes a local run cover the same files as CI, which
       // never sees them at all.
       '.qa-screens/**',
+      // The two established scratch names, per `.gitignore` and `tsconfig.json`:
+      // `chkver-*` is a before/after capture and `_*` is a throwaway tool. Both
+      // are gitignored, so CI never lints them and a local run should not either.
+      'chkver-*',
+      '_*',
     ],
   },
   js.configs.recommended,

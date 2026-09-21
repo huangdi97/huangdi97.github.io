@@ -130,4 +130,101 @@ const projectsZh = defineCollection({
   schema: projectSchema,
 });
 
-export const collections = { projects, projectsZh };
+/**
+ * Work content model (v2.3).
+ *
+ * A **work** is the other output line beside a project, and the schema exists
+ * to keep the two from collapsing into each other. Projects answer "what system
+ * did I build?" and carry status, evidence and public-code fields; a work
+ * answers "what did I make?" and carries a poster, a ratio and somewhere to
+ * watch it. There is deliberately no `status`-as-implementation-state here, no
+ * `repo`, no evidence panel and no case-study body — §43 rules out applying the
+ * project case-study structure to a work.
+ *
+ * Two fields carry more weight than they look like they do:
+ *
+ *   `aspectRatio` — §60–§62. A large share of the work is 9:16, so the schema
+ *   must not assume 16:9 anywhere. The frame is built from this value rather
+ *   than from a fixed card, which is what stops a portrait piece being cropped
+ *   into a landscape hole.
+ *
+ *   `draft` — §69. A work the owner has not approved for publication is a real
+ *   entry in the repository that no build renders. `src/lib/works.ts` is the
+ *   only place that decides this, and `scripts/check-works.mjs` asserts the
+ *   default build emits nothing from a draft. This is what lets the schema and
+ *   the routes exist while §30/§31 forbid publishing anything the owner has not
+ *   handed over.
+ *
+ * `poster` is a **base path without a width suffix** — `/images/works/<slug>`.
+ * The widths come from the shared ladder, so a poster is never hand-written per
+ * breakpoint and a phone never downloads the 1440 file (§21).
+ *
+ * Video is metadata only in this round. §18–§26 are explicit that nothing may
+ * load a video on arrival: the index shows posters, and the detail page shows a
+ * poster plus a link out. `videoProvider: 'self-hosted'` is reserved for later
+ * (§27) and no page renders a `<video>` element from it today.
+ */
+const workSchema = z.object({
+  title: z.string(),
+  slug: z.string(),
+  year: z.number().int(),
+  /** §16: a fixed, short list. Deliberately not dozens of categories. */
+  type: z.enum(['film', 'visual', 'cultural-ai', 'digital-heritage', 'interactive', 'generative']),
+  /**
+   * §17: `published` is the only state that renders. `experiment` and
+   * `archive` are still public works — they say how finished the piece is, not
+   * whether it exists. There is no `planned` / `coming soon`, because §17 and
+   * §32 forbid publishing something that does not exist.
+   */
+  status: z.enum(['published', 'experiment', 'archive']).default('published'),
+  /** §67: ordering, and the hook for a future homepage selection. */
+  featured: z.boolean().default(false),
+  /** Base path without a width suffix, e.g. `/images/works/xiakexing-3`. */
+  poster: z.string(),
+  /** §61: `9/16` | `16/9` | `1/1` | `4/3` | `3/2`. One line — a wrapped union breaks the build. */
+  aspectRatio: z.enum(['9/16', '16/9', '1/1', '4/3', '3/2']),
+  /** §11: one sentence. The index prints nothing longer. */
+  description: z.string(),
+  /**
+   * §51: what the poster shows, for assistive technology.
+   *
+   * Optional, but a work that omits it gets `title — type` rather than a
+   * generic word: §51 rules out "image", "cover" and "poster image" by name.
+   */
+  posterAlt: z.string().optional(),
+  /** §46: only ever a real role. Omitted when the piece had none. */
+  role: z.string().optional(),
+  /** §45: high-level tool names only. Never a workflow, a seed or a graph. */
+  tools: z.array(z.string()).default([]),
+  /**
+   * §44: optional, and only when the piece genuinely had collaborators.
+   *
+   * Names, or `Name — role` pairs. Defaults to empty so a solo piece shows no
+   * row at all rather than an empty heading.
+   */
+  credits: z.array(z.string()).default([]),
+  /** §11: shown in the meta line when the piece has a runtime, e.g. `15s`. */
+  duration: z.string().optional(),
+  /** §22–§23: external hosting is the first-phase model. */
+  videoProvider: z.enum(['external', 'self-hosted']).optional(),
+  /** §84: https only. A watch link, never an auto-mounted player. */
+  videoUrl: z.string().url().optional(),
+  /** A non-video work's own page, when it has one. */
+  externalUrl: z.string().url().optional(),
+  /** ISO date, for the deterministic ordering in `src/lib/works.ts`. */
+  publishedAt: z.string().optional(),
+  /** §69: excluded from every build until the owner approves publication. */
+  draft: z.boolean().default(false),
+});
+
+const works = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/works/en' }),
+  schema: workSchema,
+});
+
+const worksZh = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/works/zh' }),
+  schema: workSchema,
+});
+
+export const collections = { projects, projectsZh, works, worksZh };

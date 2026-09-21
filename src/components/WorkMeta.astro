@@ -1,0 +1,82 @@
+---
+/**
+ * Work meta line (v2.3).
+ *
+ * §11 caps what an index entry may say, and the meta line is most of the cap:
+ * `type · year · duration?`. The detail page prints the same string, from the
+ * same helper, so the two surfaces cannot drift into two different descriptions
+ * of the same work.
+ *
+ * `status` is rendered only when it is not `published`. A published piece needs
+ * no badge — saying "published" on every entry is the kind of label §13 of the
+ * project rounds took off the site, and §11 does not list it here either. What
+ * *is* worth a line is the exception: an entry that is an experiment or an
+ * archive, where the visitor would otherwise assume more than the owner is
+ * claiming.
+ */
+import { WORK_STATUS_LABELS, type WorkEntry } from '../lib/works';
+import type { Lang } from '../i18n/ui';
+
+export interface Props {
+  /** The `type · year · duration?` line, from `workMetaLine()`. */
+  line: string;
+  /** The entry, so the exceptional status can be read without a second prop. */
+  status: WorkEntry['data']['status'];
+  lang: Lang;
+  /** `sm` sits under an index title; `md` is the detail page's own line. */
+  size?: 'sm' | 'md';
+}
+
+const { line, status, lang, size = 'sm' } = Astro.props;
+---
+
+<p class:list={['work-meta', `work-meta--${size}`]}>
+  <span class="work-meta-line">{line}</span>
+  {
+    status !== 'published' && (
+      <span class="work-meta-status">{WORK_STATUS_LABELS[status][lang]}</span>
+    )
+  }
+</p>
+
+<style>
+  .work-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .work-meta--sm {
+    font-size: 0.6875rem;
+  }
+
+  .work-meta--md {
+    font-size: 0.75rem;
+  }
+
+  /* A quiet separator rather than a pill or a badge. The status is a statement
+     about the piece, so it reads as part of the same line and not as a control. */
+  .work-meta-status {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    color: var(--muted);
+  }
+
+  .work-meta-status::before {
+    content: '';
+    flex: none;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    transform: translateY(-2px);
+    opacity: 0.75;
+  }
+</style>

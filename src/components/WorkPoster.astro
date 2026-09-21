@@ -1,0 +1,104 @@
+---
+/**
+ * Work poster frame (v2.3).
+ *
+ * The one component that renders a work's cover, and the place §18–§21 and
+ * §60–§66 are actually enforced.
+ *
+ * What it deliberately is not: a card. There is no fill, no border, no radius,
+ * no shadow, no overlay (§7). §59 asks the site to unify the *framing* —
+ * spacing, ratio policy, caption position, type scale, link treatment — and
+ * explicitly not the works themselves, so the frame contributes proportion and
+ * nothing else. A poster keeps its own colour, its own medium and its own
+ * subject.
+ *
+ * The frame's height comes from the work's declared `aspectRatio` and not from
+ * a fixed card, which is the whole of the portrait support: a 9:16 piece gets a
+ * 9:16 box instead of being cropped into a landscape one (§62).
+ */
+import { posterSrcset, ratioCss } from '../lib/works';
+
+export interface Props {
+  /** Base path without a width suffix, from the entry's `poster` field. */
+  poster: string;
+  /** `9/16` | `16/9` | `1/1` | `4/3` | `3/2`. */
+  aspectRatio: string;
+  alt: string;
+  /** The frame's width at each breakpoint, from `src/data/worksLayout.ts`. */
+  sizes: string;
+  /** §54: `eager` only for a poster that genuinely paints above the fold. */
+  loading?: 'eager' | 'lazy';
+  /** §55: at most one image per page may carry a priority hint. */
+  priority?: boolean;
+}
+
+const { poster, aspectRatio, alt, sizes, loading = 'lazy', priority = false } = Astro.props;
+
+/* Intrinsic dimensions for the `<img>` attributes, derived from the declared
+   ratio and the widest rung.
+   The `aspect-ratio` below reserves the same box, so the two agree and the
+   layout is identical with the bytes blocked — which is the whole CLS story
+   (§49, §98). §99 records the measured result rather than assuming it. */
+const [ratioW, ratioH] = aspectRatio.split('/').map(Number);
+const intrinsicWidth = 1440;
+const intrinsicHeight = Math.round((intrinsicWidth * ratioH) / ratioW);
+
+/* The largest rung as the plain `src`, i.e. the no-srcset fallback.
+   `scripts/check-works.mjs` asserts every published work ships all three, so
+   the fallback and the descriptor list cannot point at a file that is not
+   there. */
+const fallbackSrc = `${poster}-1440.webp`;
+---
+
+<figure class="work-poster" style={`--poster-ratio: ${ratioCss(aspectRatio)};`}>
+  <img
+    class="work-poster-img"
+    src={fallbackSrc}
+    srcset={posterSrcset(poster)}
+    sizes={sizes}
+    width={intrinsicWidth}
+    height={intrinsicHeight}
+    alt={alt}
+    loading={loading}
+    fetchpriority={priority ? 'high' : 'auto'}
+    decoding="async"
+  />
+</figure>
+
+<style>
+  .work-poster {
+    margin: 0;
+    /* §62: the box follows the work, not a template. `aspect-ratio` is also
+       what makes the reserved space and the intrinsic attributes agree, so
+       nothing shifts when the bytes arrive. */
+    aspect-ratio: var(--poster-ratio);
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .work-poster-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* `cover` rather than `contain`: a poster fills its frame. It is not a
+       crop in practice, because the frame's ratio is the work's own ratio —
+       the two only diverge if an entry's `aspectRatio` is wrong, which is what
+       the gate is for. */
+    object-fit: cover;
+    /* §56: a restrained response to the pointer. No autoplay, no shader, no
+       WebGL, no script — a transform and nothing else. */
+    transition: transform var(--dur-base) var(--ease);
+  }
+
+  /* §57: motion is opt-in. Under `reduce` the poster simply does not move, and
+     nothing else about the frame changes. `focus-within` is what makes the same
+     response available from the keyboard (§52) — the entry's one link is in the
+     copy, so a pointer-only hover rule would leave keyboard users with no
+     feedback at all. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.work:hover) .work-poster-img,
+    :global(.work:focus-within) .work-poster-img {
+      transform: scale(1.015);
+    }
+  }
+</style>

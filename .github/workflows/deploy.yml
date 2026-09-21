@@ -21,9 +21,9 @@ env:
 
 # Quality gate — every step below is blocking.
 # Order: npm ci → lint → typecheck → build → verify → theme → artifacts →
-# science → visual → identity → test. Pages is configured, uploaded and
-# deployed only after all eleven pass. A failing test means no deployment,
-# without exception.
+# science → visual → identity → works → test. Pages is configured, uploaded
+# and deployed only after all twelve pass. A failing test means no
+# deployment, without exception.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -69,6 +69,11 @@ jobs:
 
       - name: Check public identity
         run: npm run identity
+
+      # v2.3: the Works contract. The fixed type/status/ratio enums, the poster
+      # ladder, drafts never reaching a page, and no video bytes on any route.
+      - name: Check works contract
+        run: npm run works
 
       # Resolve the exact Playwright version so browser binaries are cached
       # against it rather than against a floating "latest" key.

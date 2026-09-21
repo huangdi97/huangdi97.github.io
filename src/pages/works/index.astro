@@ -1,0 +1,107 @@
+---
+/**
+ * Works index (English) — v2.3.
+ *
+ * The locale mirror of `/zh/works`. English is not the reviewed locale, but it
+ * must build and must not diverge structurally: a visitor who switches language
+ * must not land in a different information architecture.
+ *
+ * What this page is (§7–§10). A **visual editorial gallery**, not a directory
+ * and not a card wall. §8 rules out "one identical bordered card per work" by
+ * name and §10 puts the poster at two thirds of the row; `WorkEntry` is where
+ * both are implemented, and this page only decides the rhythm between entries.
+ *
+ * What it deliberately is not. There is no filter bar and no tab strip (§28–§29
+ * — with a handful of works those are furniture, and the threshold the brief
+ * names is twelve to sixteen). There is no second template dressed as the first
+ * (§6): /projects is a scientific directory and this is a gallery, and the two
+ * do not share an entry component.
+ *
+ * §81/§82: with fewer than `WORKS_NAV_MIN` published works the route still
+ * builds — the capability is real and reviewable — but it is not in the primary
+ * navigation. Nothing here announces work that does not exist, so an index with
+ * no entries renders its heading and stops: no placeholder, no "coming soon"
+ * (§32).
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import WorkEntry from '../../components/WorkEntry.astro';
+import { SITE } from '../../config/site';
+import { useT } from '../../i18n/ui';
+import { getWorks } from '../../lib/works';
+
+const lang = 'en' as const;
+const t = useT(lang);
+
+const works = await getWorks(lang);
+
+const path = '/works/';
+const enPath = '/works/';
+const zhPath = '/zh/works/';
+
+/* Emitted only when there is something to list. An ItemList claiming zero items
+   is a structured-data assertion that the page is empty, which is worse than
+   saying nothing at all. */
+const collectionLd =
+  works.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: `Works — ${SITE.nameEn}`,
+        url: new URL(path, SITE.url).href,
+        inLanguage: 'en',
+        mainEntity: {
+          '@type': 'ItemList',
+          numberOfItems: works.length,
+          itemListElement: works.map((w, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: w.data.title,
+            url: new URL(`/works/${w.data.slug}/`, SITE.url).href,
+          })),
+        },
+      }
+    : undefined;
+---
+
+<BaseLayout
+  title={t('works.title')}
+  description="Films, generative visuals and AI-driven creative experiments — selected works from the Personal AI Lab."
+  lang={lang}
+  path={path}
+  enPath={enPath}
+  zhPath={zhPath}
+  backgroundMode="works"
+  jsonLd={collectionLd}
+>
+  <section class="shell section">
+    <SectionHeading
+      as="h1"
+      eyebrow={t('works.eyebrow')}
+      title={t('works.title')}
+      lead={t('works.lead')}
+    />
+
+    {
+      works.length > 0 && (
+        <div class="works-gallery" data-works-gallery>
+          {works.map((work) => (
+            <WorkEntry work={work} lang={lang} />
+          ))}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>
+
+<style>
+  /* §66: the rhythm between works is what makes a gallery read as a sequence of
+     pieces rather than as a list. It is generous and it does not vary by
+     orientation — the entries differ in proportion, the spacing does not. */
+  .works-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3.5rem, 8vw, 7rem);
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+</style>
