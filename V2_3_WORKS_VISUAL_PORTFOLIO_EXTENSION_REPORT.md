@@ -347,6 +347,22 @@ quietly fixed, because each was invisible to source review.
    re-measurement; the pattern is that a sentence asserting a _comparison_ is the
    easiest kind to write without running anything.
 
+**Found in existing code, and deliberately not fixed:**
+
+8. **Two external links on the Projects indexes carry no `rel="noopener noreferrer"`.**
+   `SectionHeading.astro` renders its inline link as `<a href={href} class="link-arrow">`
+   with no `target`/`rel`, and `projects/index.astro` passes it `SITE.github` — so
+   `dist/projects/index.html` and `dist/zh/projects/index.html` each contain one
+   external link lacking `rel`. This is **pre-existing**: `SectionHeading.astro`,
+   both Projects index pages and `src/data/site.ts` are all byte-unchanged since
+   `35dd7e7` (verified with `git diff --quiet`, not assumed). The Works pages use the
+   same component but pass no `href`, so the inline link never renders there — **the
+   new routes introduce no violation**, and all 156 external anchors in the build
+   carry `rel=noopener`, every one of them on a Works route included. It was left
+   alone because §91 forbids touching the existing Projects pages and §104 forbids
+   unrelated cleanup. The fix, if wanted, is one conditional in `SectionHeading.astro`
+   that adds `target`/`rel` when `href` is external.
+
 **Open, and left for the Owner to decide:**
 
 - **The empty `/works/` index is now live, publicly reachable, and in the sitemap.**
@@ -397,6 +413,33 @@ asserted: theme +54 (9 new `src/` files × 4 white-surface patterns, plus 18 new
 17 overclaim patterns), identity +30 (9 `src/` files × 2 private-data checks, plus
 2 pages × 6 — the Works pages carry no `Person` JSON-LD, verified in `dist/`),
 visual +4 (one new background variant × 4 assertions), verify 628 → 666 links.
+
+## Negative-constraint audit
+
+The spec's prohibitions (§18–§27, §28–§29, §30–§32, §70–§71, §77, §81, §84–§90,
+§103) are the constraints that rot silently: violating one produces no error, no
+gate failure and no visual difference. All sixteen were therefore asserted against
+the **built output** rather than against the source, by a throwaway checker that
+self-tests its own five regexes before reporting (5/5) — because the more common
+failure in this repo has been a checker that was wrong while its output looked
+normal.
+
+| Constraint                         | Measured                                                            |
+| ---------------------------------- | ------------------------------------------------------------------- |
+| §88–§90 no video files in the repo | 0 video files anywhere in the tree                                  |
+| §18–§27 no video on any route      | 0 `<video>`, 0 `<iframe>`, 0 `autoplay` across 28 pages             |
+| §30–§32 no placeholders            | 0 "coming soon" / "TBD" / lorem strings                             |
+| §84–§87 no analytics or pixels     | 0 gtag / GA / plausible / umami / matomo / dataLayer markers        |
+| §86 external links                 | 156/156 carry `rel=noopener`; 2 pre-existing exceptions, §18 item 8 |
+| §84 https only                     | 0 `http://` links                                                   |
+| §77 no RSS                         | 0 rss / feed / atom files in `dist/`                                |
+| §28–§29 no filters                 | 0 `<select>` / tablist / form controls on either works index        |
+| §81 no fixtures in production      | 0 `qa-*` or fixture artefacts in `dist/`                            |
+| §70–§71 drafts excluded            | 0 work detail routes built                                          |
+| §23–§27 poster formats             | `public/images` holds `.webp` only                                  |
+| §103 no agent skill                | 6 skills installed, none Works-related                              |
+
+Result: **0 violations** in the Works round's scope.
 
 ## Environment notes
 
