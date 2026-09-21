@@ -1,12 +1,26 @@
 # V2.3 — Works / Visual Portfolio Extension
 
-**Status: `WAITING_FOR_OWNER_WORKS_APPROVAL`**
+**Status: `RELEASED`** — approved by the Owner, pushed, CI green, live-verified.
 
-Nothing has been pushed, merged or deployed. The work lives on the local branch
-`visual-v20-homepage-reset`; the remote has only `main`, and `main` has not been
-touched. The code commits are on top of `35dd7e7` (v2.2.4); the commit that
-records _this_ report necessarily sits above them, so this document names no
-branch head — `git log --oneline` is the authority.
+The Owner authorised publication in-session. The release was a **fast-forward** of
+`main` from `4677301` to `67ee10f` (confirmed with `git merge-base --is-ancestor`
+before pushing, not assumed), publishing four commits: v2.2.4, the v2.3 Works
+build, and the two evidence corrections to this report.
+
+Release evidence, all measured after the push:
+
+| Check                                                                   | Result                                                                                                                                        |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| CI run `35590834688`                                                    | `build` **success**, `deploy` **success**                                                                                                     |
+| Pre-push gate on the frozen commit                                      | lint 0 · typecheck 0/0/0 · build 28 pages · verify 77/28 · theme 1046 · artifacts 137 · science 2082 · visual 750 · works 119 · identity pass |
+| Live byte comparison (`dist/` vs `https://haoleilab.com`, cache-busted) | `index.html`, `works/index.html`, `zh/works/index.html`, `zh/index.html`, `404.html`, `sitemap-0.xml` — **all six identical**                 |
+| Live sitemap                                                            | 26 URLs; both `/works/` and `/zh/works/` present; **no** `/works/<slug>/` (correct — no work is published)                                    |
+| Live `/works/`                                                          | 0 `<video>`, 0 `<iframe>`, 0 `autoplay`, 0 entries                                                                                            |
+| Live nav on `/`                                                         | `Projects / Research / About / Resume` — the §4 rename is live, and **no Works link**, which is §81's threshold working in production         |
+
+The code commits sit on top of `35dd7e7`; the commit that records _this_ report
+necessarily sits above them, so this document names no branch head —
+`git log --oneline` is the authority.
 
 ---
 
@@ -31,7 +45,9 @@ why the index is a gallery and not a card grid.
 **No existing surface was rebuilt.** Home, Projects, Research, About, the
 Scientific Editorial Background, the Header structure, the theme system, the
 Evidence truth and the Résumé are all unchanged in substance (§1, §91–§94). The
-only Header change is the conditional addition of one link.
+Header changes in exactly two ways, both mandated: the conditional addition of
+one link, and the §4 rename of the Projects label. Nothing else in the header
+markup moved — see §16 for the byte-level comparison.
 
 ## 2. The Works route
 
@@ -255,9 +271,24 @@ timings, not field data.
 
 **Zero.** No work has been approved by the Owner, so no work is published, and
 per the Owner's decision the Works link is therefore **not** in the primary
-navigation (§81). The header at zero works is byte-for-byte v2.2.4. The moment a
-third work is published the link appears by itself — the threshold is read from
-content (`WORKS_NAV_MIN`), so joining the navigation needs no code change.
+navigation (§81). To check what that actually costs the header, `35dd7e7` was
+extracted with `git archive` into an isolated tree and built there (26 pages,
+exit 0) for a byte comparison against the released build:
+
+| Page            | v2.2.4 header | v2.3 header | Verdict                           |
+| --------------- | ------------- | ----------- | --------------------------------- |
+| `zh/index.html` | 8,612 B       | 8,612 B     | **identical**                     |
+| `index.html`    | 8,722 B       | 8,726 B     | differs by 4 B, first at byte 629 |
+| `projects/…`    | 8,819 B       | 8,823 B     | differs by 4 B, first at byte 632 |
+| `about/…`       | 8,816 B       | 8,820 B     | differs by 4 B, first at byte 629 |
+
+The only difference on the English pages is the **§4 rename itself** —
+`>Work<` → `>Projects<`, which is 4 bytes longer and nothing else. So the
+accurate statement is: **the Chinese header is byte-for-byte v2.2.4, and the
+English header is byte-for-byte v2.2.4 apart from the one label §4 required.**
+No Works link appears in either locale at zero works. The moment a third work
+is published the link appears by itself — the threshold is read from content
+(`WORKS_NAV_MIN`), so joining the navigation needs no code change.
 
 ## 17. Future extension points
 
@@ -304,20 +335,39 @@ quietly fixed, because each was invisible to source review.
    brief lists could not be authored at all. Now a field, rendered in both
    locales, and only when non-empty.
 
+**Found in this report itself, and corrected:**
+
+7. **"The header at zero works is byte-for-byte v2.2.4" was not true as written.**
+   It had never been tested — `35dd7e7` was never built for comparison. Building it
+   in an isolated extraction (§16) showed the Chinese header _is_ byte-identical,
+   but the English header carries the §4 rename, so it differs by 4 bytes at the
+   `Work` → `Projects` label and by nothing else. The claim was replaced with the
+   measurement, and §1's "the only Header change is one link" was corrected to name
+   both changes. This is the third claim in this document that did not survive
+   re-measurement; the pattern is that a sentence asserting a _comparison_ is the
+   easiest kind to write without running anything.
+
 **Open, and left for the Owner to decide:**
 
-- **The empty `/works/` index is publicly reachable and is in the sitemap.**
-  That is what §75 asks for literally, but it means a page with no work and no
-  navigation entry is being offered to search engines. The alternatives are to
-  keep it (it is honest, and the detail routes do not exist yet), or to omit the
-  index from the sitemap until the first work is published. This is a product
-  decision, not a bug, so it has not been changed unilaterally.
+- **The empty `/works/` index is now live, publicly reachable, and in the sitemap.**
+  That is what §75 asks for literally, and it was accepted deliberately when the
+  Owner approved publication — but it does mean a page with no work, and no
+  navigation entry, is now being offered to search engines. If that is not wanted
+  before the first work ships, the fix is to omit the two index routes from the
+  sitemap until `publishedWorkCount >= 1`. This is a product decision, not a bug,
+  so it was not changed unilaterally — including at release time.
 - **§10's 65–75% is met under one denominator and missed by half a point under the
   other** (68.0% of the columns, 64.5% of the entry box once the gutter is counted).
   The grid has been left alone; see §7 above for the full numbers and the reasoning.
-- **The local working copy is CRLF** while `.gitattributes` declares LF, so
-  locally verified bytes are not the bytes CI would build. Normalisation is a
-  pre-release step and has not been applied, because nothing is being released.
+- **The CRLF trap was checked for and turned out not to be present this time.**
+  `.gitattributes` declares `* text=auto eol=lf`, and an earlier round established
+  that the working copy can still be CRLF — which would make locally verified bytes
+  differ from the bytes CI builds. Before releasing, every committed blob and every
+  tracked text file was tested for CR: **29 of 29 committed blobs pure LF, 170 of
+  170 tracked text files with zero CR.** No normalisation was needed, so the local
+  bytes are the bytes CI built. The check itself had to be rewritten once —
+  `git show HEAD:$f | grep -c $'\r'` passes an empty pattern, matches every line,
+  and reports every file as CRLF.
 - **`npm run format:check` is dirty repo-wide** and is not wired into the gate or
   CI. Only the files this round actually touched were formatted; the repository
   was deliberately not reformatted wholesale, because that would rewrite files in
