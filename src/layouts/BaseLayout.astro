@@ -28,6 +28,13 @@ export interface Props {
   seoTitle?: string;
   /** Withhold the page from indexing. Used for print-only variants. */
   noindex?: boolean;
+  /**
+   * v2.3.1 §1/§8: keep following this page's links while it is withheld.
+   *
+   * Only the dormant Works index sets it. See `Seo.astro` for why the two are
+   * separate flags rather than one.
+   */
+  follow?: boolean;
   /** Pages that should not show the footer CTA spacer. */
   mainClass?: string;
   /**
@@ -85,6 +92,7 @@ const {
   jsonLd,
   seoTitle,
   noindex = false,
+  follow = false,
   mainClass,
   minimalFooter = false,
   backgroundMode = 'home',
@@ -149,6 +157,7 @@ const preloadSizes = preloadArtwork ? ART_SIZES[preloadArtwork] : undefined;
       jsonLd={jsonLd}
       seoTitle={seoTitle}
       noindex={noindex}
+      follow={follow}
     />
 
     <script is:inline>

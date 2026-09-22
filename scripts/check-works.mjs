@@ -26,7 +26,15 @@
  *   7. the Works entry is in the primary navigation **only** once
  *      `WORKS_NAV_MIN` works are published (§81–§82);
  *   8. the Works pages carry no placeholder copy — no "coming soon", no TODO,
- *      no lorem (§32, §71).
+ *      no lorem (§32, §71);
+ *   9. a locale's Works index is offered to search engines **exactly** when
+ *      that locale has a published work: at zero it is absent from the sitemap
+ *      and carries `noindex,follow`, at one or more both come back (v2.3.1
+ *      §1–§2, §7–§8). Both signals are asserted against each other, because
+ *      `astro.config.mjs` decides the sitemap from the content directory while
+ *      the page decides the directive from the collection;
+ *  10. the sitemap lists real entries only — no draft is reachable through it
+ *      (v2.3.1 §7, §69).
  *
  * What this gate deliberately does **not** do: judge whether a work is any
  * good, check the poster's own pixels, or validate the video URL resolves. The
@@ -76,7 +84,16 @@ const LADDER = [640, 960, 1440];
 const POSTER_BASE = '/images/works/';
 const WORKS_NAV_MIN = 3;
 
-const PLACEHOLDER = /coming soon|敬请期待|即将推出|coming shortly|TODO|lorem ipsum/i;
+/**
+ * Copy that promises work instead of showing it (§32, §71).
+ *
+ * v2.3.1 §1 adds the "there is nothing here yet" family to the list: a dormant
+ * index is allowed to be quiet, and saying "no works yet" out loud is a
+ * different thing from saying nothing. Both are forbidden for the same reason —
+ * the page must not be *about* its own emptiness.
+ */
+const PLACEHOLDER =
+  /coming soon|敬请期待|即将推出|coming shortly|暂无作品|还没有作品|作品即将|no works yet|nothing here yet|not published yet|stay tuned|TODO|lorem ipsum/i;
 const RAW_VIDEO = /\.(mp4|mov|webm|mkv|m4v|avi)$/i;
 
 /* -------------------------------------------------------------------------- */
@@ -140,7 +157,32 @@ const entries = readEntries();
 const published = entries.filter((e) => e.data.draft !== true);
 const drafts = entries.filter((e) => e.data.draft === true);
 
+/**
+ * The two index routes, each with the locale whose content decides it.
+ *
+ * v2.3.1 §1 states the dormant rule per language, so the gate has to count per
+ * language too. A single combined count would call a mixed state "not dormant"
+ * and then pass a build where one language's index is in the sitemap while that
+ * same page tells crawlers not to index it.
+ */
+const WORK_INDEX_ROUTES = [
+  { route: '/works/', page: 'works/index.html', locale: 'en' },
+  { route: '/zh/works/', page: 'zh/works/index.html', locale: 'zh' },
+];
+
+const publishedByLocale = new Map(
+  WORK_INDEX_ROUTES.map(({ locale }) => [
+    locale,
+    published.filter((e) => e.locale === locale).length,
+  ]),
+);
+
 notes.push(`entries: ${entries.length} (${published.length} publishable, ${drafts.length} draft)`);
+notes.push(
+  `publishable by locale: ${WORK_INDEX_ROUTES.map(
+    ({ locale }) => `${locale} ${publishedByLocale.get(locale)}`,
+  ).join(', ')}`,
+);
 
 /* -------------------------------------------------------------------------- */
 /* 1–2. The entry contract                                                     */
@@ -290,34 +332,113 @@ if (!existsSync(dist)) {
   /* §81–§82: the navigation entry tracks the number of publishable works, so a
      build that has none cannot advertise the section, and a build that has
      enough cannot forget to. The homepage is the right page to check: it has no
-     other reason to link to /works. */
-  for (const page of ['index.html', 'zh/index.html']) {
+     other reason to link to /works.
+
+     Counted **per locale**, because the header is: `Header.astro` asks
+     `publishedWorkCount(lang)`. A combined count would demand a link on the
+     Chinese homepage once three English works exist, while the header correctly
+     withholds it — the gate failing a correct build, which is the failure mode
+     a gate is least able to tell apart from a real one. */
+  for (const { page, locale } of [
+    { page: 'index.html', locale: 'en' },
+    { page: 'zh/index.html', locale: 'zh' },
+  ]) {
     const file = join(dist, page);
     if (!existsSync(file)) continue;
     const html = readFileSync(file, 'utf8');
     const linked = /href=["']\/(zh\/)?works\/["']/.test(html);
+    const count = publishedByLocale.get(locale) ?? 0;
 
-    if (published.length >= WORKS_NAV_MIN) {
+    if (count >= WORKS_NAV_MIN) {
       ok(
         linked,
-        `${page}: ${published.length} works are published but the header does not link to them (§82)`,
+        `${page}: ${count} ${locale} works are published but the header does not link to them (§82)`,
       );
     } else {
       ok(
         !linked,
-        `${page}: the header links to /works with only ${published.length} publishable work(s) — §81 keeps it out below ${WORKS_NAV_MIN}`,
+        `${page}: the header links to /works with only ${count} ${locale} publishable work(s) — §81 keeps it out below ${WORKS_NAV_MIN}`,
       );
     }
   }
 
-  /* §32/§71: nothing on a Works page promises work that does not exist. */
-  for (const page of ['works/index.html', 'zh/works/index.html']) {
+  /* v2.3.1 §1/§2/§7/§8, per locale: a locale's index route is offered to search
+     engines exactly when that locale has a published work, and the page says
+     the same thing in its own markup. Both directions are asserted for both
+     signals, because the sitemap is decided in `astro.config.mjs` from the
+     content directory while the page is decided in the page from the
+     collection — two reads of one rule, and therefore two things that can
+     drift. Asserting them against each other is what turns "in the sitemap and
+     noindex at once" into a gate failure instead of a shipped page.
+
+     A detail route is never part of this: it exists only when its work does. */
+  const sitemapFile = join(dist, 'sitemap-0.xml');
+
+  if (!existsSync(sitemapFile)) {
+    fail('dist/sitemap-0.xml was not built (§75)');
+  } else {
+    const indexed = [...readFileSync(sitemapFile, 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+      (m) => m[1],
+    );
+
+    for (const { route, locale } of WORK_INDEX_ROUTES) {
+      const count = publishedByLocale.get(locale) ?? 0;
+      const present = indexed.some(
+        (url) => new URL(url).pathname.replace(/\/+$/, '') === route.replace(/\/+$/, ''),
+      );
+
+      ok(
+        present === (count > 0),
+        present
+          ? `sitemap: ${route} is offered to search engines with 0 published ${locale} work(s) (v2.3.1 §1)`
+          : `sitemap: ${route} is missing while ${count} ${locale} work(s) are published (v2.3.1 §7)`,
+      );
+    }
+
+    /* §7's other half: the sitemap lists real entries only, so a draft can
+       never be reachable through it even if a route leaked past §69. */
+    for (const slug of draftSlugs) {
+      ok(
+        !indexed.some((url) => url.includes(String(slug))),
+        `sitemap offers a draft route: ${slug} (v2.3.1 §7, §69)`,
+      );
+    }
+
+    notes.push(`sitemap carries ${indexed.length} URLs with ${published.length} published work(s)`);
+  }
+
+  /* v2.3.1 §8: the page states the same thing itself. `noindex,follow` at zero
+     — *followed* rather than `nofollow` because the page still renders the site
+     navigation and there is no reason to cut a crawler off at it. At one work
+     the directive has to be gone, or the section never enters the index at all,
+     and a forgotten `noindex` is silent: nothing about the page looks wrong.
+     That silence is why this is asserted rather than reviewed.
+
+     §32/§71 rides along: nothing on a Works page promises work that does not
+     exist. */
+  for (const { page, locale } of WORK_INDEX_ROUTES) {
     const file = join(dist, page);
     if (!existsSync(file)) {
       fail(`${page} was not built — §5 requires the Works index in both locales`);
       continue;
     }
+
     const html = readFileSync(file, 'utf8');
+    const count = publishedByLocale.get(locale) ?? 0;
+
+    const found = /<meta\s+name=["']robots["']\s+content=["']([^"']*)["']/i.exec(html);
+    const directive = found ? found[1].replace(/\s+/g, '') : null;
+    const withheld = (directive ?? '').includes('noindex');
+
+    ok(
+      count === 0 ? directive === 'noindex,follow' : !withheld,
+      count === 0
+        ? `${page}: a dormant index (0 ${locale} works) must carry <meta name="robots" content="noindex,follow"> — found ${
+            directive === null ? 'no robots meta' : `"${directive}"`
+          } (v2.3.1 §8)`
+        : `${page}: ${count} ${locale} work(s) are published but the page is still withheld from the index (v2.3.1 §2)`,
+    );
+
     ok(!PLACEHOLDER.test(html), `${page}: contains placeholder copy (§32)`);
   }
 }

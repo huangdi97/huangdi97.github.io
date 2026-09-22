@@ -15,18 +15,27 @@
  * §81/§82：正式作品少于 `WORKS_NAV_MIN` 时路由照常构建——能力是真实且可复核的
  * ——但不进入主导航。页面上不出现任何关于「尚不存在的作品」的话，所以条目为空时
  * 就只渲染标题部分：没有 placeholder，也没有「敬请期待」（§32）。
+ *
+ * v2.3.1 §1：而作品数为**零**时，它同时也不再交给搜索引擎。路由照常可构建；页面
+ * 带 `noindex,follow`，并且不进入 sitemap。见 `worksIndexIsDormant`。
  */
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import SectionHeading from '../../../components/SectionHeading.astro';
 import WorkEntry from '../../../components/WorkEntry.astro';
 import { SITE } from '../../../config/site';
 import { useT } from '../../../i18n/ui';
-import { getWorks } from '../../../lib/works';
+import { getWorks, worksIndexIsDormant } from '../../../lib/works';
 
 const lang = 'zh' as const;
 const t = useT(lang);
 
 const works = await getWorks(lang);
+
+/* v2.3.1 §1/§8：没有条目可列的索引页是**休眠**，不是「空页」。它照常构建——
+   能力是真实且可复核的——但不交给搜索引擎，且带 `follow`，让页面渲染出的导航
+   仍被继续抓取。§2 是另一半：第一个作品发布的那天，指令自己就撤掉了，所以这里
+   读的是内容而不是某个需要有人记得去改的开关。 */
+const dormant = worksIndexIsDormant(works.length);
 
 const path = '/zh/works/';
 const enPath = '/works/';
@@ -65,6 +74,8 @@ const collectionLd =
   zhPath={zhPath}
   backgroundMode="works"
   jsonLd={collectionLd}
+  noindex={dormant}
+  follow={dormant}
 >
   <section class="shell section">
     <SectionHeading

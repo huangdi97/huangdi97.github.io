@@ -25,7 +25,18 @@ export interface Props {
   ogImageHeight?: number;
   type?: 'website' | 'article' | 'profile';
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /**
+   * Withhold the page from the index.
+   *
+   * Emits `noindex,nofollow` by default, which is right for a page that is not
+   * part of the site at all (the print-only variants). A page that is withheld
+   * but *is* a legitimate part of the site — the Works index with nothing to
+   * list (v2.3.1 §1/§8) — also passes `follow`, so the crawler keeps walking
+   * the navigation the page renders instead of being cut off at it.
+   */
   noindex?: boolean;
+  /** Keep following this page's links while it is withheld. See `noindex`. */
+  follow?: boolean;
   /** Verbatim <title> override, for pages whose SEO title is a fixed phrase. */
   seoTitle?: string;
 }
@@ -43,6 +54,7 @@ const {
   type = 'website',
   jsonLd,
   noindex = false,
+  follow = false,
   seoTitle,
 } = Astro.props;
 
@@ -65,7 +77,7 @@ const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
 <meta name="author" content={SITE.nameEn} />
 <meta name="generator" content={Astro.generator} />
-{noindex && <meta name="robots" content="noindex,nofollow" />}
+{noindex && <meta name="robots" content={follow ? 'noindex,follow' : 'noindex,nofollow'} />}
 
 <!-- Language alternates -->
 <link rel="alternate" hreflang="en" href={enHref} />

@@ -53,6 +53,29 @@ export const POSTER_WIDTHS = [640, 960, 1440] as const;
  */
 export const WORKS_NAV_MIN = 3;
 
+/**
+ * v2.3.1 (§1, §2): the number of published works at which a locale's Works
+ * index stops being **dormant**.
+ *
+ * Zero works is a state the site is allowed to be in, and it is the state it is
+ * in today: the routes exist, the schema supports six kinds of work, and
+ * nothing is published until the owner hands something over. What zero works
+ * must not do is leave a page on the public web that a crawler can index — an
+ * index with nothing in it is a page whose entire content is a heading, and
+ * §30/§31 forbid announcing output that does not exist.
+ *
+ * So at zero the index carries `noindex,follow` and is held out of the sitemap;
+ * the moment one work ships, both come back. The threshold is per locale,
+ * because the count is per locale: an English work does not make the Chinese
+ * index worth indexing, and `check-works.mjs` asserts the sitemap and the
+ * directive agree with the content for each language separately.
+ *
+ * `follow` rather than `nofollow` is the deliberate half. The page has no work
+ * to link to, but it is a real page of this site, and telling a crawler to stop
+ * following from it would sever the navigation links it renders for no reason.
+ */
+export const WORKS_INDEX_MIN = 1;
+
 /** The Vite mode the screenshot harness builds under. See the note above. */
 const DRAFT_PREVIEW_MODE = 'works-preview';
 
@@ -117,6 +140,18 @@ export async function getFeaturedWorks(lang: Lang, limit = 3): Promise<WorkEntry
  */
 export async function publishedWorkCount(lang: Lang): Promise<number> {
   return (await getWorks(lang)).length;
+}
+
+/**
+ * v2.3.1 §1: whether a locale's Works index has nothing to list.
+ *
+ * The pages ask this rather than comparing the count themselves, so that the
+ * English and the Chinese index cannot end up disagreeing about what "empty"
+ * means — they are two separate source files, which is the split that has
+ * already produced one one-sided fix on this route pair (§47).
+ */
+export function worksIndexIsDormant(count: number): boolean {
+  return count < WORKS_INDEX_MIN;
 }
 
 export function workHref(lang: Lang, slug: string): string {

@@ -131,7 +131,7 @@ fixed lattice — so re-running it yields a byte-identical file, and
 │   ├── i18n/ui.ts              UI string table (en / zh-Hans)
 │   ├── layouts/BaseLayout.astro  Mounts the background, emits the one image preload
 │   ├── lib/projects.ts         Project collection queries and ordering
-│   ├── lib/works.ts            Work queries, ordering, the draft rule, poster srcset
+│   ├── lib/works.ts            Work queries, ordering, the draft rule, dormancy, poster srcset
 │   ├── lib/artworkAsset.ts     Slot names, variants, srcset — one source of truth
 │   ├── pages/                  English routes (default language)
 │   │   └── zh/                 Chinese routes, mirroring the English tree
@@ -159,6 +159,15 @@ index renders its heading and stops — no placeholder, no "coming soon" — and
 entry stays out of the primary navigation until three works are published. The threshold
 is `WORKS_NAV_MIN` in `src/lib/works.ts` and is read from the content, so the header needs
 no edit the day the third work lands. The detail routes only exist once a work does.
+
+From v2.3.1 a locale with **zero** published works is _dormant_ rather than merely empty: its
+index route carries `<meta name="robots" content="noindex,follow">` and is held out of the
+sitemap, so the capability stays buildable and reviewable without offering a search engine a
+page whose entire content is a heading. The first work in that locale brings both back. The
+rule is **per locale** — `WORKS_INDEX_MIN` in `src/lib/works.ts`, mirrored by the sitemap
+filter in `astro.config.mjs`, and asserted against the built output in both directions by
+`scripts/check-works.mjs`. The homepage never gains a Works section on its own; that stays an
+Owner decision.
 
 Seven slugs exist: `biopulse`, `hycell`, `morn`, `pdig`, `pet-ai-health`, `taiyi-lingjing` and
 `wennian`. Four of them — `biopulse`, `hycell`, `morn`, `wennian` — are `featured: true`, and
@@ -349,7 +358,7 @@ the browser suite. All of them are blocking in CI, in this order.
 | Science       | `npm run science`   | No overclaims; conceptual notation labelled                                    |
 | Visual        | `npm run visual`    | The background contract and the raster loading policy                          |
 | Identity      | `npm run identity`  | No private contact data; PDF text and metadata                                 |
-| Works         | `npm run works`     | No draft reaches `dist/`; no page loads a video; the poster ladder is complete |
+| Works         | `npm run works`     | No draft reaches `dist/`; no page loads a video; the poster ladder is complete; a dormant index is `noindex,follow` and out of the sitemap |
 | Browser tests | `npm run test`      | Playwright — desktop 1440×900 + Pixel 5                                        |
 
 `scripts/verify-build.mjs` walks every generated HTML file, resolves internal links
@@ -371,10 +380,16 @@ exists, eager bytes at the largest rung under 250 KB, and no source file publish
 `scripts/check-works.mjs` is the smallest gate and owns the newest surface. It asserts that
 every work entry carries a supported type, status, aspect ratio and poster path; that every
 outbound URL is `https`; that a published work ships the whole `[640, 960, 1440]` poster
-ladder; that **no draft reaches `dist/`** as a route, a slug or a title; that no page on the
-site contains a `<video>`, an `<iframe>`, an `autoplay` or a video preload; that
-`public/images/works/` holds nothing a published work does not reference; and that the
-header links to `/works` exactly when three or more works are published. The layout, ratio
+ladder; that **no draft reaches `dist/`** as a route, a slug or a title, and that no draft is
+reachable through the sitemap; that no page on the site contains a `<video>`, an `<iframe>`,
+an `autoplay` or a video preload; that `public/images/works/` holds nothing a published work
+does not reference; that the header links to `/works` exactly when three or more works are
+published; and that a locale's index is offered to search engines exactly when that locale has
+a published work — at zero it is absent from the sitemap and carries `noindex,follow`, at one
+or more both come back. That last pair is asserted against the built page _and_ against the
+sitemap, because the sitemap is decided in `astro.config.mjs` from the content directory while
+the page is decided in the page from the collection: two reads of one rule, and therefore two
+things that can drift. The layout, ratio
 and loading contracts are asserted in a real browser instead — `tests/works.spec.ts` under
 `WORKS_PREVIEW=1`, and `npm run qa:works`, which generates its own fixtures, builds under
 the `works-preview` mode and removes them again.

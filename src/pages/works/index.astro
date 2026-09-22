@@ -22,18 +22,30 @@
  * navigation. Nothing here announces work that does not exist, so an index with
  * no entries renders its heading and stops: no placeholder, no "coming soon"
  * (§32).
+ *
+ * v2.3.1 §1: and at *zero* works it also stops being offered to search engines.
+ * The route stays buildable; the page carries `noindex,follow` and is held out
+ * of the sitemap. See `worksIndexIsDormant`.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import WorkEntry from '../../components/WorkEntry.astro';
 import { SITE } from '../../config/site';
 import { useT } from '../../i18n/ui';
-import { getWorks } from '../../lib/works';
+import { getWorks, worksIndexIsDormant } from '../../lib/works';
 
 const lang = 'en' as const;
 const t = useT(lang);
 
 const works = await getWorks(lang);
+
+/* v2.3.1 §1/§8: an index with nothing to list is *dormant*, not empty. It keeps
+   building — the capability is real and reviewable — but it is withheld from
+   the index, and it is withheld with `follow` so the navigation it renders is
+   still walked. §2 is the other half: the directive comes off by itself the day
+   the first work is published, which is why this reads the content rather than
+   a flag someone has to remember to flip. */
+const dormant = worksIndexIsDormant(works.length);
 
 const path = '/works/';
 const enPath = '/works/';
@@ -73,6 +85,8 @@ const collectionLd =
   zhPath={zhPath}
   backgroundMode="works"
   jsonLd={collectionLd}
+  noindex={dormant}
+  follow={dormant}
 >
   <section class="shell section">
     <SectionHeading
