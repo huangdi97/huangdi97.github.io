@@ -1,11 +1,28 @@
 # V2.3.1 — Dormant Works Mode
 
-**Status: `WAITING_FOR_OWNER_APPROVAL`** — nothing pushed, nothing deployed.
+**Status: `RELEASED`** — approved by the Owner, pushed, CI green, live-verified.
 
-The round's changes sit **uncommitted** in the working tree on top of the released
-v2.3 commit `5ca0730`. `main` and `origin/main` both still point at `5ca0730`;
-no commit was created in this session. Publication is §106-gated on an explicit
-Owner approval in the current message, which has not been given.
+The Owner authorised publication in-session. The round published two commits as a
+**fast-forward** of `main` from `5ca0730` (confirmed with `git merge-base --is-ancestor`
+before pushing, not assumed): the code commit `f08bc27`, and the commit recording this
+report.
+
+Release evidence, all measured after the push:
+
+| Check | Result |
+| --- | --- |
+| CI run `35682565784` (run #38) | `build` **success**, `deploy` **success**; head_sha `d6fdae8` |
+| Quality steps | all **success** — lint, typecheck, build, verify, theme, artifacts, science, visual, identity, **works contract**, then Test |
+| Live byte comparison (cache-busted) | `/index.html`, `/works/index.html`, `/zh/works/index.html`, `/zh/index.html`, `/404.html`, `/sitemap-0.xml` — **all six identical** to `dist/` |
+| Live sitemap | **24 URLs**, **0** works routes — the dormant rule working in production |
+| Live `/works/` and `/zh/works/` | both carry `noindex,follow` |
+| Live `/works/` | 0 `<video>`, 0 `<iframe>`, 0 `autoplay`, 0 placeholders, **0 entries** (0 `<figure>`, 0 `<article>`, 0 `work-entry`) |
+| Live nav on `/` | `Projects / Research / About / Resume` — **no Works link**; §81's threshold holding in production |
+| Unchanged from v2.3 | `/index.html` `f355877af08b74a7` and `/zh/index.html` `8392369ef9b854ad` are byte-identical to the v2.3 release — independent confirmation that the dormant rule does not touch the homepage |
+
+The code commit sits on top of `5ca0730`; the commit that records _this_ report
+necessarily sits above it, so this document names no branch head — `git log --oneline`
+is the authority.
 
 ---
 
@@ -49,7 +66,7 @@ produced one one-sided fix on this route pair (§47).
 
 ## 2. Files changed
 
-Eight files, all uncommitted:
+Eight files, published as the code commit `f08bc27`:
 
 | File | Change |
 | --- | --- |
@@ -224,8 +241,9 @@ green.
 
 ## 8. Open items for the Owner
 
-1. **Publication.** The changes are uncommitted and unpushed. Nothing further happens
-   without an explicit approval in the current message.
+1. **Publication — resolved.** The Owner approved in-session; the round was pushed as a
+   fast-forward and is live (see the header). The next thing that changes this rule is
+   the Owner's own decision to publish a first real work, which is what ends dormancy.
 2. **Where the §-references point.** The v2.3.1 brief is the continuation instruction
    itself — _recover the real state, finish only what remains, verify completely_ — and
    it carries no feature list of its own. The sections the code cites (§1, §2, §7, §8,
@@ -239,11 +257,12 @@ green.
    Works row were checked against the source by hand. As the project notes, prose
    documentation does not fail CI and therefore does not announce its own staleness.
 
-## 9. Repository state at the time of writing
+## 9. Repository state
 
-- Branch `visual-v20-homepage-reset`; HEAD `5ca0730`; `main` and `origin/main` also
-  `5ca0730` — **the released v2.3 commit**. No commit was made this session.
-- Eight modified files uncommitted (§2).
-- `.chkver-v231/` holds the negative-control backups and the preserve copies.
+- The round published `f08bc27` (code) and the commit recording this report,
+  fast-forwarding `main` from `5ca0730`. The working tree is clean apart from
+  gitignored scratch.
+- `.chkver-v231/` holds the negative-control backups, the preserved pre-change copies,
+  and the live captures used for the byte comparison. It is gitignored.
 - `chkver-*.mjs` at the repository root are the round's scratch checkers; the prefix is
   gitignored and established for exactly this purpose.
