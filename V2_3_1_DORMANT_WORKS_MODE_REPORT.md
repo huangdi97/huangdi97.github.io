@@ -222,8 +222,17 @@ is `generatePages()` → `cleanServerOutput()` → … → `runHookBuildDone()`,
 leaves **no `dist/sitemap-0.xml` at all**, and any sitemap-reading gate then fails
 with a message that points nowhere near the cause. The tell is a log with
 `✓ Completed in …` but no `[@astrojs/sitemap] … created at dist` and no
-`[build] Complete!`. With the shim removed the same build finishes in seconds instead
-of ~7.5 minutes.
+`[build] Complete!`.
+
+**On the timing — this is a local agent/sandbox environment effect, not a property of the
+site.** The same 28-page build took **447.96 s** with the shim loaded and **28.01 s**
+without (both measured this round, both `exit 0`). That difference is the cost of the
+delete-guard shim being injected into every Node process on this machine, and it says
+**nothing** about how long the site takes to build anywhere else: CI, a normal developer
+machine and the deploy runner never load that shim and were never slow. **No site code,
+configuration or dependency was changed to obtain the faster number**, and the two figures
+are not a before/after of any optimisation — they are the same build under two local
+environments.
 
 **Deleting a content file does not remove it from the build.** See §6 item 2. The
 symptom is a `dist/` that disagrees with the source tree while `git status` stays
@@ -266,3 +275,140 @@ green.
   and the live captures used for the byte comparison. It is gitignored.
 - `chkver-*.mjs` at the repository root are the round's scratch checkers; the prefix is
   gitignored and established for exactly this purpose.
+
+---
+
+## 10. Threshold verification closure — v2.3.1
+
+**Round status: `V2_3_1_THRESHOLD_VERIFIED` · `REPORT_COMMITTED` ·
+`WAITING_FOR_OWNER_PUSH_APPROVAL`.** This round changed **no production logic**, pushed
+nothing and deployed nothing; it committed this report and stopped. It exists to pin the
+two thresholds at their actual boundaries instead of at a comfortable distance from them,
+and to show the per-locale counts are genuinely independent.
+
+**State at the start of the round.** `HEAD` = `76fdd20`; `git ls-remote origin main` =
+`76fdd20` — identical. `git rev-parse origin/main` **fails**: this clone carries no local
+remote-tracking ref for `main`, so the `ls-remote` value is the authority, not
+`origin/main`. Working tree clean apart from the gitignored `.chkver-v231/`.
+
+### Threshold Boundary Verification
+
+Five states were constructed and built: 0, 1, 2 and 3 works per locale, plus one
+asymmetric build at EN 3 / ZH 2. Astro's content cache was removed before **every** build,
+so the tree on disk is the tree that was measured — the cache served deleted entries once
+already in this round's history (§6), and a boundary measured against a stale cache would
+have measured the cache.
+
+Every cell below is read from the built `dist/`, never from the source.
+
+| State | Locale | Index route | `robots` | Sitemap | Nav link | Detail routes |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0 works | en | exists | `noindex,follow` | absent | hidden | 0 |
+| 0 works | zh | exists | `noindex,follow` | absent | hidden | 0 |
+| 1 work | en | exists | none | present | hidden | 1 |
+| 1 work | zh | exists | none | present | hidden | 1 |
+| 2 works | en | exists | none | present | hidden | 2 |
+| 2 works | zh | exists | none | present | hidden | 2 |
+| 3 works | en | exists | none | present | **visible** | 3 |
+| 3 works | zh | exists | none | present | **visible** | 3 |
+| EN 3 / ZH 2 | en | exists | none | present | **visible** | 3 |
+| EN 3 / ZH 2 | zh | exists | none | present | **hidden** | 2 |
+
+#### The two thresholds, at their boundaries
+
+| Threshold | Constant | Flips between | Evidence |
+| --- | --- | --- | --- |
+| Sitemap membership + `robots` | `WORKS_INDEX_MIN = 1` | 0 and 1 work | 0 → `noindex,follow` and absent; 1 → no directive and present |
+| Navigation entry | `WORKS_NAV_MIN = 3` | **2 and 3 works** | 2 → hidden; 3 → visible |
+
+The 2 → hidden / 3 → visible pair is the one the brief singles out, and it was measured
+**at 2 and at 3** — not inferred from a larger count. A build with eight works would show
+`visible` at a point the threshold does not describe, and would not test the boundary at
+all.
+
+#### Per-locale independence
+
+The asymmetric build is the proof that the two counts are two counts. In **one build,
+from one content tree**, English at 3 gains the `Works` entry while Chinese at 2 does not.
+Both headers were read directly out of the built HTML: the English homepage carries
+`href="/works/"` with the label `Works`, and the Chinese homepage links to `about`,
+`projects`, `research` and `resume` only — no entry for the Works route. Both indexes are
+nevertheless in the sitemap and both are indexable, because each locale has at least one
+work: the dormancy rule is per locale, not per site.
+
+#### Build evidence — every state built clean
+
+| State | Pages | Sitemap URLs | Detail routes | Build exit |
+| --- | --- | --- | --- | --- |
+| 0 works | 28 | 24 | 0 | 0 |
+| 1 work / locale | 30 | 28 | 2 | 0 |
+| 2 works / locale | 32 | 30 | 4 | 0 |
+| 3 works / locale | 34 | 32 | 6 | 0 |
+| EN 3 / ZH 2 | 33 | 31 | 5 | 0 |
+| 0 works — final, after cleanup | 28 | 24 | 0 | 0 |
+
+Each page count is the 28 baseline pages plus **one detail page per published work per
+locale**:
+
+> **`28 + EN published works + ZH published works`**
+
+When the two locales publish the same number of works, that reduces to **`28 + 2n`**.
+Checked against every row above:
+
+| EN / ZH works | Formula | Listed pages |
+| --- | --- | --- |
+| 0 / 0 | 28 + 0 + 0 | 28 |
+| 1 / 1 | 28 + 1 + 1 = 28 + 2(1) | 30 |
+| 2 / 2 | 28 + 2 + 2 = 28 + 2(2) | 32 |
+| 3 / 3 | 28 + 3 + 3 = 28 + 2(3) | 34 |
+| 3 / 2 | 28 + 3 + 2 | 33 |
+
+Every value matches the table, so the formula and the measurements agree.
+
+⚠️ An earlier draft of this section wrote the page count as `28 + 2 × locales × works`,
+which is **wrong**: at one work per locale it predicts 32 pages where the build produced
+30. The two expressions coincide only at zero works, which is why the error survived a
+casual reading. The count is per **work**, not per locale-work pair.
+
+Each sitemap count is **`24 baseline URLs + active Works indexes + published detail
+routes`** — likewise matching every row (24; 28; 30; 32; 31), with each detail route also
+counted once in the page count above.
+
+#### Fixture protection
+
+After the measurements, and after the final cleanup build:
+
+- `src/content/works/en/` and `src/content/works/zh/` hold **only `.gitkeep`** — 0 fixture files.
+- `public/images/works/` holds **0** `qa-*.webp` posters.
+- `dist/` contains **0** paths matching a fixture slug, **28** pages, and only the two
+  Works index routes; its sitemap carries **0** works routes.
+
+#### No production logic changed
+
+`git diff --name-only` against the released `76fdd20` is **empty**. The round's scratch
+harnesses (`chkver-boundary-setup.mjs`, `chkver-boundary-measure.mjs`) lived under the
+gitignored `chkver-` prefix and were **removed at close**: they were single-use, and
+keeping them would have left this section describing files that no longer exist. The
+five states are reproducible from the two constants and the tables above. **No bug was
+found at any of the five boundaries**, so per the brief nothing was "optimised" either.
+
+### Production build re-verification
+
+The final 0-work build, re-run end to end after the fixtures were removed:
+
+| Step | Result |
+| --- | --- |
+| `npm run lint` | exit 0 |
+| `npm run typecheck` | 119 files, 0 errors / 0 warnings / 0 hints, exit 0 |
+| `npm run build` | **28 pages**, exit 0 |
+| `npm run verify` | 666 internal links, 22 local assets, 7 case studies × 2 locales |
+| `npm run theme` | 1046 checks |
+| `npm run artifacts` | 137 checks |
+| `npm run science` | 2082 checks |
+| `npm run visual` | 750 checks |
+| `npm run identity` | 442 assertions |
+| `npm run works` | 123 checks, 0 entries |
+| `npx playwright test` | **382 tests: 357 passed, 25 skipped, 0 failed**, exit 0 |
+
+Every figure is identical to the released v2.3.1 baseline, as it must be: this round
+changed no production code.
