@@ -280,16 +280,35 @@ green.
 
 ## 10. Threshold verification closure — v2.3.1
 
-**Round status: `V2_3_1_THRESHOLD_VERIFIED` · `REPORT_COMMITTED` ·
-`WAITING_FOR_OWNER_PUSH_APPROVAL`.** This round changed **no production logic**, pushed
-nothing and deployed nothing; it committed this report and stopped. It exists to pin the
-two thresholds at their actual boundaries instead of at a comfortable distance from them,
-and to show the per-locale counts are genuinely independent.
+**Round status: `V2_3_1_THRESHOLD_VERIFIED` · `REPORT_RELEASED` ·
+`WORKS_DORMANT_COMPLETE`.**
 
-**State at the start of the round.** `HEAD` = `76fdd20`; `git ls-remote origin main` =
-`76fdd20` — identical. `git rev-parse origin/main` **fails**: this clone carries no local
-remote-tracking ref for `main`, so the `ls-remote` value is the authority, not
-`origin/main`. Working tree clean apart from the gitignored `.chkver-v231/`.
+This verification round changed **no production logic** — no file under `src/`, `scripts/`
+or `tests/`, and no sitemap configuration. Its report-only commit `6b4c441` was
+subsequently approved by the Owner, fast-forwarded to `main`, deployed successfully
+through GitHub Pages CI, and live-verified with **no production artifact changes relative
+to `76fdd20`**. Nothing here re-released production code: the deployed output is the same
+output, which is exactly what a documentation-only change should produce.
+
+Keeping the pieces distinct:
+
+- **Production logic** — zero changes. `git diff --name-only 76fdd20..6b4c441` names only this report.
+- **This report** — modified, and the only file in the commit.
+- **Report commit `6b4c441`** — pushed to `main` as a fast-forward; no merge commit, no rebase, no force.
+- **CI** — executed. Run `35689239671` reported `build` success and `deploy` success.
+- **Deployed artifact** — identical to `76fdd20`: all six verified paths and the stylesheet hash are unchanged.
+
+The round exists to pin the two thresholds at their actual boundaries instead of at a
+comfortable distance from them, and to show the per-locale counts are genuinely
+independent.
+
+**State at the start of the verification round** — a historical baseline, deliberately
+left at `76fdd20` and **not** updated to the report commit, because rewriting it would
+erase the timeline the verification was measured against. `HEAD` = `76fdd20`;
+`git ls-remote origin main` = `76fdd20` — identical. `git rev-parse origin/main`
+**fails**: this clone carries no local remote-tracking ref for `main`, so the `ls-remote`
+value is the authority, not `origin/main`. Working tree clean apart from the gitignored
+`.chkver-v231/`.
 
 ### Threshold Boundary Verification
 
@@ -412,3 +431,9 @@ The final 0-work build, re-run end to end after the fixtures were removed:
 
 Every figure is identical to the released v2.3.1 baseline, as it must be: this round
 changed no production code.
+
+---
+
+**Final release state.** Report commit `6b4c441` is on `main`; Works remains dormant with
+zero public works. No further Works development is scheduled until the Owner has a real
+work to publish.
